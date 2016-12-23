@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Dynamic App</title>
+		<link rel="stylesheet" media="all" href="dynamic-app.css">
+		<script src="js/dynamic.js"></script>
+	</head>
+
+	<body class='dynamic'>
+
+		<input name=level type=number value=10011 class=hidden>
+
+		<p>
+			<label>Person:
+				<select name=person>
+					<option label="Choose a person" disabled>
+					<option value=cindy>Cindy</option>
+					<option value=harry>Harry</option>
+					<option value=fenna>Fenna</option>
+					<option value=bo>Bo</option>
+					<option value=bengt>Bengt</option>
+				</select>
+			</label>
+		</p>
+
+		<div class="dynamic-template company" data-dynamic-template-for="person.company">
+			<h2>{{person.company.name}}</h2>
+		</div>
+
+		<form id="build_input" method="post" enctype="multipart/form-data">
+			<label>First name: 
+				<input name="person.first-name">
+			</label>
+			<label>Last name: 
+			<input name=person.last-name></label>
+
+		</form>
+
+		<p>Hello {{person.first-name}}.</p>
+
+		<div class="dynamic-template person-record" data-dynamic-template-for="person">
+			<label>Identification: <span>{{person.id}}.</span></label>
+			<label>First name:     <span>{{person.first-name}}.</span></label>
+			<label>Last name:      <span>{{person.last-name}}.</span></label>
+			<label>Birth date:     <span>{{person.birth-date}}.</span></label>
+			<address class="dynamic-template person-address" data-dynamic-template-for="person.address">
+				<label>Adress:      <span>{{person.address.street}} {{person.address.number}}.</span></label>
+				<label>City:        <span>{{person.address.postal}}  {{person.address.city}}.</span></label>
+			</address>
+		</div>
+
+		<hr>
+
+		<div class="dynamic-template company">
+			<address class="dynamic-template company-address" data-dynamic-template-for="person.company.address">
+				<label class="dynamic-template company-address-street" data-dynamic-template-for="person.company.address.street">Adress:      <span>{{person.company.address.street}} {{person.company.address.number}}.</span></label>
+				<label>City:        <span>{{person.company.address.city}}.</span></label>
+			</address>
+			<hr>
+		</div>
+	</body>
+</html>

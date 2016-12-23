@@ -1,0 +1,32 @@
+{
+  "name": "dynamic",
+  "version": "1.0.0",
+  "description": "Dynamic templates that appear on value changes",
+  "main": "dynamic-server.js",
+  "scripts": {
+    "test": "tape test/**/*.js",
+    "watch": "npm-watch",
+    "browserify": "browserify src/modules/*.js --outfile js/dynamic.js"
+  },
+  "watch": {
+    "browserify": "src/modules/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com/HaKr/dynamic.git"
+  },
+  "keywords": [
+    "Dynamic",
+    "Web"
+  ],
+  "author": "Harry de Kroon",
+  "license": "ISC",
+  "devDependencies": {
+    "browserify": "^13.1.1",
+    "event-emitter": "^0.3.4",
+    "install": "^0.8.2",
+    "npm": "^4.0.5",
+    "npm-watch": "^0.1.6",
+    "tapes": "^4.1.0"
+  }
+}

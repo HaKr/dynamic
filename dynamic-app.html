@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Dynamic App</title>
+		<link rel="stylesheet" media="all" href="dynamic-app.css">
+		<script src="cms-generic.js"></script>
+		<script src="dynamic-scopes.js"></script>
+		<script src="dynamic-values.js"></script>
+		<script src="dynamic-templates.js"></script>
+		<script src="dynamic-app.js"></script>
+	</head>
+
+	<body>
+
+		<dfn class="dynamic-value form-layouts hash">
+				<var title="A">one</var>
+				<var title="B">two</var>
+				<var title="C">three</var>
+				<var title="D">four</var>
+			</dfn>
+		<dfn class="dynamic-value year number">2016</dfn>
+		<dfn class="dynamic-value formname string">C</dfn>
+		<dfn class="dynamic-value first-name string"></dfn>
+		<dfn class="dynamic-value last-name string"></dfn>
+
+
+		<div class="dynamic-scope nav">
+			<dfn class="dynamic-value nav_1 string">nav 1</dfn>
+			<div class="mambo">
+				<dfn class="dynamic-value nav_2 string">nav 2</dfn>
+				<div class="dynamic-scope navnav">
+					<dfn class="dynamic-value nav_1_1 string">nav 1 navnav 1</dfn>
+					<dfn class="dynamic-value level number">10011</dfn>
+					<div class="dynamic-template scoped-one" data-dynamic-template-for="first-name">
+						<p>line 1</p>
+						<p class="dynamic-template scoped-one-sub" data-dynamic-template-for="last-name">Line in sub</p>
+						<p>line 3</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<p  class="dynamic-template declared">
+			Last name:   {{last-name}}.
+
+
+		<div id="dynamic" class="row">
+			<div class="col-md-9 layout">
+				<h2>Display groups</h2>
+				<h3>Level: {{nav.navnav.level}}</h3>
+			
+				<form id="build_input" method="post" enctype="multipart/form-data">
+					<label for ="inp_first_name">First name: </label>
+					<input id="inp_first_name" data-bind="first-name">
+					<label for ="inp_last_name">Last name: </label>
+					<input id="inp_last_name" data-bind="last-name">
+				</form>
+
+				<p>
+					Hello {{first-name}} {{last-name}}.
+			</div>
+			<p class="dynamic-template deferred" data-dynamic-template-for="first-name" data-dynamic-template-options="only-content">
+			<p class="dynamic-template declared" data-dynamic-template-for="last-name"  data-dynamic-template-options="only-content">
+				<ul class="dynamic-template complex-list" data-dynamic-template-for="first-name" data-dynamic-template-options="on-empty=no-groups">
+				<li class="dynamic-template complex-list-item" data-dynamic-template-for-each="first-name">1</li>
+			</ul>
+			<ul class="dynamic-template complex2-list" data-dynamic-template-for="complex" data-dynamic-template-options="on-empty=no-groups">
+				<li class="dynamic-template complex2-list-item" data-dynamic-template-for-each="complex">2
+					<span class="dynamic-template complex2-list-item-sub" data-dynamic-template-for-each="form-layouts">Sub</span>
+				</li>
+			</ul>
+
+			<div class="dynamic-scope nav">
+				<div class="dynamic-scope navnav">
+					<p class="dynamic-template scoped-one-sub">Second line for {{last-name}} in sub</p>
+				</div>
+			</div>
+
+			<p class="dynamic-template deferred" >
+					First name:  {{first-name}}.
+
+		</div>
+	</body>
+</html>

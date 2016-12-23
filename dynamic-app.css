@@ -1,0 +1,31 @@
+.hidden, .dynamic-template {
+	display: none;
+}
+
+body {
+	padding-top: 1em;
+}
+
+label {
+	display: block;
+	width: 80ex;
+	height: 3em;
+}
+
+label > select {
+	top: auto;
+	margin-left: 20ex;
+}
+
+label > span {
+	margin-left: 24ex;
+	top: 0ex;
+}
+
+label > * {
+	display: inline-flex;
+	margin-left: 26ex;
+	top: 0ex;
+	position: relative;
+}
+
