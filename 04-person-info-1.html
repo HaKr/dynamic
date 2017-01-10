@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Dynamic App: Person info 1</title>
+		<link rel="stylesheet" media="all" href="dynamic-app.css">
+		<script src="js/dynamic.js"></script>
+	</head>
+
+	<body>
+		<fieldset>
+			<label>First name:
+				<input name=person.first-name>
+			</label>
+			
+			<label>Family name:
+				<input name=person.last-name>
+			</label>
+		</fieldset>
+
+		<p class="dynamic-template person-data" 
+			data-dynamic-template-for=person
+			data-dynamic-template-options="on-empty=please-enter-value"
+		>
+				Hello {{.first-name}} {{.last-name}}!
+	
+
+		<p class="dynamic-template please-enter-value">Please enter your name in the input boxes above.
+
+	</body>
+</html>

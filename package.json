@@ -4,8 +4,11 @@
   "description": "Dynamic templates that appear on value changes",
   "main": "dynamic-server.js",
   "scripts": {
-    "test": "tape test/**/*.js",
+    "testing": "browserify test/*.js | tape-run",
+    "test": "tape -r ./src/modules/dynamic-values.js test/*.js",
+    "abc": "tape-run",
     "watch": "npm-watch",
+    "taper": "tape-run",
     "browserify": "browserify src/modules/*.js --outfile js/dynamic.js"
   },
   "watch": {
@@ -27,6 +30,8 @@
     "install": "^0.8.2",
     "npm": "^4.0.5",
     "npm-watch": "^0.1.6",
+    "tape": "^4.6.3",
+    "tape-run": "^2.1.5",
     "tapes": "^4.1.0"
   }
 }

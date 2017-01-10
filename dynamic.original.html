@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Dynamic App</title>
+		<link rel="stylesheet" media="all" href="dynamic-app.css">
+		<script src="js/dynamic.js"></script>
+	</head>
+
+	<body class='dynamic-person'>
+
+		<div class=meta>
+			<label>Templates:    	{{debug.template_count}}.</label>
+			<label>Placeholders:    {{debug.placeholder_count}}.</label>
+			<label>Instances:    	{{debug.instance_count}}.</label>
+			<label>Observers:     	{{debug.observer_count}}.</label>
+		</div>
+
+		<input name=level type=number value=10011 class=hidden>
+
+		<div class=selection>
+			<div>
+				<span class=reallabel>Actions:</span>
+					<button id=set-button>Simulate Get Person list call</button>
+					<button id=show-button>Show person in console</button>
+				
+			</div>	
+
+			<label>Show info for:
+				<select id=person-select name=persons.$selected class="dynamic-template person-select" data-dynamic-template-for="persons">
+					<option disabled>Choose a person</option>
+
+					<option value={{.$reference}} class="dynamic-template person-select-option" data-dynamic-template-for-each="persons">
+						{{.first-name}} {{.last-name}}
+					</option>
+
+				</select>
+			</label>
+		</div>
+
+		<div class="dynamic-template company" data-dynamic-template-for="persons.@.company">
+			<h2>{{.name}}</h2>
+		</div>
+
+		<form id="build_input" method="post" action="/api/build-input" class="dynamic-template person-record-input" data-dynamic-template-for="persons.@">
+			<label>First name: 
+				<input name=".first-name">
+			</label>
+			<label>Last name: 
+			<input name=.last-name></label>
+		</form>
+
+		<p>Hello {{persons.@.description}}.</p>
+
+		<address class="dynamic-template address">
+			<label class="dynamic-template address-street" data-dynamic-template-for=".street">
+					Adress:      {{..street}} {{..number}}.</label>
+			<label>	City:        {{.postal}}  {{.city}}.</label>
+		</address>
+
+		<div class="dynamic-template person-record" data-dynamic-template-for="persons.@">
+			<label title="{{.first-name}} {{.last-name}}">Identification: {{.id}}.</label>
+			<label>First name:     {{.first-name}}.</label>
+			<label>Last name:      {{.last-name}}.</label>
+			<label>Birth date:     {{.birth-date}}.</label>
+			<label>Salary:     	   € {{ .per_annum= }}</label>
+			<address class="dynamic-template address" data-dynamic-template-for="persons.@.address"></address>
+		</div>
+
+		<hr>
+
+		<div class="dynamic-template company" data-dynamic-template-options="only-content">
+			<address class="dynamic-template address" data-dynamic-template-for=".address"></address>
+			<hr>
+		</div>
+
+		<ul class="dynamic-template person-list" data-dynamic-template-for="persons">
+			<li class="dynamic-template person-list-item" data-dynamic-template-for-each="persons">
+				<span class=person-id>{{.id}} </span>{{.first-name}} {{.last-name}}
+			</li>
+		</ul>
+
+		<table class="dynamic-template person-grid" data-dynamic-template-for="persons">
+			<thead>
+				<tr>
+					<th>ID
+					<th>Last
+					<th>First
+					<th>City
+					<th>Salary
+					<th>Monthly
+					<th>Notes
+					<th>
+				</tr>
+				<tr>
+					<td colspan=2>Totals
+					<td colspan=2>{{persons.$count}} rows
+					<td>{{totals.salary= Sum(persons.*.salary) }}
+					<td>{{totals.per_annum= Sum(persons.*.per_annum) }}
+					<td colspan=2>
+				</tr>
+			<tfoot>
+				<tr>
+					<td colspan=2>Totals
+					<td colspan=2>{{persons.$count}} rows
+					<td>{{totals.salary= Sum(persons.*.salary) }}
+					<td>{{totals.per_annum= Sum(persons.*.per_annum) }}
+					<td colspan=2>
+				</tr>
+			<tbody>
+				<tr class="dynamic-template person-grid-row" data-dynamic-template-for-each="persons">
+					<td class=person-id>{{.id}}
+					<td>{{.last-name}}
+					<td>{{.first-name}}
+					<td>{{.address.city}}
+					<td><input name=".salary" type=number min=0>
+					<td>{{.per_annum= .salary * 12 * 1.08}}
+					<td><input name=.description>
+					<td>
+						<button class="remove dynamic-value"></button>
+				</tr>
+		</table>
+
+	</body>
+</html>

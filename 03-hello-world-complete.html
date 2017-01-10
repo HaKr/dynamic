@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Dynamic App: Hello World complete</title>
+		<link rel="stylesheet" media="all" href="dynamic-app.css">
+		<script src="js/dynamic.js"></script>
+	</head>
+
+	<body>
+	
+		<label>Please enter your name:
+			<input name=addressee>
+		</label>
+		
+		<p class="dynamic-template please-enter-value">Please enter your name in the input box above.
+
+		<p class="dynamic-template salutation" 
+			data-dynamic-template-for=addressee
+			data-dynamic-template-options="on-empty=please-enter-value"
+		>
+				Hello {{addressee}}!
+	
+	</body>
+</html>

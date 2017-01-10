@@ -9,23 +9,61 @@ body {
 label {
 	display: block;
 	width: 80ex;
-	height: 3em;
+	height: 2.5em;
 }
 
-label > select {
-	top: auto;
-	margin-left: 20ex;
+
+span.reallabel {
+	display: inline-block;
+	width: 20ex;
 }
 
-label > span {
-	margin-left: 24ex;
-	top: 0ex;
+.selection {
+	border: dashed thin green;
+	padding: 1em;
+	margin: 1em 5em 3ex 5em;
 }
 
-label > * {
-	display: inline-flex;
-	margin-left: 26ex;
-	top: 0ex;
-	position: relative;
+.dynamic, .company, .person-record, .person-address,
+.company-address, .company-address-street {
+	display: inherit;
 }
 
+.salutation {
+	color: green;
+}
+
+.please-enter-value {
+	color: orange;
+}
+
+button.dynamic-value {
+	margin-left: 1em;
+	width: 3ex;
+	padding: 0.1ex;
+	color: blue;
+}
+
+.person-id {
+	display: inline-block;
+	width: 6em;
+	text-align: right;
+	margin-right: 2ex;
+	background-color: rgba( 0, 127, 0, .2 ); 
+	color: orange;
+	padding-right: 1ex;
+}
+
+input[type=number]{
+	text-align: right;
+}
+
+div.meta {
+	padding: 1em;
+	font-size: xx-small;
+	background-color: rgba( 0, 200,200, 0.3 );
+}
+
+div.meta label {
+	height: 1em;
+}

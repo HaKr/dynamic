@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Dynamic App</title>
+		<link rel="stylesheet" media="all" href="dynamic-app.css">
+		<script src="js/dynamic.js"></script>
+	</head>
+
+	<body class='dynamic-person'>
+
+		<p class=selection>
+			<label>Show info for:
+				<select id=person-select2 name=person-to-show2 class="dynamic-template person-select" data-dynamic-template-for="persons" data-bind=persons.$selected>
+					<option label="Choose a person" disabled>
+
+					<option value={{.$reference}} class="dynamic-template person-select-option" data-dynamic-template-for-each="persons">
+						{{.first-name}} {{.last-name}}
+					</option>
+
+				</select>
+
+			</label>
+
+			<label>Actions:
+				<button id=show-button>Show person in console</button>
+			</label>
+
+		</p>
+
+		<p>Hello {{persons.@.description}}.</p>
+
+		<div class="dynamic-template person-record" data-dynamic-template-for="persons.@">
+			<label>Identification: {{.id}}.</label>
+			<label>First name:     {{.first-name}}.</label>
+			<label>Last name:      {{.last-name}}.</label>
+			<label>Birth date:     {{.birth-date}}.</label>
+			<address class="dynamic-template person-address" data-dynamic-template-for=".address">
+				<label>Adress:     {{.street}} {{.number}}.</label>
+				<label>City:       {{.postal}}  {{.city}}.</label>
+			</address>
+		</div>
+
+		<hr>
+
+	</body>
+</html>
