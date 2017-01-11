@@ -37,11 +37,12 @@ var
 		'on-empty': {},
 		alternative: {},
 		'only-content': {},
-		incomplete: {}
+		incomplete: {},
+		range: {}
 	},
 	template_tag = 'dynamic-template',
 	parse_options = {},
-	attributelist_pattern = '([^=]+)=(\\S+)\\s*',
+	attributelist_pattern = '([^=]+)=(\\S*)\\s*',
 	comment_pattern = '^<' + template_tag + '\\s+(((' + attributelist_pattern + '))+)\\s*>$',
 	attributelist_re = new RegExp(attributelist_pattern, 'g'),
 	comment_re = new RegExp(comment_pattern)
@@ -119,6 +120,7 @@ dynamic_app.define_templates = function(template_element) {
 		parser 			= null,
 		existing 		= null,
 		only_content 	= false,
+		range				= '<>',
 		is_body 			= typeof template_element === "undefined";
 
 	if (!is_body) {
@@ -136,15 +138,21 @@ dynamic_app.define_templates = function(template_element) {
 				result.merge_options( parser.options );
 			} else {
 				result = template_module.define( parser.name, parser.options );
-
 			}
 
-			if (parser.options['for'] || parser.options.for_each) {
+			if (parser.options.hasOwnProperty('for') || parser.options.hasOwnProperty('for_each')) {
+				range = parser.options.hasOwnProperty('range') ? parser.options.range : '<>';
 				var 
-					dynamic_value_name 	= parser.options['for'] ? parser.options['for'] : parser.options.for_each,
-					multiple 				= ( typeof parser.options.for_each !== "undefined" ),
-					comment_node 			= document.createComment( "<" + template_tag + " name=" + parser.name + " dynamic-value=" + dynamic_value_name + " multiple=" + multiple + ">" )
+					dynamic_value_name 	= parser.options.hasOwnProperty('for') ? parser.options['for'] : parser.options.for_each,
+					multiple 				= parser.options.hasOwnProperty('for_each'),
+					comment_node 			= document.createComment( "<" + template_tag + " name=" + parser.name + " dynamic-value=" + dynamic_value_name + " range=" + range +" multiple=" + multiple + ">" )
 				;
+
+				if (parser.options.hasOwnProperty('for_each') && dynamic_value_name.length<1){
+					logger.warning( 'For-each value is empty', template_element);
+				}
+
+				only_content = existing !== null;
 
 				template_element.parentNode.insertBefore( comment_node, template_element );
 			}
@@ -248,22 +256,139 @@ var
 	dynamic_value_class = {}
 ;
 
+dynamic_value_class.get_elements = function( selector ) {
+	var result = [];
+
+	this.instances.forEach(function( instance ) {
+		result = result.concat( instance.get_elements( selector ) );
+	}, this );
+
+	return result;
+};
+
+
 dynamic_value_class.add_instance = function( instance ){
 	if ( typeof this.instances ==="undefined" ){
 		this.instances = [];
 	}
-	this.instances.push( instance );
+	var 
+		exists_ix = this.instances.findIndex( function(existing_instance){ return existing_instance.placeholder.definition.name == instance.placeholder.definition.name }, this );
+	if ( exists_ix >= 0 ){
+		this.instances[ exists_ix ] = instance;
+		logger.warning( 'Instance '+instance.placeholder.definition.name+' already referenced on value '+instance.dynamic_value.name );
+	} else {
+		this.instances.push( instance );
+	}
+	
 };
 
 dynamic_value_class.remove = function( instance ){
+	this.children.forEach( function remove_child( child_value ){
+		child_value.remove();
+	}, this );
+	this.children = [];
+
 	if ( typeof this.instances !=="undefined" ){
 		this.instances.forEach( function remove_instance( instance ){
 			instance.remove();
 		}, this);
 	}
-	this.instances= [];
+
+	this.set_value( null );
+	this.instances = [];
 	delete this.parent.value[ this.reference ];
 	delete this.parent.children[ this.reference ];
+
+	counter = dynamic_app.dynamic_value(this.parent.name+'.$count');
+	if (counter !== null) {
+		counter.notify_observers( counter );
+	}
+
+};
+
+dynamic_value_class.can_swap = function( offset ){
+	var
+		result = false;
+
+	if (this.parent === null){
+		result = false;
+	} else {
+		var 
+			child_references = Object.keys( this.parent.children ),
+			my_index = child_references.indexOf( this.reference ),
+			other_index =
+				typeof offset === "string" 
+					? child_references.indexOf( offset )
+					: my_index + offset >=0 && my_index + offset < child_references.length
+						? my_index + offset
+						: -1 
+		;
+
+		if (other_index < 0 ){
+			result = false;
+		} else {
+			result = true;
+		}
+	}
+
+	return result;
+};
+
+dynamic_value_class.swap = function( offset ){
+	var
+		result = null;
+	if (this.parent === null){
+		logger.warning( "Cannot swap a top-level value" );
+	} else {
+		var 
+			child_references = Object.keys( this.parent.children ),
+			my_index = child_references.indexOf( this.reference ),
+			other_index =
+				typeof offset === "string" 
+					? child_references.indexOf( offset )
+					: my_index + offset >=0 && my_index + offset < child_references.length
+						? my_index + offset
+						: -1 
+		;
+
+		if (other_index < 0 ){
+			logger.warning( 'Swap offset '+offset+' out of reach' );
+		} else {
+			var
+				upper 				= Math.max( my_index, other_index ),
+				lower 				= Math.min( my_index, other_index ), 
+				upper_value_ref 	= child_references.splice( upper, 1 )[0],
+				lower_value_ref 	= child_references.splice( lower, 1, upper_value_ref )[0],
+				dummy_value_ref   = child_references.splice( upper, 0, lower_value_ref ),
+				upper_value 		= this.parent.children[ upper_value_ref ],
+				lower_value 		= this.parent.children[ lower_value_ref ]
+			;
+			
+			var new_children = {};
+			child_references.forEach( function rebuild_children( child_ref ){
+				new_children[ child_ref ] = this.parent.children[ child_ref ];
+			}, this );
+
+			this.parent.children = new_children;
+
+			// this.instances.forEach( function( an_instance ){
+			// 	logger.info( '"'+an_instance.placeholder.definition.name+'"' );
+			// }, this );
+
+			upper_value.instances.forEach( function swap_instances( upper_instance, ix ){
+				var other_instance = lower_value.instances.find( function( an_instance ){
+					return an_instance.placeholder.definition.name === upper_instance.placeholder.definition.name; 
+				}, this );
+				if (typeof other_instance === "object"){
+					upper_instance.swap( other_instance );
+				}
+			} );
+
+			result = upper_value === this? lower_value : upper_value;
+		}
+	}
+
+	return result;
 };
 
 /* 
@@ -281,7 +406,16 @@ dynamic_instance_class.get_values_and_templates = function() {
 	logger.debug( function() {
 			dynamic_app.update_info();
 	});
+};
 
+dynamic_instance_class.get_elements = function( selector ) {
+	var result = [];
+
+	this.child_nodes.forEach(function(node) {
+		result = result.concat( dynamic_dom.get_elements( node, selector ) );
+	}, this );
+
+	return result;
 };
 
 dynamic_instance_class.add_text_observer = function( text_observer ){
@@ -388,6 +522,7 @@ dynamic_instance_class.get_templates = function(node) {
 
 		template_placeholder.value_changed 	= dynamic_placeholder.select_instancing(attributes.multiple);
 		template_placeholder.first 			= anchor_first;
+		template_placeholder.range				= new ValueRange( attributes.range );
 
 		template_placeholder.on_instance = function on_instance_created( template_instance ) {
 			if (template_instance.dynamic_value !== null){
@@ -397,14 +532,14 @@ dynamic_instance_class.get_templates = function(node) {
 			template_instance.get_values_and_templates();
 		};
 
-		var dynamic_value = this.get_dynamic_value( attributes.dynamic_value );
+		var dynamic_value = attributes.dynamic_value.length>0 ? this.get_dynamic_value( attributes.dynamic_value ) : this.dynamic_value;
 		this.add_observer(
 			dynamic_value.observe( 'placeholder', function change_placeholder(trigger_value) {
-				if (template_placeholder.dynamic_value !== trigger_value ){
+				// if (template_placeholder.dynamic_value !== trigger_value ||  template_placeholder.dynamic_value.get_value() !== trigger_value.get_value() ){
 					logger.debug( dynamic_value.name+'['+trigger_value.name+']'+'('+(typeof template_placeholder.dynamic_value === "undefined"?'NIL':template_placeholder.dynamic_value.name)+') ==> instance(s) of ' + template_placeholder.definition.name );
 					template_placeholder.dynamic_value = trigger_value;
 					template_placeholder.value_changed(trigger_value);
-				}
+				// }
 			}, template_placeholder )
 		);
 
@@ -421,7 +556,43 @@ dynamic_instance_class.get_templates = function(node) {
 };
 
 var
-	control_tags = ['input', 'select'];
+	control_tags = ['input', 'select'],
+	button_commands = {
+		remove: { event_handler: function remove_dynamic_variable(){
+				this.dynamic_value.remove();
+			}, label: '-',
+			can_do: function( dynamic_value ){ return true; }
+		},
+		'move-up': { event_handler: function move_up_dynamic_variable(){
+				var 
+					other_value = this.dynamic_value.swap(-1),
+					other_button = other_value.get_elements( 'button.move-up.dynamic-value' )[0] 
+				;
+				dynamic_dom.remove_class( other_button, 'hidden' );
+
+				if (!this.dynamic_value.can_swap(-1)){
+					dynamic_dom.add_class( this, 'hidden' );
+				}
+			}, label: '^',
+			can_do: function( dynamic_value ){ return dynamic_value.can_swap(-1); }
+
+		},
+		'move-down': { event_handler: function move_down_dynamic_variable(){
+				var 
+					other_value = this.dynamic_value.swap(1),
+					other_button = other_value.get_elements( 'button.move-down.dynamic-value' )[0] 
+				;
+				dynamic_dom.remove_class( other_button, 'hidden' );
+
+				if (!this.dynamic_value.can_swap(1)){
+					dynamic_dom.add_class( this, 'hidden' );
+				}
+			}, label: 'v',
+			can_do: function( dynamic_value ){ return dynamic_value.can_swap(1); }
+
+		}
+	}
+;
 
 dynamic_instance_class.get_values = function(node) {
 
@@ -432,19 +603,37 @@ dynamic_instance_class.get_values = function(node) {
 		}
 
 		tag_elements.forEach(function(tag_element) {
-			this.define_control(tag_element);
+			if (typeof tag_element.dataset !== "object"){
+				tag_element.dataset = {};
+			}
+			if (!tag_element.dataset.hasOwnProperty('dynamicValue')){
+				this.define_control(tag_element);
+			}
 		}, this );
 	}, this );
 
-	var buttons = dynamic_dom.get_elements(node, 'button.remove.dynamic-value');
+	var buttons = dynamic_dom.get_elements(node, 'button.dynamic-value');
 	buttons.forEach( function link_button( btn ){
-		if (typeof btn.dataset.dynamic_variable === "undefined"){
+		if (typeof btn.dataset !== "object"){
+			btn.dataset = {};
+		}
+
+		if (!btn.dataset.hasOwnProperty('dynamicValue')){
 			var dv = this.dynamic_value;
-			btn.dataset.dynamic_variable = dv.name;
-			btn.textContent = '-';
-			btn.addEventListener( 'click', function remove_dynamic_variable(){
-				dv.remove();
-			});
+			btn.dataset.dynamicValue = dv.name;
+			
+			Object.keys( button_commands ).forEach( function( command_name ){
+				if (btn.className.indexOf( command_name ) >= 0){
+					if (!button_commands[ command_name ].can_do( dv )){
+						dynamic_dom.add_class( btn, 'hidden' );
+					}
+
+					btn.textContent = button_commands[ command_name ].label;
+					btn.dynamic_value = dv;
+					btn.addEventListener( 'click', button_commands[ command_name ].event_handler );		
+				}
+			}, this );
+			
 		}
 	}, this );
 
@@ -454,7 +643,10 @@ dynamic_instance_class.define_control = function(tag_element) {
 	if (typeof this.controls === "undefined"){
 		this.controls = [];
 	}
-	this.controls.push(new AppControl(tag_element, this));
+	if (tag_element.tagName === 'SELECT' && tag_element.className.indexOf('fte-select')>=0 && tag_element.className.indexOf('harry')>=0) {
+			logger.info( 'add control on '+this.placeholder.definition.name, tag_element, this );
+		}
+		this.controls.push(new AppControl(tag_element, this));
 };
 
 dynamic_instance_class.get_dynamic_value = function(value_name) {
@@ -756,8 +948,9 @@ AppControl.prototype.set_up = function() {
 		name = this.element.name,
 		self = this;
 
-	this.dynamic_value = this.instance.get_dynamic_value( name );
-	this.element.name = this.dynamic_value.bracket_notation
+	this.dynamic_value 						= this.instance.get_dynamic_value( name );
+	this.element.name 						= this.dynamic_value.bracket_notation
+	this.element.dataset.dynamicValue 	= this.dynamic_value.name;
 
 	if (this.element.value !== "") {
 		self.update_value();
@@ -781,17 +974,12 @@ AppControl.prototype.set_up = function() {
 // Formulas
 function FormulaValue( dv, formula, instance ) {
 
-	// this.instance = instance;
-	// this.formula = formula;
-	// this.create( name );
 	if (typeof dv.formula === "undefined"){
 		dv.formula = formula;
 
 		Object.keys( FormulaValue.prototype ).forEach( function set_method( method_name ){
 			dv[ method_name ] = FormulaValue.prototype[ method_name ];
 		});
-
-		// logger.debug( 'Define formula '+formula+' for ' + dv.name + ' on '+instance.placeholder.definition.name );
 
 		dv.instance = instance;
 		dv.parse_formula(); 
@@ -814,8 +1002,6 @@ FormulaValue.prototype.calculate_simple_operation = function( operation ){
 	this.push_literal( operation.operation.apply( this, operands.reverse() ) );
 
 };
-// FormulaValue.prototype = new value_module.types.DynamicValue();
-// FormulaValue.constructor = FormulaValue;
 
 FormulaValue.prototype.calculate = function() {
 	var 
@@ -823,6 +1009,8 @@ FormulaValue.prototype.calculate = function() {
 		operators = dynamic_utils.array_duplicate( this.operators ),
 		operands = dynamic_utils.array_duplicate( this.operands )
 	;
+
+	logger.debug( 'calculate '+this.formula+' for '+this.name+' = '+result );
 
 	while ( this.operands.length > 1 ){
 		var 
@@ -837,13 +1025,10 @@ FormulaValue.prototype.calculate = function() {
 		result = operand.get_value();
 	;
 	
-
 	this.operands = operands;
 
 	this.set_value( result );
-// if (this.name === "persons.harry.per_annum"){
-	logger.debug( 'calculate '+this.formula+' for '+this.name+' = '+result, this.oldvalue );
-// }
+
 };
 
 function get_numerical_value( operand ){
@@ -1013,7 +1198,50 @@ FormulaValue.prototype.parse_formula = function() {
 	this.calculate();
 };
 
+range_testers = {
+	'<': function bound_lt( val, bound ){ return bound < val; },
+	'[': function bound_le( val, bound ){ return bound <= val; },
+	'>': function bound_gt( val, bound ){ return bound > val; },
+	']': function bound_ge( val, bound ){ return bound >= val; }
+};
 
+function ValueRange( range ){
+	this.range = range;
+	this.lower_bound_check = true;
+	this.upper_bound_check = true;
+
+	if (range !== '<>'){
+		var parts = range.split(',');
+
+		this.lower_bound = parts[0].substring(1);
+		if (this.lower_bound.length>0){
+			this.lower_bound_check = range_testers[ parts[0].substr(0,1) ]
+		}
+		this.upper_bound = parts[1].slice(0,-1);
+		if (this.upper_bound.length>0){
+			this.upper_bound_check = range_testers[ parts[1].substr(-1,1) ]
+		}
+	}
+}
+
+ValueRange.prototype.includes =function( dynamic_value ){
+	var
+		result;
+
+	if (dynamic_value.is_empty()){
+		result = false;
+	} else {
+		var
+			val = dynamic_value.get_value(),
+			lower_bound_check = typeof this.lower_bound_check === "function"? this.lower_bound_check( val, this.lower_bound ) : this.lower_bound_check,
+			upper_bound_check = typeof this.upper_bound_check === "function"? this.upper_bound_check( val, this.upper_bound ) : this.upper_bound_check
+		;
+
+		result = lower_bound_check && upper_bound_check;
+	}
+
+	return result;
+};
 
 // logger.debug( function() {
 dynamic_app.find_observer = function(text) {

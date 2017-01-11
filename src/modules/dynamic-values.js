@@ -109,7 +109,7 @@ values_module.get_or_define = function(value_name) {
 };
 
 function DynamicValue() {}
-DynamicValue.prototype.create = function(name) {
+DynamicValue.prototype.create = function( name ) {
 	this.name = name;
 	this.initialised = false;
 	this.value = "";
@@ -118,6 +118,7 @@ DynamicValue.prototype.create = function(name) {
 	this.observers = [];
 	this.parent = null;
 	this.children = {};
+
 	Object.defineProperties( this, {
 		'bracket_notation': {
 			enumerable: false,
@@ -127,7 +128,19 @@ DynamicValue.prototype.create = function(name) {
 			get: function() { return Object.keys( this.children ).length; }
 		}
 	});
-
+	if (typeof this.children.forEach !== "function"){
+		var self = this;
+		Object.defineProperty( this.children, 'forEach',{
+			enumerable: false,
+			get: function(){ return function( callback, this_arg ){	
+				var childs = self.get_children();
+				for (var ci=0; ci<childs.length;ci++){
+					child_value = childs[ci];
+					callback.call( this_arg, child_value );
+				}
+			}
+		}});
+	}
 };
 
 var
@@ -279,7 +292,7 @@ DynamicValue.prototype.get_full_reference = function() {
 };
 
 DynamicValue.prototype.get_value = function() {
-	return typeof this.value === "object" ? this.value.valueOf() : this.value;
+	return typeof this.value === "object" && this.value !== null ? this.value.valueOf() : this.value;
 };
 
 DynamicValue.prototype.get_text = function() {
@@ -386,7 +399,7 @@ function DynamicValueObserver(name, callback, dynamic_value) {
 	this.callback = callback;
 	this.dynamic_value = dynamic_value;
 
-	this.reference = (100000000 + ++values_module.vars.observer_index) +'_' + name;
+	this.reference = (100000000 + ++values_module.vars.observer_index) + '_' + name;
 
 	values_module.vars.observers[this.reference] = this;
 }

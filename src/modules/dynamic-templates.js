@@ -131,6 +131,9 @@ DynamicTemplateDefinition.prototype.absorb = function(element, only_content) {
 	});
 
 	if (only_content) {
+		dynamic_dom.get_attributes( element ).forEach( function ( attr ){
+			parent.setAttribute( attr.name, attr. value );
+		}, this );
 		element.parentNode.removeChild(element);
 	}
 
@@ -178,14 +181,7 @@ DynamicTemplatePlaceholder.prototype.check_complete = function( dynamic_value ) 
 	var
 		result = false;
 
-	// if (typeof dynamic_value !== "undefined"){
-	// 	if (this.dynamic_value !== dynamic_value){
-	// 		this.clear();
-	// 	}
-	// 	this.dynamic_value = dynamic_value;
-	// }
-
-	result = !this.dynamic_value.is_empty();
+	result = this.range.includes( dynamic_value );
 
 	if (result && this.definition.wait_for_complete){
 		for (var i=0; result && i < this.dynamic_values.length; i++){
@@ -366,6 +362,28 @@ DynamicTemplateInstance.prototype.node_inserted = function( node ){
 	//
 };
 
+DynamicTemplateInstance.prototype.swap = function( other_instance ) {
+
+	this.child_nodes.forEach(function(child_node) {
+		this.anchor.parentNode.insertBefore(child_node, other_instance.last);
+	}, this );
+
+	other_instance.child_nodes.forEach(function(child_node) {
+		other_instance.anchor.parentNode.insertBefore(child_node, this.last);
+	}, this );
+
+	var
+		other_last				= other_instance.last,
+		other_first				= other_instance.first
+	;
+	other_instance.last 		= this.last;
+	other_instance.first 	= this.first;
+
+	this.last 					= other_last;
+	this.first 					= other_first;
+
+};
+
 DynamicTemplateInstance.prototype.build = function() {
 	var self = this;
 
@@ -374,10 +392,10 @@ DynamicTemplateInstance.prototype.build = function() {
 		this.first = dynamic_dom.insert_text_before(this.anchor, '\n');
 
 		this.child_nodes.forEach(function(child_node) {
-			self.anchor.parentNode.insertBefore(child_node, self.anchor);
-			self.node_inserted( child_node );
-		});
+			this.anchor.parentNode.insertBefore(child_node, this.anchor);
+		}, this );
 
+		
 		this.last = dynamic_dom.insert_text_before(this.anchor, '\n');
 	}
 };
