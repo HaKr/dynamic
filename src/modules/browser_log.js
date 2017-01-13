@@ -3,12 +3,14 @@ function Log() {
 	this.muted = false;
 	this.instances = {};
 	this.Levels = {
+		OFF: 99,
 		ERROR: 7,
 		WARNING: 5,
 		// VISUAL: 3,
 		INFO: 1,
 		DEBUG: -1
 	};
+	this.default_level = this.Levels.OFF;
 
 	this.Targets = this.hasConsole ? {
 		ERROR: {
@@ -35,7 +37,7 @@ function Log() {
 
 function LogInstance(name) {
 	this.name = name;
-	this.log_level = LogModule.Levels.ERROR;
+	this.log_level = LogModule.Levels.default_level;
 
 	Object.defineProperty(this, 'module', {
 		get: function() {
@@ -100,6 +102,17 @@ Log.prototype.to_console = function(target, log_instance, params) {
 		}
 	}
 };
+
+Log.prototype.set_default_level = function( default_level ) {
+	var self = this;
+
+	Object.keys(this.instances).forEach(function( logger_name ) {
+		this.instances[logger_name].log_level = default_level;
+	}, this);
+
+	this.default_level = default_level;
+};
+
 
 LogInstance.prototype.get_module = function() {
 	return LogModule;

@@ -18,15 +18,17 @@ var
 	logger = require('./browser_log').get_logger(dynamic.info.Name),
 	person_list;
 
-var log_config = {};
-log_config[dynamic_dom.info.Name] = logger.module.Levels.WARNING;
-log_config[dynamic_app.info.Name] = logger.module.Levels.WARNING;
-log_config["Dynamic values"] = logger.module.Levels.WARNING;
-log_config["Dynamic templates"] = logger.module.Levels.WARNING,
-log_config[dynamic.info.Name] = logger.module.Levels.WARNING;
-log_config["meta info"] = logger.module.Levels.DEBUG;
+// var log_config = {};
+// log_config[dynamic_dom.info.Name] = logger.module.Levels.DEBUG;
+// log_config[dynamic_app.info.Name] = logger.module.Levels.DEBUG;
+// log_config["Dynamic values"] = logger.module.Levels.DEBUG;
+// log_config["Dynamic templates"] = logger.module.Levels.DEBUG,
+// log_config[dynamic.info.Name] = logger.module.Levels.DEBUG;
+// log_config["meta info"] = logger.module.Levels.DEBUG;
 
-logger.module.configure(log_config);
+// logger.module.configure(log_config);
+
+logger.module.set_default_level( logger.module.Levels.OFF );
 
 dynamic_app.register_component('.dynamic-person')
 	.on_initialise(function(component_element) {
@@ -78,93 +80,88 @@ dynamic_app.register_component('.dynamic-person')
 module.exports = dynamic;
 
 person_list = {
-	harry: {
-		'last-name': "de Kroon",
-		id: 15,
-		description: 'person harry',
+	person_1: {
+		'last-name': "Last 1",
+		id: 1001,
+		description: 'person one',
 		address: {
-			city: 'Rozendaal',
-			number: 28,
-			street: 'Delhoevelaan'
+			city: 'City 1',
+			number: 1,
+			street: 'Street 1'
 		},
-		'first-name': "Harry",
+		'first-name': "First 1",
+		'not-used': 'this value is not used',
 		company: {
-			name: 'Ciber',
+			name: 'Company one',
 			address: {
-				number: 105,
-				street: 'Vredeoord',
-				city: 'Eindhoven'
+				number: 101,
+				street: 'Street 101',
+				city: 'City 101'
 			}
 		},
-		'birth-date': "15 sep 1967"
 	},
-	cindy: {
-		description: 'person cindy',
-		'last-name': "Brokking",
-		id: 1,
+	person_2: {
+		description: 'person two',
+		'last-name': "Last 2",
+		id: 1002,
 		address: {
-			city: 'Rozendaal',
-			number: 28,
-			street: 'Delhoevelaan'
+			postal: 'postal 2',
+			city: 'City 2',
+			number: 2,
 		},
-		'first-name': "Cindy",
+		fte: .5,
+		'first-name': "First 2",
 		company: {
-			name: 'Color BC',
+			name: 'Company twee',
 			address:{
-				street: 'Eusebiusbuitensingel',
-				number: '7-9',
-				city: 'Arnhem'
+				number: 202,
+				city: 'City 202',
+				street: 'Street-202'
 			}
 		},
-		'birth-date': "4 aug 1974"
 	},
-	bo: {
-		'last-name': "Zwiers",
-		id: 2002,
+	person_3: {
+		'last-name': "Last 3",
+		id: 1003,
 		address: {
 			number: 0,
-			city: 'Rozendaal'
+			city: 'City 3'
 		},
-		description: 'person bo',
-		'first-name': "Bo",
+		description: 'person three',
+		'first-name': "First 3",
 		company: {
-			name: 'Oranjerie',
+			name: 'Company Drei',
 		},
-		'birth-date': "26 mrt 2002"
 	},
-	bengt: {
-		'last-name': "Zwiers",
-		id: 2005,
-		'first-name': "Bengt",
-		'birth-date': "15 feb 2005"
+	person_4: {
+		'last-name': "Last 4",
+		id: 1004,
+		'first-name': "First 4",
 	},
-	fenna: {
-		'last-name': "de Kroon",
-		id: 2001,
+	person_5: {
+		'last-name': "Last 5",
+		id: 1005,
 		address: {
-			city: 'Gorredijk',
-			number: 40,
-			street: 'Weverij'
+			city: 'City 5',
+			street: '5th Street'
 		},
-		'first-name': "Fenna",
+		'first-name': "First 5",
 		company: {
-			name: 'Hema',
+			name: 'Company Cinq',
 			address: {
-				city: 'Gorredijk'
+				city: 'City 505'
 			}
 		},
-		'birth-date': "5 feb 2001"
 	},
-	mara: {
-		'last-name': "de Kroon",
-		id: 200204,
+	person_6: {
+		'last-name': "Last 6",
 		address: {
-			city: 'Gorredijk',
-			number: 40,
-			street: 'Weverij'
+			city: 'City 6',
+			number: 6,
+			street: '6nd Street'
 		},
-		'first-name': "Mara",
-		'birth-date': "23 apr 2002"
+		'first-name': "First 6",
+		id: 1006
 	}
 };
 

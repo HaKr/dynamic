@@ -321,7 +321,7 @@ function DynamicTemplateInstance() {}
 DynamicTemplateInstance.prototype.debug_info = function() {
 	var result = {};
 
-	result.id = this.sequence + '_' + (this.placeholder === null? 'BODY' : this.placeholder.definition.name + this.dynamic_value ? '_' + this.dynamic_value.name : '');
+	result.id = this.sequence + '_' + (this.placeholder === null? 'BODY' : this.placeholder.definition.name + (this.dynamic_value !== null ? '_' + this.dynamic_value.name : ''));
 	result.child_instances = this.child_instances.length;
 	var my_node = this.child_nodes[0]; 
 	var node_info = my_node.tagName + '.' + dynamic_utils.make_array(my_node.classList).join('.');
@@ -432,6 +432,12 @@ DynamicTemplateInstance.prototype.build = function() {
 		this.first = dynamic_dom.insert_text_before(this.anchor, '\n');
 
 		this.child_nodes.forEach(function(child_node) {
+			if (typeof this.dynamic_value === "object" && this.dynamic_value !== null){
+				dynamic_dom.add_class( child_node, this.dynamic_value.name.replace('.','-') );
+				if (this.dynamic_value.parent !== null && this.dynamic_value.reference == this.dynamic_value.parent.selected){
+					dynamic_dom.add_class( child_node, 'selected' );
+				}
+			}
 			this.anchor.parentNode.insertBefore(child_node, this.anchor);
 		}, this );
 

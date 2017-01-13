@@ -419,7 +419,7 @@ dynamic_value_class.can_swap = function( offset ){
 		result = false;
 
 	if (this.parent !== null){
-		result = (this.index_by_offset( ofsset ) >= 0 );
+		result = (this.index_by_offset( offset ) >= 0 );
 	}
 
 	return result;
@@ -432,7 +432,7 @@ dynamic_value_class.swap = function( offset ){
 		logger.warning( "Cannot swap a top-level value" );
 	} else {
 		var 
-			other_index = this.index_by_offset( ofsset )
+			other_index = this.index_by_offset( offset )
 		;
 
 		if (other_index < 0 ){

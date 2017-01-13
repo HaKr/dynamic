@@ -9,7 +9,7 @@
     "abc": "tape-run",
     "watch": "npm-watch",
     "taper": "tape-run",
-    "browserify": "browserify src/modules/*.js --outfile js/dynamic.js"
+    "browserify": "browserify src/modules/*.js --outfile js/dynamic-app.js"
   },
   "watch": {
     "browserify": "src/modules/*.js"
