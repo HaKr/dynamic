@@ -321,7 +321,7 @@ function DynamicTemplateInstance() {}
 DynamicTemplateInstance.prototype.debug_info = function() {
 	var result = {};
 
-	result.id = this.sequence + '_' + (this.placeholder === null? 'BODY' : this.placeholder.definition.name + '_' + this.dynamic_value.name );
+	result.id = this.sequence + '_' + (this.placeholder === null? 'BODY' : this.placeholder.definition.name + this.dynamic_value ? '_' + this.dynamic_value.name : '');
 	result.child_instances = this.child_instances.length;
 	var my_node = this.child_nodes[0]; 
 	var node_info = my_node.tagName + '.' + dynamic_utils.make_array(my_node.classList).join('.');

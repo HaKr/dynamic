@@ -398,29 +398,28 @@ dynamic_value_class.remove = function( instance ){
 
 };
 
+dynamic_value_class.index_by_offset=function( offset ){
+
+	var 
+		child_references = Object.keys( this.parent.children ),
+		my_index = child_references.indexOf( this.reference ),
+		result =
+			typeof offset === "string" 
+				? child_references.indexOf( offset )
+				: my_index + offset >=0 && my_index + offset < child_references.length
+					? my_index + offset
+					: -1 
+	;
+
+	return result;
+};
+
 dynamic_value_class.can_swap = function( offset ){
 	var
 		result = false;
 
-	if (this.parent === null){
-		result = false;
-	} else {
-		var 
-			child_references = Object.keys( this.parent.children ),
-			my_index = child_references.indexOf( this.reference ),
-			other_index =
-				typeof offset === "string" 
-					? child_references.indexOf( offset )
-					: my_index + offset >=0 && my_index + offset < child_references.length
-						? my_index + offset
-						: -1 
-		;
-
-		if (other_index < 0 ){
-			result = false;
-		} else {
-			result = true;
-		}
+	if (this.parent !== null){
+		result = (this.index_by_offset( ofsset ) >= 0 );
 	}
 
 	return result;
@@ -433,14 +432,7 @@ dynamic_value_class.swap = function( offset ){
 		logger.warning( "Cannot swap a top-level value" );
 	} else {
 		var 
-			child_references = Object.keys( this.parent.children ),
-			my_index = child_references.indexOf( this.reference ),
-			other_index =
-				typeof offset === "string" 
-					? child_references.indexOf( offset )
-					: my_index + offset >=0 && my_index + offset < child_references.length
-						? my_index + offset
-						: -1 
+			other_index = this.index_by_offset( ofsset )
 		;
 
 		if (other_index < 0 ){
@@ -462,10 +454,6 @@ dynamic_value_class.swap = function( offset ){
 			}, this );
 
 			this.parent.children = new_children;
-
-			// this.instances.forEach( function( an_instance ){
-			// 	logger.info( '"'+an_instance.placeholder.definition.name+'"' );
-			// }, this );
 
 			upper_value.instances.forEach( function swap_instances( upper_instance, ix ){
 				var other_instance = lower_value.instances.find( function( an_instance ){
