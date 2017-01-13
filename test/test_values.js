@@ -10,8 +10,8 @@ test('Basic Values API ', function (t) {
 
 	var log_config = {};
 
-	log_config[logger_name] = logger.module.Levels.INFO;
-	log_config[values_module.info.Name] = logger.module.Levels.DEBUG;
+	log_config[logger_name] = logger.module.Levels.WARNING;
+	log_config[values_module.info.Name] = logger.module.Levels.WARNING;
 
 	logger.module.configure(log_config);
 
@@ -52,7 +52,7 @@ test('Basic Values API ', function (t) {
 	modify_value.set_value( 42 );
 	t.equals( modify_value.get_value(), 42, "The answer to the Universe...");
 
-	var observer = modify_value.observe( function( dv ){
+	var observer = modify_value.observe( 'modify_value', function( dv ){
 		modify_count++;
 	});
 
@@ -77,33 +77,6 @@ test('Basic Values API ', function (t) {
 });
 
 
-function x1(){
-test('Dynamic values in action', function (t) {
-	var log_config = {};
-
-	test_persons = person_list;
-
-	log_config[logger_name] = logger.module.Levels.INFO;
-	log_config[values_module.info.Name] = logger.module.Levels.DEBUG;
-
-	logger.module.configure(log_config);
-
-
-	var
-		dv_persons = values_module.get_or_define( 'persons' )
-	;
-
-	dv_persons.set_value( test_persons );
-
-	logger.info("Dynamic value list:", dv_persons );
-
-	// t.equals( dv_person_one_first.get_value(), person_list.person_1['first-name'], "First name as expected." );
-
-	t.end();
-});
-}
-
-
 test('Dynamic values in action', function (t) {
 	var log_config = {};
 
@@ -111,8 +84,8 @@ test('Dynamic values in action', function (t) {
 
 	test_persons = person_list;
 
-	log_config[logger_name] = logger.module.Levels.INFO;
-	log_config[values_module.info.Name] = logger.module.Levels.DEBUG;
+	log_config[logger_name] = logger.module.Levels.WARNING;
+	log_config[values_module.info.Name] = logger.module.Levels.WARNING;
 
 	logger.module.configure(log_config);
 
@@ -138,7 +111,7 @@ test('Dynamic values in action', function (t) {
 	dv_persons_selected.set_value( 'person_3' );
 	t.equals( dv_person_current.get_value(), person_list[dv_person_three_reference.get_value()], "Third person unmodified." );
 
-	dv_person_current.observe( function( dv ){
+	dv_person_current.observe( 'person_current', function( dv ){
 		t.equals( dv.get_value(), person_list.person_5, 'Fifth person selected (1-3).' );
 	})
 

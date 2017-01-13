@@ -118,6 +118,7 @@ DynamicValue.prototype.create = function( name ) {
 	this.observers = [];
 	this.parent = null;
 	this.children = {};
+	this.child_counter_value = null;
 
 	Object.defineProperties( this, {
 		'bracket_notation': {
@@ -195,36 +196,6 @@ DynamicValue.prototype.set_up = function() {
 };
 
 
-DynamicValue.prototype.update_from_child = function( child_value ) {
-	var
-		had_keys, has_keys;
-
-	if (this.is_empty()) {
-		this.value = {};
-		this.oldvalue = {};
-	}
-
-	var self = this;
-
-	had_keys = Object.keys( this.value ).length > 0;
-
-	if (!child_value.is_empty()) {
-		this.value[child_value.reference] = child_value.value;
-
-	} else {
-		delete this.value[child_value.reference];
-	}
-	
-	has_keys = Object.keys( this.value ).length > 0;
-
-	if (had_keys !== has_keys){
-		// notify observers that we've changed from null or {} to some content
-		this.notify_observers();
-	}
-
-	return this;
-};
-
 DynamicValue.prototype.get_children = function() {
 	var result = [];
 
@@ -238,6 +209,8 @@ DynamicValue.prototype.add_child = function( child_value ) {
 
 	this.children[child_value.reference] = child_value;
 	this.update_from_child( child_value );
+
+
 
 	return this.value[child_value.reference];
 };
@@ -325,6 +298,47 @@ DynamicValue.prototype.is_deferred = function() {
 	return false;
 };
 
+DynamicValue.prototype.notify_structural_change = function() {
+	if (this.child_counter_value == null){
+		this.child_counter_value = values_module.get_or_define( this.name +'.$count');
+	}
+
+	this.child_counter_value.notify_observers();
+};
+
+DynamicValue.prototype.update_from_child = function( child_value ) {
+	var
+		had_keys, has_keys;
+
+	if (this.is_empty()) {
+		this.value = {};
+		this.oldvalue = {};
+	}
+
+	var self = this;
+
+	had_keys = Object.keys( this.value ).length;
+
+	if (!child_value.is_empty()) {
+		this.value[child_value.reference] 		= child_value.value;
+		this.children[ child_value.reference ]	= child_value;
+	} else {
+		delete this.value[ child_value.reference ];
+		delete this.children[ child_value.reference ];
+	}
+	
+	has_keys = Object.keys( this.value ).length;
+
+	if (had_keys !== has_keys){
+		if (!this.busy){
+		// notify observers that we've changed from null or {} to some content
+			// this.notify_observers();
+			this.notify_structural_change();
+		}
+	}
+
+	return this;
+};
 
 DynamicValue.prototype.update_attributes = function() {
 	var
@@ -342,14 +356,18 @@ DynamicValue.prototype.update_attributes = function() {
 	dynamic_utils.array_diff(Object.keys(this.children), value_keys).forEach(function(child_name) {
 		this.children[child_name].clear();
 	}, this);
+
+	this.notify_structural_change();
 };
+	// delete this.parent.value[ this.reference ];
 
 DynamicValue.prototype.do_set_value = function(newvalue) {
 	this.oldvalue = this.value;
 	this.value = newvalue;
+	this.busy = true;
 
 	var self = this;
-			logger.debug( 'set value for  ref '+this.reference, this );
+	logger.debug( 'set value for  ref '+this.reference, this );
 
 	if (this.parent !== null) {
 		this.parent.update_from_child( this );
@@ -364,7 +382,7 @@ DynamicValue.prototype.do_set_value = function(newvalue) {
 			}
 		}
 	}
-
+	delete this.busy;
 };
 
 DynamicValue.prototype.notify_observers = function(dynamic_value) {
@@ -470,6 +488,15 @@ DynamicByReferenceValue.prototype.is_deferred = function() {
 	return true;
 };
 
+function by_reference_updater( dynamic_value ) {
+	return function( index_value ){
+		if (!index_value.is_empty() || index_value == 0){
+			dynamic_value.delegate_value = values_module.get_or_define(dynamic_value.parent_ref + index_value.get_value() + dynamic_value.child_ref);
+			logger.debug('By ref index changed', index_value, dynamic_value );
+			dynamic_value.notify_observers(dynamic_value.delegate_value);
+		}
+	}
+}
 
 DynamicByReferenceValue.prototype.set_up = function() {
 	selected_reference_re.exec('dummy'); // reset de RE
@@ -486,14 +513,13 @@ DynamicByReferenceValue.prototype.set_up = function() {
 			right = this.name.substring(m.index + 1)
 		;
 
-		self.by_reference_observer = index_value.observe( 'index by ref',
-			function by_reference_update( dynamic_value ) {
-				if (!dynamic_value.is_empty() || dynamic_value == 0){
-					self.delegate_value = values_module.get_or_define(left + dynamic_value.get_value() + right);
-					logger.debug('By ref index changed', dynamic_value, self );
-					self.notify_observers(self.delegate_value);
-				}
-		}, self );
+		this.parent_ref = left;
+		this.child_ref  = right;
+
+		self.by_reference_observer = index_value.observe( 'index by ref', by_reference_updater( self ), self );
+		if (!index_value.is_empty()){
+			by_reference_updater( self ).call( null, index_value );
+		}
 	}
 };
 

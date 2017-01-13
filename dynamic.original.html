@@ -47,9 +47,10 @@
 					<button id=show-button>Show person in console</button>
 				
 			</div>	
+			
 
-			<label>Show info for:
-				<select id=person-select name=persons.$selected class="dynamic-template person-select" data-dynamic-template-for="persons">
+			<label class="dynamic-template person-select" data-dynamic-template-for="persons">Show info for:
+				<select id=person-select name=.$selected>
 					<option disabled>Choose a person</option>
 
 					<option value={{.$reference}} class="dynamic-template person-select-option" data-dynamic-template-for-each="persons">
@@ -60,104 +61,110 @@
 			</label>
 		</div>
 
-		<!-- company info; company address will be added later in this HTML -->
-		<div class="dynamic-template company" data-dynamic-template-for="persons.@.company">
-			<h2>{{.name}}</h2>
+		<div class="dynamic-template please-select">
+			<p>Please click on the Simulate button above...
 		</div>
 
-		<form id="build_input" method="post" action="/api/build-input" class="dynamic-template person-record-input" data-dynamic-template-for="persons.@">
-			<label>First name: 
-				<input name=".first-name">
-			</label>
-			<label>Last name: 
-			<input name=.last-name></label>
-		</form>
+		<div class="dynamic-template persons-retrieved" data-dynamic-template-for="persons" data-dynamic-template-options=on-empty=please-select>
 
-		<p>Hello {{persons.@.description}}.</p>
+			<!-- company info; company address will be added later in this HTML -->
+			<div class="dynamic-template company" data-dynamic-template-for="persons.@.company">
+				<h2>{{.name}}</h2>
+			</div>
 
-		<!--
-			Generic address template 
-				Only when the street is given, street and number are added
-				Note that when postal is missing, no blanks are left of city
-		-->
-		<address class="dynamic-template address">
-			<label class="dynamic-template address-street" data-dynamic-template-for=".street">
-					Adress:      {{..street}} {{..number}}.</label>
-			<label>	City:        {{.postal}}  {{.city}}.</label>
-		</address>
+			<form id="build_input" method="post" action="/api/build-input" class="dynamic-template person-record-input" data-dynamic-template-for="persons.@">
+				<label>First name: 
+					<input name=".first-name">
+				</label>
+				<label>Last name: 
+				<input name=.last-name></label>
+			</form>
 
-		<div class="dynamic-template person-record" data-dynamic-template-for="persons.@">
-			<label title="{{.first-name}} {{.last-name}}">Identification: {{.id}}.</label>
-			<label>First name:     {{.first-name}}.</label>
-			<label>Last name:      {{.last-name}}.</label>
-			<label>Birth date:     {{.birth-date}}.</label>
+			<p>Hello {{persons.@.description}}.</p>
 
-			<!-- value based templates -->
-			<label>Salary:     	   € {{ .per_annum= }} 
-				<span class='dynamic-template fte-fulltime-text-full' data-dynamic-template-for=.fte data-dynamic-template-options="range=[0.9,1]">(fulltime, </span>
-				<span class='dynamic-template fte-fulltime-text-part' data-dynamic-template-for=.fte data-dynamic-template-options="range=[0.25,0.9>">(parttime, </span>
-				<span class='dynamic-template fte-fulltime-text-other' data-dynamic-template-for=.fte data-dynamic-template-options="range=[0,0.25>">(</span>
-				<span class='dynamic-template fte-fulltime' data-dynamic-template-for=.fte>{{..fte-perc= ..fte * 100}}%)</span>
-			</label>
-			<address class="dynamic-template address" data-dynamic-template-for="persons.@.address"></address>
-		</div>
+			<!--
+				Generic address template 
+					Only when the street is given, street and number are added
+					Note that when postal is missing, no blanks are left of city
+			-->
+			<address class="dynamic-template address">
+				<label class="dynamic-template address-street" data-dynamic-template-for=".street">
+						Adress:      {{..street}} {{..number}}.</label>
+				<label>	City:        {{.postal}}  {{.city}}.</label>
+			</address>
 
-		<hr>
+			<div class="dynamic-template person-record" data-dynamic-template-for="persons.@">
+				<label title="{{.first-name}} {{.last-name}}">Identification: {{.id}}.</label>
+				<label>First name:     {{.first-name}}.</label>
+				<label>Last name:      {{.last-name}}.</label>
+				<label>Birth date:     {{.birth-date}}.</label>
 
-		<!-- addition to the company template above, only the children of this DIV are added -->
-		<div class="dynamic-template company" data-dynamic-template-options="only-content">
-			<address class="dynamic-template address" data-dynamic-template-for=".address"></address>
+				<!-- value based templates -->
+				<label>Salary:     	   € {{ .per_annum= }} 
+					<span class='dynamic-template fte-fulltime-text-full' data-dynamic-template-for=.fte data-dynamic-template-options="range=[0.9,1]">(fulltime, </span>
+					<span class='dynamic-template fte-fulltime-text-part' data-dynamic-template-for=.fte data-dynamic-template-options="range=[0.25,0.9>">(parttime, </span>
+					<span class='dynamic-template fte-fulltime-text-other' data-dynamic-template-for=.fte data-dynamic-template-options="range=[0,0.25>">(</span>
+					<span class='dynamic-template fte-fulltime' data-dynamic-template-for=.fte>{{..fte-perc= ..fte * 100}}%)</span>
+				</label>
+				<address class="dynamic-template address" data-dynamic-template-for="persons.@.address"></address>
+			</div>
+
 			<hr>
-		</div>
 
-		<table class="dynamic-template person-grid" data-dynamic-template-for="persons">
-			<thead>
-				<tr>
-					<th>ID
-					<th>Last
-					<th>First
-					<th>City
-					<th>Salary base
-					<th>FTE
-					<th>Monthly salary 
-					<th>Annual
-					<th>Notes
-					<th>
-				</tr>
-				<tr>
-					<td colspan=2>Totals
-					<td colspan=2>{{persons.$count}} rows
-					<td colspan=2>
-					<td>{{totals.salary= Sum(persons.*.salary) }}
-					<td>{{totals.per_annum= Sum(persons.*.per_annum) }}
-					<td colspan=2>
-				</tr>
-			<tfoot>
-				<tr>
-					<td colspan=2>Totals
-					<td colspan=2>{{persons.$count}} rows
-					<td colspan=2>
-					<td>{{totals.salary= Sum(persons.*.salary) }}
-					<td>{{totals.per_annum= Sum(persons.*.per_annum) }}
-					<td colspan=2>
-				</tr>
-			<tbody>
-				<tr class="dynamic-template person-grid-row" data-dynamic-template-for-each="persons">
-					<td class=person-id>{{.id}}
-					<td>{{.last-name}}
-					<td>{{.first-name}}
-					<td>{{.address.city}}
-					<td><input name=".salary_month" type=number min=0>
-					<td><select name=..fte class="dynamic-template fte-select" data-dynamic-template-for='.id'></select>
-					<td>{{.salary= .salary_month * .fte}}
-					<td>{{.per_annum= .salary * 12 * 1.08}}
-					<td><input name=.description>
-					<td>
-						<button class="remove dynamic-value"></button>
-						<button class="move-up dynamic-value"></button>
-						<button class="move-down dynamic-value"></button>
-				</tr>
-		</table>
-		
+			<!-- addition to the company template above, only the children of this DIV are added -->
+			<div class="dynamic-template company" data-dynamic-template-options="only-content">
+				<address class="dynamic-template address" data-dynamic-template-for=".address"></address>
+				<hr>
+			</div>
+
+			<table class="dynamic-template person-grid" data-dynamic-template-for="persons">
+				<thead>
+					<tr>
+						<th>ID
+						<th>Last
+						<th>First
+						<th>City
+						<th>Salary base
+						<th>FTE
+						<th>Monthly salary 
+						<th>Annual
+						<th>Notes
+						<th>
+					</tr>
+					<tr>
+						<td colspan=2>Totals
+						<td colspan=2>{{persons.$count}} rows
+						<td colspan=2>
+						<td>{{totals.salary= Sum(persons.*.salary) }}
+						<td>{{totals.per_annum= Sum(persons.*.per_annum) }}
+						<td colspan=2>
+					</tr>
+				<tfoot>
+					<tr>
+						<td colspan=2>Totals
+						<td colspan=2>{{persons.$count}} rows
+						<td colspan=2>
+						<td>{{totals.salary= Sum(persons.*.salary) }}
+						<td>{{totals.per_annum= Sum(persons.*.per_annum) }}
+						<td colspan=2>
+					</tr>
+				<tbody>
+					<tr class="dynamic-template person-grid-row" data-dynamic-template-for-each="persons">
+						<td class=person-id>{{.id}}
+						<td>{{.last-name}}
+						<td>{{.first-name}}
+						<td>{{.address.city}}
+						<td><input name=".salary_month" type=number min=0>
+						<td><select name=..fte class="dynamic-template fte-select" data-dynamic-template-for='.id'></select>
+						<td>{{.salary= .salary_month * .fte}}
+						<td>{{.per_annum= .salary * 12 * 1.08}}
+						<td><input name=.description>
+						<td>
+							<button class="remove dynamic-value"></button>
+							<button class="move-up dynamic-value"></button>
+							<button class="move-down dynamic-value"></button>
+					</tr>
+			</table>
+		</div>		
 	</body>
 </html>

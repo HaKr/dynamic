@@ -20,10 +20,11 @@ var
 
 var log_config = {};
 log_config[dynamic_dom.info.Name] = logger.module.Levels.WARNING;
-log_config[dynamic_app.info.Name] = logger.module.Levels.DEBUG;
-log_config["Dynamic values"] = logger.module.Levels.INFO;
-log_config["Dynamic templates"] = logger.module.Levels.DEBUG,
-log_config[dynamic.info.Name] = logger.module.Levels.DEBUG;
+log_config[dynamic_app.info.Name] = logger.module.Levels.WARNING;
+log_config["Dynamic values"] = logger.module.Levels.WARNING;
+log_config["Dynamic templates"] = logger.module.Levels.WARNING,
+log_config[dynamic.info.Name] = logger.module.Levels.WARNING;
+log_config["meta info"] = logger.module.Levels.DEBUG;
 
 logger.module.configure(log_config);
 
@@ -65,7 +66,7 @@ dynamic_app.register_component('.dynamic-person')
 
 		set_button.addEventListener('click', function() {
 			dv_persons.set_value(person_list);
-			set_button.remove();
+			// set_button.remove();
 		});
 
 		show_button.addEventListener('click', function() {

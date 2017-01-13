@@ -19,7 +19,9 @@ var templates_module = {
 	vars: {
 		Definitions: {},
 		Placeholders: [],
-		Instances: []
+		Instances: [],
+		placeholder_sequence: 1000,
+		instance_sequence: 20000000
 
 	},
 	types: {
@@ -41,6 +43,7 @@ var templates_module = {
 			this.on_empty = null;
 			this.dynamic_values = [];
 			this.empty_instance = null;
+
 			var self=this;
 			logger.debug( function() {
 				self.reference = self.definition.name;
@@ -48,6 +51,7 @@ var templates_module = {
 			})
 			this.set_up();
 
+			this.sequence = ++templates_module.vars.placeholder_sequence;
 			templates_module.vars.Placeholders.push(this);
 		},
 		DynamicTemplateInstance: function( placeholder, anchor, child_nodes ) {
@@ -59,6 +63,7 @@ var templates_module = {
 			this.observers = {};
 			this.placeholders = [];
 
+			this.sequence = ++templates_module.vars.instance_sequence;
 			templates_module.vars.Instances.push( this );
 		}
 	}
@@ -238,7 +243,6 @@ DynamicTemplatePlaceholder.prototype.clear = function() {
 	var self = this;
 
 	var todo = this.instances.reverse();
-	this.instances = [];
 
 	todo.forEach(function(instance) {
 		instance.remove();
@@ -301,14 +305,36 @@ DynamicTemplatePlaceholder.prototype.empty = function() {
 };
 
 DynamicTemplatePlaceholder.prototype.remove_instance = function( instance ) {
-	var instance_index = this.instances.indexOf(instance);
+	if (instance !== this.empty_instance){
+		var instance_index = this.instances.indexOf(instance);
 
-	if ( instance_index >= 0 ) {
-		this.instances.splice( instance_index, 1 );
+		if ( instance_index >= 0 ) {
+			this.instances.splice( instance_index, 1 );
+		} else {
+			logger.error( 'remove instance from placeholder failed', instance, this );
+		}
 	}
 };
 
 function DynamicTemplateInstance() {}
+
+DynamicTemplateInstance.prototype.debug_info = function() {
+	var result = {};
+
+	result.id = this.sequence + '_' + (this.placeholder === null? 'BODY' : this.placeholder.definition.name + '_' + this.dynamic_value.name );
+	result.child_instances = this.child_instances.length;
+	var my_node = this.child_nodes[0]; 
+	var node_info = my_node.tagName + '.' + dynamic_utils.make_array(my_node.classList).join('.');
+	result.node = node_info;
+	result.controls = this.controls? this.controls.length : 0;
+	result.observers = Object.keys( this.observers ).length;
+	result.placeholders = Array.isArray(this.placeholders) ? this.placeholders.length : 0;
+	result.instance = this;
+	this.debug = result.id;
+
+	return result;
+};
+
 
 DynamicTemplateInstance.prototype.enhance = function( methods ) {
 	Object.keys( methods ).forEach( function enhance_instance( method_name ){
@@ -342,6 +368,20 @@ DynamicTemplateInstance.prototype.create_placeholder = function( definition, anc
 
 DynamicTemplateInstance.prototype.add_child_instance = function( child_instance ) {
 	this.child_instances.push( child_instance );
+
+	return this;
+};
+
+DynamicTemplateInstance.prototype.remove_child_instance = function( child_instance ) {
+	var ix = this.child_instances.indexOf( child_instance );
+
+	if (ix<0){
+		logger.error( 'Could not remove child instance', child_instance, this );
+	} else {
+		this.child_instances.splice( ix,1 );	
+	}
+	
+	return this;
 };
 
 DynamicTemplateInstance.prototype.add_observer = function( observer ) {
@@ -402,10 +442,12 @@ DynamicTemplateInstance.prototype.build = function() {
 
 DynamicTemplateInstance.prototype.remove = function() {
 
-	this.child_instances.reverse().forEach( function remove_child( child_instance ){
+	var children = dynamic_utils.list_duplicate( this.child_instances.reverse() );
+
+	children.forEach( function remove_child( child_instance ){
 		child_instance.remove();
 	}, this );
-	this.child_instances = [];
+	// this.child_instances = [];
 
 	Object.keys( this.observers ).forEach( function unobserve( observer_ref ){
 		var observer = this.observers[ observer_ref ];
@@ -418,23 +460,34 @@ DynamicTemplateInstance.prototype.remove = function() {
 	});
 	this.placeholders = [];
 
+	if (this.dynamic_value !== null){
+		this.dynamic_value.remove_instance( this );
+	}
+
 	if (this.placeholder !== null){
+
+		this.placeholder.remove_instance(this);
+		templates_module.vars.Instances.splice( templates_module.vars.Instances.indexOf( this ), 1 );
+
 		dynamic_dom.remove_node(this.last);
 
 		this.child_nodes.reverse().forEach(function(child_node) {
 			dynamic_dom.remove_node(child_node);
 		});
 		dynamic_dom.remove_node(this.first);
-
-		this.placeholder.remove_instance(this);
-		templates_module.vars.Instances.splice( templates_module.vars.Instances.indexOf( this ), 1 );
-
 	}
+
+	if (this.parent_instance !== null){
+		this.parent_instance.remove_child_instance( this );
+	}
+
 };
 
 DynamicTemplateInstance.prototype.get_nodes = function() {
 	return this.child_nodes;
 };
+
+
 
 templates_module.types.DynamicTemplateDefinition.prototype = new DynamicTemplateDefinition();
 templates_module.types.DynamicTemplateDefinition.constructor = templates_module.types.DynamicTemplateDefinition;

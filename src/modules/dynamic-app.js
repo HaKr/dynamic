@@ -26,7 +26,10 @@ var
 	dynamic_utils = require('./dynamic-utils'),
 	value_module = require('./dynamic-values.js'),
 	template_module = require('./dynamic-templates.js'),
-	logger = require('./browser_log').get_logger(dynamic_app.info.Name)
+	observer_module = require('./dynamic-observers.js'),
+	formula_module = require('./dynamic-formulas.js'),
+	logger = require('./browser_log').get_logger(dynamic_app.info.Name),
+	metalogger = require('./browser_log').get_logger('meta info')
 ;
 
 var
@@ -72,17 +75,64 @@ dynamic_app.run = function() {
 		component.initialise();
 	});
 
-	logger.debug( function(){
+	metalogger.debug( function(){
+		var
+			old_instances_info = {}
+		;
 		dynamic_app.debug_templates 		= value_module.get_or_define( 'debug.template_count' );
 		dynamic_app.debug_placeholders 	= value_module.get_or_define( 'debug.placeholder_count' );
 		dynamic_app.debug_instances 		= value_module.get_or_define( 'debug.instance_count' );
 		dynamic_app.debug_observers 		= value_module.get_or_define( 'debug.observer_count' );
 
-		dynamic_app.update_info = function(){
+		dynamic_app.update_meta_info = function(){
+			var
+				instances_info = {},
+				instance_count = 0,
+				tree_count = 1,
+				observer_count = 0,
+				placeholder_count = 0
+			;
+
 			dynamic_app.debug_templates.set_value( Object.keys( template_module.vars.Definitions ).length );
 			dynamic_app.debug_placeholders.set_value( Object.keys( template_module.vars.Placeholders ).length );
 			dynamic_app.debug_instances.set_value( Object.keys( template_module.vars.Instances ).length );
 			dynamic_app.debug_observers.set_value( Object.keys( value_module.vars.observers ).length );
+
+			Object.keys( template_module.vars.Instances ).forEach( function (ik){
+				var 
+					instance = template_module.vars.Instances[ik],
+					instance_info = instance.debug_info();
+					instances_info[ instance_info.id ] = instance_info;
+					delete instance_info.id
+
+					instance_count++;
+					tree_count 			+= instance_info.child_instances;
+					observer_count 	+= instance_info.observers;
+					placeholder_count	+= instance_info.placeholders;
+
+			});
+
+
+			if (Object.keys(old_instances_info).length>0 ){
+
+				metalogger.debug( '----- instances -----');
+				var diff = dynamic_utils.object_difference( old_instances_info, instances_info );
+				var removed_count = 0, added_count = 0;
+				for (var removed_name in diff.removed){
+					var removed = diff.removed[ removed_name ];
+					metalogger.debug( '- '+removed_name, removed );
+					removed_count++;
+				}
+				for (var added_name in diff.added){
+					var added = diff.added[ added_name ];
+					metalogger.debug( '+ '+added_name, added );
+					added_count++;
+				}
+				metalogger.debug( '===== removed: ' + removed_count + ', added: '+added_count+', total: '+instance_count+ '; placeholders: '+placeholder_count + '; observers: '+ observer_count+' =====');
+			}
+
+			old_instances_info = instances_info;
+
 		};
 
 	});
@@ -97,6 +147,31 @@ dynamic_app.run = function() {
 	dynamic_app.vars.components.forEach( function notify_component_start( component ) {
 		component.started();
 	});
+};
+
+dynamic_app.show_instance_info = function(){
+	var
+		instance_count = 0,
+		tree_count = 1,
+		observer_count = 0,
+		placeholder_count = 0
+	;
+
+	Object.keys( template_module.vars.Instances ).reverse().forEach( function (ik){
+		var 
+			instance = template_module.vars.Instances[ik],
+			info     = instance.debug_info()
+		;
+		instance_count++;
+		tree_count += info.child_instances;
+		observer_count += info.observers;
+		placeholder_count += info.placeholders;
+		
+		console.log( 'Instance', info );
+	});
+
+	console.log( instance_count + ' instances, cross-reference count: '+ tree_count + '; placeholders: '+placeholder_count + '; observers: '+ observer_count );
+
 };
 
 module.exports = dynamic_app;
@@ -224,12 +299,12 @@ dynamic_placeholder.multiple_instance = function(dynamic_value) {
 };
 
 dynamic_placeholder.multi_attribute_selector = {
-	multiple: dynamic_placeholder.multiple_instance,
-	yes: dynamic_placeholder.multiple_instance,
-	'true': dynamic_placeholder.multiple_instance,
-	no: dynamic_placeholder.single_instance,
-	'false': dynamic_placeholder.single_instance,
-	single: dynamic_placeholder.single_instance
+	multiple: 	{multiple: true, on_value_changed: dynamic_placeholder.multiple_instance},
+	yes: 			{multiple: true, on_value_changed: dynamic_placeholder.multiple_instance},
+	'true': 		{multiple: true, on_value_changed: dynamic_placeholder.multiple_instance},
+	no: 			{multiple: false, on_value_changed: dynamic_placeholder.single_instance},
+	'false': 	{multiple: false, on_value_changed: dynamic_placeholder.single_instance},
+	single: 		{multiple: false, on_value_changed: dynamic_placeholder.single_instance}
 };
 
 dynamic_placeholder.select_instancing = function(multiple) {
@@ -242,7 +317,7 @@ dynamic_placeholder.select_instancing = function(multiple) {
 		result = dynamic_placeholder.multi_attribute_selector.single;
 	}
 
-	if (typeof result !== "function") {
+	if (typeof result !== "object") {
 		logger.warning('Instancing selector "' + multiple + ' unknown');
 	}
 
@@ -255,6 +330,16 @@ dynamic_placeholder.select_instancing = function(multiple) {
 var
 	dynamic_value_class = {}
 ;
+
+dynamic_value_class.get_dynamic_value = function get_dynamic_value_for_value( value_name ) {
+	var result = null;
+
+	if (typeof this.parent_instance !== "undefined" && this.parent_instance !== null){
+		result = this.parent_instance.get_dynamic_value( value_name );
+	}
+
+	return result;
+};
 
 dynamic_value_class.get_elements = function( selector ) {
 	var result = [];
@@ -275,34 +360,41 @@ dynamic_value_class.add_instance = function( instance ){
 		exists_ix = this.instances.findIndex( function(existing_instance){ return existing_instance.placeholder.definition.name == instance.placeholder.definition.name }, this );
 	if ( exists_ix >= 0 ){
 		this.instances[ exists_ix ] = instance;
-		logger.warning( 'Instance '+instance.placeholder.definition.name+' already referenced on value '+instance.dynamic_value.name );
+		logger.warning( 'Instance '+instance.placeholder.definition.name+' already referenced on value '+this.name );
 	} else {
 		this.instances.push( instance );
 	}
 	
 };
 
+dynamic_value_class.remove_instance = function( instance ){
+	var 
+		exists_ix = this.instances.indexOf( instance );
+	if ( exists_ix < 0 ){
+		logger.error( 'Instance '+sequence+' already referenced on value '+this.name );
+	} else {
+		this.instances.splice( exists_ix, 1 );
+	}
+};
+
+
 dynamic_value_class.remove = function( instance ){
+
 	this.children.forEach( function remove_child( child_value ){
 		child_value.remove();
 	}, this );
-	this.children = [];
+	this.children = {};
 
 	if ( typeof this.instances !=="undefined" ){
-		this.instances.forEach( function remove_instance( instance ){
+		var instances = dynamic_utils.list_duplicate( this.instances );
+
+		instances.reverse().forEach( function remove_instance( instance ){
 			instance.remove();
 		}, this);
 	}
 
 	this.set_value( null );
 	this.instances = [];
-	delete this.parent.value[ this.reference ];
-	delete this.parent.children[ this.reference ];
-
-	counter = dynamic_app.dynamic_value(this.parent.name+'.$count');
-	if (counter !== null) {
-		counter.notify_observers( counter );
-	}
 
 };
 
@@ -402,10 +494,6 @@ dynamic_instance_class.get_values_and_templates = function() {
 		this.get_templates(node);
 		this.get_values(node);
 	}, this);
-
-	logger.debug( function() {
-			dynamic_app.update_info();
-	});
 };
 
 dynamic_instance_class.get_elements = function( selector ) {
@@ -434,20 +522,6 @@ dynamic_instance_class.add_attribute_observer = function( attribute_observer ){
 	this.attribute_observers.push( attribute_observer );
 };
 
-dynamic_instance_class.add_placeholder = function( placeholder ){
-	if (typeof this.placeholders === "undefined"){
-		this.placeholders = [];
-	}
-
-	this.placeholders.push( placeholder );
-};
-
-var
-	binding_re = /{{([^}]+)}}/g,
-	bind_pattern = '{{([^}]+?)}}',
-	binding_finder = new RegExp(bind_pattern),
-	binding_replacer = new RegExp(bind_pattern, 'g');
-
 
 dynamic_instance_class.bind_textnodes = function(element) {
 	// first approach was to cut all text nodes into pieces
@@ -459,10 +533,9 @@ dynamic_instance_class.bind_textnodes = function(element) {
 	dynamic_dom.get_nodes(element, {
 		node_type: Node.TEXT_NODE
 	}, function(text_node) {
-		var node_text = text_node.textContent;
-		var parent_node = text_node.parentNode;
-		if (binding_finder.test(node_text)) {
-			self.add_text_observer( new TextObserver(text_node, self) );
+		
+		if ( observer_module.contains_binding( text_node.textContent ) ) {
+			self.add_text_observer( observer_module.create_text_observer( text_node, self ) );
 		}
 	});
 };
@@ -484,8 +557,8 @@ dynamic_instance_class.bind_attributes = function(element) {
 				var
 					attribute = element_attributes[eai],
 					attribute_value = attribute.value;
-				if (binding_finder.test(attribute_value)) {
-					self.add_attribute_observer( new AttributeObserver(child_element, attribute.name, this) );
+				if ( observer_module.contains_binding( attribute_value ) ) {
+					self.add_attribute_observer( observer_module.create_attribute_observer( child_element, attribute.name, this ) );
 				}
 			}
 		}
@@ -515,14 +588,14 @@ dynamic_instance_class.get_templates = function(node) {
 			anchor_first 			= dynamic_dom.insert_text_before( comment_node, "\n" ),
 			anchor 					= dynamic_dom.insert_text_before( comment_node, "\n" ),
 			template_definition 	= this.get_template_by_name( attributes.name ),
-			template_placeholder = this.create_placeholder( template_definition, anchor, match[0] )
+			template_placeholder = this.create_placeholder( template_definition, anchor, match[0] ),
+			instancing_schema		= dynamic_placeholder.select_instancing(attributes.multiple)
 		;
 
-		self.add_placeholder( template_placeholder );
-
-		template_placeholder.value_changed 	= dynamic_placeholder.select_instancing(attributes.multiple);
-		template_placeholder.first 			= anchor_first;
-		template_placeholder.range				= new ValueRange( attributes.range );
+		template_placeholder.on_value_changed 	= instancing_schema.on_value_changed;
+		template_placeholder.is_multiple			= instancing_schema.multiple;
+		template_placeholder.first 				= anchor_first;
+		template_placeholder.range					= new ValueRange( attributes.range );
 
 		template_placeholder.on_instance = function on_instance_created( template_instance ) {
 			if (template_instance.dynamic_value !== null){
@@ -534,20 +607,34 @@ dynamic_instance_class.get_templates = function(node) {
 
 		var dynamic_value = attributes.dynamic_value.length>0 ? this.get_dynamic_value( attributes.dynamic_value ) : this.dynamic_value;
 		this.add_observer(
-			dynamic_value.observe( 'placeholder', function change_placeholder(trigger_value) {
+			dynamic_value.observe( 'placeholder_'+template_placeholder.definition.name, function change_placeholder(trigger_value) {
 				// if (template_placeholder.dynamic_value !== trigger_value ||  template_placeholder.dynamic_value.get_value() !== trigger_value.get_value() ){
 					logger.debug( dynamic_value.name+'['+trigger_value.name+']'+'('+(typeof template_placeholder.dynamic_value === "undefined"?'NIL':template_placeholder.dynamic_value.name)+') ==> instance(s) of ' + template_placeholder.definition.name );
 					template_placeholder.dynamic_value = trigger_value;
-					template_placeholder.value_changed(trigger_value);
+					template_placeholder.on_value_changed(trigger_value);
 				// }
 			}, template_placeholder )
 		);
 
-		if (!dynamic_value.is_empty() ){
+		if (!template_placeholder.is_multiple && !dynamic_value.is_empty() ){
 			logger.debug( 'Instance(s) of ' + template_placeholder.definition.name + ' for ' + dynamic_value.name+'['+dynamic_value.get_final().name+']' );
 			template_placeholder.dynamic_value = dynamic_value;
-			template_placeholder.value_changed( dynamic_value );
+			template_placeholder.on_value_changed( dynamic_value );
+		} 
+		var delegated_value = dynamic_value.get_final();
+		if (delegated_value !== dynamic_value){
+			this.add_observer(
+				delegated_value.observe( 'placeholder_delegated'+template_placeholder.definition.name, function change_placeholder(trigger_value) {
+					// if (template_placeholder.dynamic_value !== trigger_value ||  template_placeholder.dynamic_value.get_value() !== trigger_value.get_value() ){
+						logger.debug( trigger_value.name+'('+(typeof template_placeholder.dynamic_value === "undefined"?'NIL':template_placeholder.dynamic_value.name)+') ==> instance(s) of ' + template_placeholder.definition.name );
+						template_placeholder.dynamic_value = trigger_value;
+						template_placeholder.on_value_changed(trigger_value);
+					// }
+				}, template_placeholder )
+			);
+
 		}
+	
 
 		comment_node.remove();
 
@@ -606,7 +693,9 @@ dynamic_instance_class.get_values = function(node) {
 			if (typeof tag_element.dataset !== "object"){
 				tag_element.dataset = {};
 			}
-			if (!tag_element.dataset.hasOwnProperty('dynamicValue')){
+			if (tag_element.dataset.hasOwnProperty('dynamicValue')){
+				logger.warning( 'element already has a value', tag_element.dataset.dynamicValue, tag_element);
+			} else {
 				this.define_control(tag_element);
 			}
 		}, this );
@@ -649,7 +738,7 @@ dynamic_instance_class.define_control = function(tag_element) {
 		this.controls.push(new AppControl(tag_element, this));
 };
 
-dynamic_instance_class.get_dynamic_value = function(value_name) {
+dynamic_instance_class.get_dynamic_value = function get_dynamic_value_for_instance( value_name ) {
 	var 
 		result = null,
 		formula = ""
@@ -676,7 +765,11 @@ dynamic_instance_class.get_dynamic_value = function(value_name) {
 
 	if (formula.length > 0){
 
-		FormulaValue( result, formula, this );
+		var formula_value =  formula_module.enhance_as_formula( result, formula );
+		formula_value.parent_instance = this;
+		formula_value.parse_formula();
+
+		result = formula_value;
 	}
 
 
@@ -773,143 +866,6 @@ AttributeParser.prototype.parse = function(element) {
 	return this;
 };
 
-function LiteralPart(text) {
-	this.text = text;
-}
-
-LiteralPart.prototype.get_text = function() {
-	return this.text;
-};
-
-function DynamicPart(value, binding_observer) {
-	this.dynamic_value = value;
-	this.delegate_value = null;
-	this.binding_observer = binding_observer;
-	this.text = value.get_final().get_text();
-
-	var self = this;
-
-	this.value_observer = this.dynamic_value.observe( 'binding', function update_binding(the_value) {
-		self.text = the_value.get_text();
-		self.binding_observer.set_text_content();
-
-		if (the_value !== self.dynamic_value && self.delegate_value !== the_value) {
-			logger.debug('Dynamic part updated by reference', self);
-			self.delegate_value = the_value;
-			if (typeof self.delegate_observer !== "undefined" && self.delegate_observer !== null ) {
-				logger.debug('Dynamic part removing reference observer', self.delegate_observer);
-				self.delegate_observer.remove();
-			}
-			self.delegate_observer = self.delegate_value.observe( 'delegated binding', function update_binding_by_delegate(dv) {
-				logger.debug('Dynamic part updating binding by reference', self, dv);
-				self.text = dv.get_text();
-				self.binding_observer.set_text_content();
-			}, self );
-
-			if (typeof self.binding_observer.instance !== "undefined") {
-				self.binding_observer.instance.add_observer(self.delegate_observer);
-			} else {
-				logger.error( 'binding observer instance undefined', self );
-			}
-		}
-	}, this);
-
-	if (typeof this.binding_observer.instance !== "undefined") {
-		this.binding_observer.instance.add_observer(this.value_observer);
-	}
-}
-
-DynamicPart.prototype.get_text = LiteralPart.prototype.get_text;
-
-function BindingObserver() {}
-
-BindingObserver.prototype.register = function(template_instance) {
-	this.instance = template_instance;
-	this.parts = [];
-	dynamic_app.vars.binding_observers.push(this);
-	this.add_parts();
-};
-
-BindingObserver.prototype.add_literal = function(text) {
-	this.parts.push(new LiteralPart(text));
-};
-
-BindingObserver.prototype.add_dynamic = function(dynamic_value) {
-	this.parts.push(new DynamicPart( dynamic_value, this ));
-};
-
-BindingObserver.prototype.add_parts = function() {
-	var test_value = this.original;
-	while (binding_finder.test(test_value)) {
-		var match = test_value.match(binding_finder);
-		var whole_part = match[0];
-		var value_name = match[1];
-		var part_start = test_value.indexOf(whole_part);
-		if (part_start > 0) {
-			var left_part = test_value.substring(0, part_start);
-			this.add_literal(left_part);
-		}
-		var dynamic_value = this.instance.get_dynamic_value( value_name );
-		this.instance.add_value(dynamic_value);
-		this.add_dynamic(dynamic_value);
-
-		var right_part = test_value.substring(part_start + whole_part.length);
-		test_value = right_part;
-	}
-
-	if (test_value.length > 0) {
-		this.add_literal(test_value);
-	}
-
-	this.set_text_content();
-};
-
-function TextObserver(text_node, template_instance) {
-	this.text_node = text_node;
-	this.original = text_node.textContent;
-
-	this.register(template_instance);
-}
-
-TextObserver.prototype = new BindingObserver();
-TextObserver.constructor = TextObserver;
-
-TextObserver.prototype.set_text_content = function() {
-	var result = '';
-	this.parts.forEach(function(part) {
-		result += part.get_text();
-	});
-	this.text_node.textContent = result.trim();
-};
-
-function AttributeObserver(element, attribute_name, template_instance) {
-	this.element = element;
-	this.attribute_name = attribute_name;
-	this.original = this.element.getAttribute(attribute_name);
-	this.element.removeAttribute(attribute_name);
-
-	this.register(template_instance);
-}
-
-AttributeObserver.prototype = new BindingObserver();
-AttributeObserver.constructor = AttributeObserver;
-
-AttributeObserver.prototype.set_text_content = function() {
-	var
-		result = '',
-		complete = true;
-	this.parts.forEach(function(part) {
-		var part_text = part.get_text();
-		if (part_text.length > 0) {
-			result += part.get_text();
-		} else {
-			complete = false;
-		}
-	});
-	if (complete) {
-		this.element.setAttribute( this.attribute_name, result.trim() );
-	}
-};
 
 function AppControl( element, template_instance ) {
 	this.element 	= element;
@@ -939,6 +895,9 @@ AppControl.prototype.update_value = function() {
 	}
 	logger.debug('>>>>> update value "'+this.dynamic_value.name+'" from control "'+control_value+'"', this);
 	this.dynamic_value.set_value(control_value);
+	metalogger.debug( function() {
+		dynamic_app.update_meta_info();
+	});
 	logger.debug('<<<<< update value "'+this.dynamic_value.name+'" from control "'+control_value+'"', this);
 };
 
@@ -971,232 +930,6 @@ AppControl.prototype.set_up = function() {
 };
 
 
-// Formulas
-function FormulaValue( dv, formula, instance ) {
-
-	if (typeof dv.formula === "undefined"){
-		dv.formula = formula;
-
-		Object.keys( FormulaValue.prototype ).forEach( function set_method( method_name ){
-			dv[ method_name ] = FormulaValue.prototype[ method_name ];
-		});
-
-		dv.instance = instance;
-		dv.parse_formula(); 
-	} else {
-		if (dv.formula !== formula){
-			logger.warning( dv.name + ' already has formula "'+dv.formula+'"; ignoring "'+formula+'"' );
-		}
-	}
-
-	return dv;
-}
-
-FormulaValue.prototype.calculate_simple_operation = function( operation ){
-	var operands = [];
-
-	for ( oi=0 ; oi<operation.operands ; oi++ ){
-		operands.push( this.operands.pop() );
-	}
-
-	this.push_literal( operation.operation.apply( this, operands.reverse() ) );
-
-};
-
-FormulaValue.prototype.calculate = function() {
-	var 
-		result="",
-		operators = dynamic_utils.array_duplicate( this.operators ),
-		operands = dynamic_utils.array_duplicate( this.operands )
-	;
-
-	logger.debug( 'calculate '+this.formula+' for '+this.name+' = '+result );
-
-	while ( this.operands.length > 1 ){
-		var 
-			operator = operators.pop()
-		;
-
-		this.calculate_simple_operation( operator );
-	}
-
-	var
-		operand = this.operands.pop(),
-		result = operand.get_value();
-	;
-	
-	this.operands = operands;
-
-	this.set_value( result );
-
-};
-
-function get_numerical_value( operand ){
-	var result = 0;
-
-	if (operand.include()){
-		result = new Number( operand.get_value() );
-	}
-
-	return result;
-}
-
-function set_numerical_value( param ){
-	var result;
-
-	if (isNaN( param ) || !isFinite( param ) ){
-		result = '';
-	} else {
-		result = new Number( param )
-	};
-
-	return result;
-}
-
-var
-	naive_re = /\s*(([+\-*\/])\s*((?:[@$.]|\w)+))/g,
-	first_re = /^(.*?)(?:(\s+[+\-*\/])|$)/,
-	operations = {
-		'+': {operands: 2, operation: function f_add(op1,op2){ return set_numerical_value( get_numerical_value( op1 ) + get_numerical_value( op2 ) ); }  },
-		'-': {operands: 2, operation: function f_sub(op1,op2){ return set_numerical_value( get_numerical_value( op1 ) - get_numerical_value( op2 ) ); }  },
-		'/': {operands: 2, operation: function f_div(op1,op2){ return set_numerical_value( get_numerical_value( op1 ) / get_numerical_value( op2 ) ); }  },
-		'*': {operands: 2, operation: function f_mul(op1,op2){ return set_numerical_value( get_numerical_value( op1 ) * get_numerical_value( op2 ) ); }  }
-	}
-;
-
-FormulaValue.prototype.push_operator = function( operator ) {
-	var worker = operations[ operator ];
-	this.operators.push( worker );
-};
-
-FormulaValue.prototype.push_literal = function( operand ) {
-	this.operands.push( {include: function(){ return true; }, get_value: function(){ return operand; } } );
-};
-
-FormulaValue.prototype.push_operand = function( operand ) {
-	if (/^^\d+(\.\d+)?$/.test( operand )){
-		this.push_literal( operand );
-	} else {
-		var dv = this.instance.get_dynamic_value( operand );
-		this.operands.push( {include: function(){ return !dv.is_empty(); }, get_value: function(){return dv.get_value(); } } );
-		var self = this;
-
-		dv.observe( this.formula, function operand_value_changed( v ){
-			self.calculate();
-		}, this )
-	}
-};
-
-function FunctionSum( formula_value, params ){
-	this.formula_value = formula_value;
-	this.reference = params[0];
-	this.value_decimals = params.length > 1? params[1] : -1;
-	this.value_refs = [];
-	this.operand_count = 0;
-
-	var star_pos = this.reference.indexOf( '*' );
-
-	if (star_pos>0){
-		var
-			parent_ref = this.reference.substring( 0, star_pos-1 ), /* -1 to get rid of the dot */
-			childs_ref = this.reference.substring( star_pos+1 )
-		;
-
-		this.parent_value = dynamic_app.dynamic_value( parent_ref );
-
-		if (this.parent_value === null){
-			logger.error( 'unknown reference "'+parent_ref+'"');
-		} else {
-			var child_values = this.parent_value.get_children();
-			child_values.forEach( function( child_value ){
-				var operand = child_value.name + childs_ref;
-				this.formula_value.push_operand( operand );
-			}, this );
-			this.operand_count = child_values.length;
-		}
-	}
-}
-
-FunctionSum.prototype.calculate = function calculate_sum(){
-	var result = 0;
-
-	Array.prototype.slice.call( arguments[0] ).forEach( function add_to_sum( operand ){
-		var intermediate = get_numerical_value( operand );
-		result += ( typeof intermediate === "string" ? 0 : intermediate );
-	} );
-
-	return set_numerical_value( result );
-};
-
-var
-	known_functions = {
-		sum: {
-			params_re: /^([^\ ,]+)\s*(?:,\s*(\d+))?\s*(?:,\s*(\d+))?$/,
-			params_explain: 'value_reference [, decimals]',
-			class: FunctionSum
-		}
-	}
-;
-
-FormulaValue.prototype.parse_function = function( func ) {
-	var 
-		h1=func.indexOf('('),
-		h2=func.indexOf(')'),
-		func_name = func.substring( 0, h1 ).trim().toLowerCase(),
-		func_params = func.substring( h1+1, h2 ).trim()
-	;
-
-	if (!known_functions.hasOwnProperty( func_name )){
-		logger.error( 'Unknown function "'+func_name+'" in '+this.formula );
-	} else {
-		var 
-			func_parser = known_functions[ func_name ], 
-			func_params_match = func_params.match( func_parser.params_re )
-		;
-		if (!func_params_match){
-			logger.error( 'invalid parameters "'+ func_params + '"; ' + func_name + ': ' + func_parser.params_explain  );
-		} else {
-			function_instance = new func_parser.class( this, func_params_match.slice(1) );
-			this.operators.push(
-				{operands: function_instance.operand_count, operation: function f_fn(){ return function_instance.calculate( arguments ); } }
-			);
-		}
-	}
-
-};
-
-FormulaValue.prototype.parse_formula = function() {
-	this.operands = [];
-	this.operators = [];
-
-	var 
-		to_parse = this.formula,
-		match = to_parse.match( first_re ),
-		operand = match[1],
-		operator 
-		;
-
-	if ( operand.indexOf( '(' )>0){
-		this.parse_function( operand );
-	} else {
-		this.push_operand( operand );	
-	}
-
-	to_parse = to_parse.substring( operand.length );
-
-	match = naive_re.exec( to_parse );
-
-
-	while (match){
-		operator = match[2];
-		operand = match[3];
-		this.push_operator( operator );
-		this.push_operand( operand );
-		match = naive_re.exec( to_parse );
-	}
-
-	this.calculate();
-};
 
 range_testers = {
 	'<': function bound_lt( val, bound ){ return bound < val; },
@@ -1243,16 +976,6 @@ ValueRange.prototype.includes =function( dynamic_value ){
 	return result;
 };
 
-// logger.debug( function() {
-dynamic_app.find_observer = function(text) {
-	var obs = dynamic_app.vars.binding_observers.find(function(binding_observer) {
-		return binding_observer.original === '{{' + text + '}}';
-	});
-
-	logger.debug('Observer', obs);
-};
-// });
-
 dynamic_app.types.AppComponent.prototype.on_initialise = function(callback) {
 	this.on_initialise = callback;
 
@@ -1282,3 +1005,4 @@ dynamic_app.types.AppComponent.prototype.started = function(callback) {
 		this.on_started( this.element );
 	}
 };
+
