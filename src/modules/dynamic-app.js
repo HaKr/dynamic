@@ -40,6 +40,8 @@ var
 		'on-empty': {},
 		alternative: {},
 		'only-content': {},
+		'with-content': {},
+		'sort': {},
 		incomplete: {},
 		range: {}
 	},
@@ -66,9 +68,39 @@ dynamic_app.register_component = function(css_selector) {
 	return result;
 };
 
+var label_find_re = /([^:]*):\s*(.*)/;
+
+dynamic_app.transform_labels = function(){
+	var replace_count = 0;
+
+	dynamic_dom.get_elements( 'label').forEach(function(label_element) {
+		dynamic_dom.get_nodes(label_element, {
+			node_type: Node.TEXT_NODE
+		}, function(text_node) {
+			if (label_find_re.test(text_node.textContent)) {
+				var
+					match = text_node.textContent.match(label_find_re),
+					reallabel = match[1],
+					remainder = match[2];
+
+				var span = document.createElement('span');
+				span.className = 'reallabel';
+				span.textContent = reallabel;
+				text_node.parentNode.insertBefore(span, text_node);
+				text_node.textContent = remainder;
+				replace_count++;
+			}
+		});
+	});
+
+	logger.debug('Replaced ' + replace_count + ' text labels.');
+};
+
 dynamic_app.run = function() {
 
 	logger.info( dynamic_app.info );
+
+	dynamic_app.transform_labels();
 
 	dynamic_app.vars.components.forEach( function register_components(component) {
 		component.locate();
@@ -195,32 +227,46 @@ dynamic_app.define_templates = function(template_element) {
 		parser 			= null,
 		existing 		= null,
 		only_content 	= false,
+		with_content   = '',
+		template_name  = '',
 		range				= '<>',
 		is_body 			= typeof template_element === "undefined";
 
 	if (!is_body) {
 
-		parser = new AttributeParser( template_tag );
+		parser 			= new AttributeParser( template_tag );
 		parser.parse( template_element );
-		only_content = parser.options.hasOwnProperty( 'only_content' ) ? parser.options.only_content : false;
+
+		template_name  = parser.name;
+		only_content 	= parser.options.hasOwnProperty( 'only_content' ) ? parser.options.only_content : false;
+		with_content	= parser.options.hasOwnProperty('with_content') ? parser.options.with_content : '',
 		delete parser.options.only_content;
 
-		if (typeof parser.name === "string" && parser.name.length > 0) {
-			existing = template_module.get_template_by_name( parser.name );
+		if (typeof template_name === "string" && template_name.length > 0) {
+			existing = template_module.get_template_by_name( template_name );
 
 			if (existing !== null) {
-				result = existing;
-				result.merge_options( parser.options );
+				if (with_content.length>0){
+					template_name += "_" + with_content;
+					result = template_module.define( template_name, parser.options );	
+					// existing = null;
+					result.get_clone_from( existing );
+
+				} else {
+					result = existing;
+					result.merge_options( parser.options );
+				}
 			} else {
-				result = template_module.define( parser.name, parser.options );
+				result = template_module.define( template_name, parser.options );
 			}
 
-			if (parser.options.hasOwnProperty('for') || parser.options.hasOwnProperty('for_each')) {
+			if (parser.options.hasOwnProperty('for') || parser.options.hasOwnProperty('for_each') || parser.options.hasOwnProperty('with_content')) {
 				range = parser.options.hasOwnProperty('range') ? parser.options.range : '<>';
 				var 
-					dynamic_value_name 	= parser.options.hasOwnProperty('for') ? parser.options['for'] : parser.options.for_each,
+					dynamic_value_name 	= parser.options.hasOwnProperty('for') ? parser.options['for'] : parser.options.hasOwnProperty('for_each')? parser.options.for_each : '',
 					multiple 				= parser.options.hasOwnProperty('for_each'),
-					comment_node 			= document.createComment( "<" + template_tag + " name=" + parser.name + " dynamic-value=" + dynamic_value_name + " range=" + range +" multiple=" + multiple + ">" )
+					sort_order				= parser.options.hasOwnProperty('sort')? parser.options.sort : '',
+					comment_node 			= document.createComment( "<" + template_tag + " name=" + template_name + " dynamic-value=" + dynamic_value_name + " range=" + range +" multiple=" + multiple + " with_content=" + with_content + " sort=" + sort_order + ">" )
 				;
 
 				if (parser.options.hasOwnProperty('for_each') && dynamic_value_name.length<1){
@@ -281,8 +327,43 @@ dynamic_placeholder.single_instance = function(dynamic_value) {
 
 dynamic_placeholder.multiple_instance = function(dynamic_value) {
 	var
-		child_keys = Object.keys(dynamic_value.children);
+		self 			= this,
+		child_keys 	= Object.keys(dynamic_value.children),
+		items			= this.sort_order
+	;
 
+	if ( items.length > 0 ){
+		child_keys = child_keys.sort( function( key_a, key_b ){
+			var 
+				child_a = dynamic_value.children[key_a],
+				child_b = dynamic_value.children[key_b],
+				result = 0
+			;
+
+			for (var ii=0; result == 0 && ii<items.length; ii++){
+				var 
+					item_ref = '.'+ items[ii].trim(),
+					child_a_item = child_a.get_dynamic_value( item_ref, true ),
+					child_b_item = child_b.get_dynamic_value( item_ref, true )
+				;
+				if (child_a_item === null || child_b_item === null){
+					if (child_a_item !== child_b_item){
+						result = child_a_item === 0 ? -1 : 1
+					}
+				} else {
+					var
+						child_a_value = child_a_item.get_value(),
+						child_b_value = child_b_item.get_value()
+					;
+
+					result = child_a_value < child_b_value ? -1 : (child_a_value > child_b_value ? 1 : 0);
+				}
+			}
+
+			return result;
+
+		});
+	}
 	this.empty();
 
 	var
@@ -331,16 +412,6 @@ var
 	dynamic_value_class = {}
 ;
 
-dynamic_value_class.get_dynamic_value = function get_dynamic_value_for_value( value_name ) {
-	var result = null;
-
-	if (typeof this.parent_instance !== "undefined" && this.parent_instance !== null){
-		result = this.parent_instance.get_dynamic_value( value_name );
-	}
-
-	return result;
-};
-
 dynamic_value_class.get_elements = function( selector ) {
 	var result = [];
 
@@ -383,7 +454,7 @@ dynamic_value_class.remove = function( instance ){
 	this.children.forEach( function remove_child( child_value ){
 		child_value.remove();
 	}, this );
-	this.children = {};
+	this.clear_children();
 
 	if ( typeof this.instances !=="undefined" ){
 		var instances = dynamic_utils.list_duplicate( this.instances );
@@ -425,6 +496,32 @@ dynamic_value_class.can_swap = function( offset ){
 	return result;
 };
 
+dynamic_value_class.mark_selected = function(){
+	if (this.parent !== null && this.parent.metainfo.selected){
+		var
+			selected_reference = this.parent.metainfo.selected
+		;
+
+		this.parent.get_children().forEach( function( child_value ){
+			var
+				is_selected = child_value.reference === selected_reference;
+
+			child_value.instances.forEach( function ( child_instance ){
+				var
+					element_node = child_instance.child_nodes[0];
+				if (is_selected){
+					dynamic_dom.add_class( element_node, 'selected' );
+				} else {
+					dynamic_dom.remove_class( element_node, 'selected' );
+				}
+			}, this );
+
+		}, this );
+	}
+	
+
+};
+
 dynamic_value_class.swap = function( offset ){
 	var
 		result = null;
@@ -432,6 +529,8 @@ dynamic_value_class.swap = function( offset ){
 		logger.warning( "Cannot swap a top-level value" );
 	} else {
 		var 
+			child_references = Object.keys( this.parent.children ),
+			my_index = child_references.indexOf( this.reference ),
 			other_index = this.index_by_offset( offset )
 		;
 
@@ -456,11 +555,13 @@ dynamic_value_class.swap = function( offset ){
 			this.parent.children = new_children;
 
 			upper_value.instances.forEach( function swap_instances( upper_instance, ix ){
-				var other_instance = lower_value.instances.find( function( an_instance ){
-					return an_instance.placeholder.definition.name === upper_instance.placeholder.definition.name; 
-				}, this );
-				if (typeof other_instance === "object"){
-					upper_instance.swap( other_instance );
+				if (upper_instance.placeholder.sort_order.length < 1){
+					var other_instance = lower_value.instances.find( function( an_instance ){
+						return an_instance.placeholder.definition.name === upper_instance.placeholder.definition.name; 
+					}, this );
+					if (typeof other_instance === "object"){
+						upper_instance.swap( other_instance );
+					}
 				}
 			} );
 
@@ -572,6 +673,11 @@ dynamic_instance_class.get_templates = function(node) {
 			attributes[attr_match[1].replace('-', '_')] = attr_match[2];
 		});
 
+		logger.debug( function() {
+			dynamic_dom.insert_comment_before( comment_node, comment_node.textContent  );
+		});
+
+
 		var
 			anchor_first 			= dynamic_dom.insert_text_before( comment_node, "\n" ),
 			anchor 					= dynamic_dom.insert_text_before( comment_node, "\n" ),
@@ -580,10 +686,16 @@ dynamic_instance_class.get_templates = function(node) {
 			instancing_schema		= dynamic_placeholder.select_instancing(attributes.multiple)
 		;
 
+		logger.debug( function() {
+			dynamic_dom.insert_comment_before( comment_node, "End "+attributes.name  );
+		});
+
 		template_placeholder.on_value_changed 	= instancing_schema.on_value_changed;
 		template_placeholder.is_multiple			= instancing_schema.multiple;
 		template_placeholder.first 				= anchor_first;
 		template_placeholder.range					= new ValueRange( attributes.range );
+		template_placeholder.with_content		= attributes.with_content;
+		template_placeholder.sort_order 			= attributes.sort.length>0 ? attributes.sort.split(',') : [];
 
 		template_placeholder.on_instance = function on_instance_created( template_instance ) {
 			if (template_instance.dynamic_value !== null){
@@ -641,7 +753,7 @@ var
 		'move-up': { event_handler: function move_up_dynamic_variable(){
 				var 
 					other_value = this.dynamic_value.swap(-1),
-					other_button = other_value.get_elements( 'button.move-up.dynamic-value' )[0] 
+					other_button = other_value.get_elements( '.move-up.dynamic-value' )[0] 
 				;
 				dynamic_dom.remove_class( other_button, 'hidden' );
 
@@ -655,7 +767,7 @@ var
 		'move-down': { event_handler: function move_down_dynamic_variable(){
 				var 
 					other_value = this.dynamic_value.swap(1),
-					other_button = other_value.get_elements( 'button.move-down.dynamic-value' )[0] 
+					other_button = other_value.get_elements( '.move-down.dynamic-value' )[0] 
 				;
 				dynamic_dom.remove_class( other_button, 'hidden' );
 
@@ -698,6 +810,20 @@ dynamic_instance_class.get_values = function(node) {
 		if (!btn.dataset.hasOwnProperty('dynamicValue')){
 			var dv = this.dynamic_value;
 			btn.dataset.dynamicValue = dv.name;
+
+			var 
+				i = document.createElement( 'i' );
+				i.className = btn.className;
+				button_title = btn.getAttribute( 'title')
+			;
+
+			if (button_title !== null){
+				i.setAttribute( 'title', button_title  );
+			}	
+
+			btn.parentNode.insertBefore( i, btn );
+			btn.remove();
+			btn = i;
 			
 			Object.keys( button_commands ).forEach( function( command_name ){
 				if (btn.className.indexOf( command_name ) >= 0){
@@ -705,7 +831,7 @@ dynamic_instance_class.get_values = function(node) {
 						dynamic_dom.add_class( btn, 'hidden' );
 					}
 
-					btn.textContent = button_commands[ command_name ].label;
+					// btn.textContent = button_commands[ command_name ].label;
 					btn.dynamic_value = dv;
 					btn.addEventListener( 'click', button_commands[ command_name ].event_handler );		
 				}
@@ -720,10 +846,8 @@ dynamic_instance_class.define_control = function(tag_element) {
 	if (typeof this.controls === "undefined"){
 		this.controls = [];
 	}
-	if (tag_element.tagName === 'SELECT' && tag_element.className.indexOf('fte-select')>=0 && tag_element.className.indexOf('harry')>=0) {
-			logger.info( 'add control on '+this.placeholder.definition.name, tag_element, this );
-		}
-		this.controls.push(new AppControl(tag_element, this));
+	
+	this.controls.push(new AppControl(tag_element, this));
 };
 
 dynamic_instance_class.get_dynamic_value = function get_dynamic_value_for_instance( value_name ) {
@@ -738,18 +862,11 @@ dynamic_instance_class.get_dynamic_value = function get_dynamic_value_for_instan
 		formula = name_parts[1].trim();
 	}
 
-
-	if (dynamic_utils.starts_with(value_name, '.')) {
-		var
-			parent_value = this.dynamic_value.get_final();
-		if (dynamic_utils.starts_with(value_name, '..')){
-			parent_value = this.dynamic_value.get_final().parent;
-			value_name = value_name.substring(1);
-		}
-		value_name = parent_value.name + value_name;
+	if (typeof this.dynamic_value === "object" && this.dynamic_value !== null){
+		result = this.dynamic_value.get_dynamic_value( value_name );
+	} else {
+		result = value_module.get_or_define( value_name );
 	}
-
-	result = value_module.get_or_define( value_name );
 
 	if (formula.length > 0){
 
@@ -872,6 +989,7 @@ AppControl.prototype.update_by_value = function(dynamic_value) {
 	}
 };
 
+
 AppControl.prototype.update_value = function() {
 	var
 		control_value = this.element.value;
@@ -882,10 +1000,16 @@ AppControl.prototype.update_value = function() {
 		}
 	}
 	logger.debug('>>>>> update value "'+this.dynamic_value.name+'" from control "'+control_value+'"', this);
+
 	this.dynamic_value.set_value(control_value);
 	metalogger.debug( function() {
 		dynamic_app.update_meta_info();
 	});
+
+	if (typeof this.element.options === "object"){
+		this.dynamic_value.mark_selected();
+	}
+
 	logger.debug('<<<<< update value "'+this.dynamic_value.name+'" from control "'+control_value+'"', this);
 };
 

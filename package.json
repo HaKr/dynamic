@@ -9,10 +9,12 @@
     "abc": "tape-run",
     "watch": "npm-watch",
     "taper": "tape-run",
-    "browserify": "browserify src/modules/*.js --outfile js/dynamic-app.js"
+    "browserify": "browserify src/modules/*.js --outfile js/dynamic-app.js",
+    "copy-shared": "cp -r dynamic-app.* js /media/sf_eeg/dynamic/"
   },
   "watch": {
-    "browserify": "src/modules/*.js"
+    "browserify": "src/modules/*.js",
+    "copy-shared": [  "js/*.js",  "dynamic-app.*" ]
   },
   "repository": {
     "type": "git",

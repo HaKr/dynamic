@@ -3,19 +3,178 @@
 	<head>
 		<meta charset=utf-8>
 		<title>Dynamic App</title>
+
+		
+		<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Raleway:200,200i,300,300i,400,400i,500,500i" media="all">
+		<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Montserrat:400,700" media="all">
+		<link rel="stylesheet" href="css/font-awesome.min.css" />
+		<link rel="stylesheet" href="css/main.css" />
+		<link rel="stylesheet" href="css/header.css" />
+		<link rel="stylesheet" href="css/footer.css" />
+		<link rel="stylesheet" href="css/forms.css" />
+		<link rel="stylesheet" href="css/tables.css" />
+		<link rel="stylesheet" href="css/mobile.css" />
+
 		<link rel=stylesheet media=all href=dynamic-app.css>
 		<script src=js/dynamic-app.js></script>
 	</head>
 
-	<body class=dynamic-person>
+	<body class="dynamic-person container">
+		<header id="header">
+			<nav id="menu" class="menu">
+				<div id="logo" class="logo">
+					<a href="/"><img src="images/logo.png" alt="Ciber logo" /></a>
+					<h1>Dynamic App</h1>
+				</div>
+			</nav>
+		</header>
 
-		<!-- debugging info -->
-		<div class=meta>
-			<label>Templates:    	{{debug.template_count}}.</label>
-			<label>Placeholders:    {{debug.placeholder_count}}.</label>
-			<label>Instances:    	{{debug.instance_count}}.</label>
-			<label>Observers:     	{{debug.observer_count}}.</label>
-		</div>
+		<main>
+		
+			<form class=selection action="javascript:;">
+
+				<!-- Simulator buttons, one simulates the GET of person data, the second logs that data to the console -->
+				<fieldset>
+					<label>Actions:</label
+					><button type="button" id=set-button>Simulate Get Person list call</button
+					><button type="button" id=show-button>Show person in console</button>
+				</fieldset>
+				
+				<fieldset>
+					<label class="dynamic-template person-select nested" data-dynamic-template-for="persons">Show info for:
+						<select id=person-select name=.$selected>
+							<option class="placeholder" value="">Choose a person</option>
+
+							<option value={{.$reference}} class="dynamic-template person-select-option" data-dynamic-template-for-each="persons">
+								{{.first-name}} {{.last-name}}
+							</option>
+
+						</select>
+					</label>
+				</fieldset>
+			</form>
+
+			<div class="dynamic-template please-select">
+				<p>Please click on the Simulate button above...
+			</div>
+
+			<div class="dynamic-template persons-retrieved" data-dynamic-template-for="persons" data-dynamic-template-options="on-empty=please-select">
+				<div class="helpTextContainer dynamic-template help-text">
+					<a onclick="toggleHelpText(this);" class=""><i class="fa fa-question-circle-o"></i></a>
+					<div class="helpText dynamic-template-content">
+					</div>
+				</div>
+
+				<!-- company info; company address will be added later in this HTML -->
+				<div class="dynamic-template company" data-dynamic-template-for="persons.@.company" title="{{.title}}">
+					<h2>{{.name}}</h2>
+				</div>
+
+				<form id="build_input" method="post" action="/api/build-input" class="dynamic-template person-record-input" data-dynamic-template-for="persons.@">
+					<fieldset>
+						<fieldset>
+						<label class="nested">First name: 
+							<input name=".first-name">
+						</label>
+						<div class="dynamic-template help-text" data-dynamic-template-options="with-content=first-name">
+							<p>Enter <i class="fa fa-pencil"></i> the <b>first name</b> of the selected person.
+							<p>Observe how this name is copied all over this page.
+						</div>
+						</fieldset>
+						<fieldset>
+						<label class="nested">Last name:
+							<input name=.last-name>
+						</label>
+						<div class="dynamic-template help-text" data-dynamic-template-options="with-content=last-name">
+							Enter <i class="fa fa-pencil"></i> the <b>family name</b> of the selected person.
+						</div>
+						</fieldset>
+					</fieldset>
+				</form>
+
+				<!--
+					Generic address template 
+						Only when the street is given, street and number are added
+						Note that when postal is missing, no blanks are left of city
+				-->
+				<address class="dynamic-template address">
+					<i class="fa fa-envelope-o"></i>
+					<label class="dynamic-template address-street nested" data-dynamic-template-for=".street">
+							Adress:      {{.street}} {{.number}}.</label>
+					<label class="nested">	City:        {{.postal}}  {{.city}}.</label>
+				</address>
+
+				<div title="{{.last-name}}, {{.first-name}}" class="dynamic-template person-record" data-dynamic-template-for="persons.@">
+					<input type=hidden name=.id>
+					<label class="nested">First name:     {{.first-name}}.</label>
+					<label class="nested">Last name:      {{.last-name}}.</label>
+
+					<!-- value based templates -->
+					<label class="nested">Salary:     	    
+						(<span class='dynamic-template fte-fulltime-text-full' data-dynamic-template-for=.fte data-dynamic-template-options="range=[0.9,1]">fulltime,</span>
+						<span class='dynamic-template fte-fulltime-text-part' data-dynamic-template-for=.fte data-dynamic-template-options="range=[0.25,0.9>">parttime,</span>
+						<span class='dynamic-template fte-fulltime-text-other' data-dynamic-template-for=.fte data-dynamic-template-options="range=[0,0.25>">freelance,</span>
+						<span class='dynamic-template fte-fulltime' data-dynamic-template-for=.fte>{{..fte-perc= ..fte * 100}}%</span>)
+						€ {{ .per_annum= }}
+					</label>
+					<address class="dynamic-template address" data-dynamic-template-for="persons.@.address"></address>
+				</div>
+
+				<!-- addition to the company template above, only the children of this DIV are added -->
+				<div class="dynamic-template company" data-dynamic-template-options="only-content">
+					<address class="dynamic-template address" data-dynamic-template-for=".address"></address>
+				</div>
+
+				<!-- Template that will be used in the table -->
+				<select class="dynamic-template fte-select">
+					<option value={{fte.fulltime}}>Fulltime</option>
+					<option value={{fte.36}}>36 uur</option>
+					<option value={{fte.32}}>32 uur</option>
+					<option value={{fte.24}}>24 uur</option>
+					<option value={{fte.20}}>20 uur</option>
+					<option value={{fte.16}}>16 uur</option>
+
+					<!-- alternative way to specify a fixed value  -->
+					<option value='{{fte.8= 8 / 40}}'>8 uur</option>
+				</select>
+
+				<table class="dynamic-template person-grid" data-dynamic-template-for="persons">
+					<thead>
+						<tr>
+							<th>id <th>Last <th>First <th>City <i class="fa fa-sort-alpha-asc"></i> <th>Salary base <th>FTE <th>Monthly salary <th>Annual salary<th>Notes <i class="fa fa-sort-alpha-asc"></i><th>
+						</tr>
+					<tfoot>
+						<tr>
+							<td colspan=2>Totals
+							<td colspan=2>{{persons.$count}} rows
+							<td colspan=2>
+							<td>{{totals.salary= 	Sum(persons.*.salary) }}
+							<td>{{totals.per_annum= Sum(persons.*.per_annum) }}
+							<td colspan=2>
+						</tr>
+					<tbody>
+						<tr class="dynamic-template person-grid-row" data-dynamic-template-for-each="persons" data-dynamic-template-options="sort=address.city,description">
+							<td class=person-id>{{.id}}
+							<td>{{.last-name}}
+							<td>{{.first-name}}
+							<td>{{.address.city}}
+							<td><input name=".salary_month" step=25 class="salary" type=number min=0>
+							<td><select name=.fte class="dynamic-template fte-select" data-dynamic-template-for='.id'></select>
+							<td>{{.salary= .salary_month * .fte}}
+							<td>{{.per_annum= .salary * 12 * 1.08}}
+							<td><input name=.description>
+							<td><button class="fa fa-times             remove    dynamic-value" title="remove {{.first-name}} {{.last-name}}."></button>
+						</tr>
+				</table>
+
+				<div  class="dynamic-template person-tile" data-dynamic-template-for-each="persons" >
+					{{.id}}	{{.last-name}}, {{first-name}}	{{.address.city}}
+						<button class="fa fa-times             remove    dynamic-value" title="remove {{.first-name}} {{.last-name}}."></button
+						><button class="fa fa-arrow-circle-up   move-up   dynamic-value"></button
+						><button class="fa fa-arrow-circle-down move-down dynamic-value"></button>
+				</div>
+			</div>
+		</main>
 
 		<!-- have some refrence values ready -->
 		<input type=hidden name="fte.fulltime= 40 / 40">
@@ -25,137 +184,5 @@
 		<input type=hidden name="fte.20= 20 / 40">
 		<input type=hidden name="fte.16= 16 / 40">
 
-		<!-- Template that will be used in the table -->
-		<select class="dynamic-template fte-select">
-			<option value={{fte.fulltime}}>Fulltime</option>
-			<option value={{fte.36}}>36 uur</option>
-			<option value={{fte.32}}>32 uur</option>
-			<option value={{fte.24}}>24 uur</option>
-			<option value={{fte.20}}>20 uur</option>
-			<option value={{fte.16}}>16 uur</option>
-
-			<!-- alternative way to specify a fixed value  -->
-			<option value='{{fte.8= 8 / 40}}'>8 uur</option>
-		</select>
-
-		<div class=selection>
-
-			<!-- Simulator buttons, one simulates the GET of person data, the second logs that data to the console -->
-			<div>
-				<span class=reallabel>Actions:</span>
-					<button id=set-button>Simulate Get Person list call</button>
-					<button id=show-button>Show person in console</button>
-				
-			</div>	
-			
-
-			<label class="dynamic-template person-select" data-dynamic-template-for="persons">Show info for:
-				<select id=person-select name=.$selected>
-					<option disabled>Choose a person</option>
-
-					<option value={{.$reference}} class="dynamic-template person-select-option" data-dynamic-template-for-each="persons">
-						{{.first-name}} {{.last-name}}
-					</option>
-
-				</select>
-			</label>
-		</div>
-
-		<div class="dynamic-template please-select">
-			<p>Please click on the Simulate button above...
-		</div>
-
-		<div class="dynamic-template persons-retrieved" data-dynamic-template-for="persons" data-dynamic-template-options=on-empty=please-select>
-
-			<!-- company info; company address will be added later in this HTML -->
-			<div class="dynamic-template company" data-dynamic-template-for="persons.@.company">
-				<h2>{{.name}}</h2>
-			</div>
-
-			<form id="build_input" method="post" action="/api/build-input" class="dynamic-template person-record-input" data-dynamic-template-for="persons.@">
-				<fieldset>
-					<label>First name: 
-						<input name=".first-name">
-					</label>
-					<label>Last name: 
-					<input name=.last-name></label>
-				</fieldset>
-			</form>
-
-			<p>Hello {{persons.@.description}}.</p>
-
-			<!--
-				Generic address template 
-					Only when the street is given, street and number are added
-					Note that when postal is missing, no blanks are left of city
-			-->
-			<address class="dynamic-template address">
-				<label class="dynamic-template address-street" data-dynamic-template-for=".street">
-						Adress:      {{..street}} {{..number}}.</label>
-				<label>	City:        {{.postal}}  {{.city}}.</label>
-			</address>
-
-			<div title="{{.last-name}}, {{.first-name}}" class="dynamic-template person-record" data-dynamic-template-for="persons.@">
-				<input type=hidden name=.id>
-				<label>First name:     {{.first-name}}.</label>
-				<label>Last name:      {{.last-name}}.</label>
-
-				<!-- value based templates -->
-				<label>Salary:     	   € {{ .per_annum= }} 
-					<span class='dynamic-template fte-fulltime-text-full' data-dynamic-template-for=.fte data-dynamic-template-options="range=[0.9,1]">(fulltime, </span>
-					<span class='dynamic-template fte-fulltime-text-part' data-dynamic-template-for=.fte data-dynamic-template-options="range=[0.25,0.9>">(parttime, </span>
-					<span class='dynamic-template fte-fulltime-text-other' data-dynamic-template-for=.fte data-dynamic-template-options="range=[0,0.25>">(</span>
-					<span class='dynamic-template fte-fulltime' data-dynamic-template-for=.fte>{{..fte-perc= ..fte * 100}}%)</span>
-				</label>
-				<address class="dynamic-template address" data-dynamic-template-for="persons.@.address"></address>
-			</div>
-
-			<hr>
-
-			<!-- addition to the company template above, only the children of this DIV are added -->
-			<div class="dynamic-template company" data-dynamic-template-options="only-content">
-				<address class="dynamic-template address" data-dynamic-template-for=".address"></address>
-			</div>
-
-			<table class="dynamic-template person-grid" data-dynamic-template-for="persons">
-				<thead>
-					<tr>
-						<th>id <th>Last <th>First <th>City <th>Salary base <th>FTE <th>Monthly salary <th>Annual <th>Notes <th>
-					</tr>
-					<tr>
-						<td colspan=2>Totals
-						<td colspan=2>{{persons.$count}} rows
-						<td colspan=2>
-						<td>{{totals.salary= 	Sum(persons.*.salary) }}
-						<td>{{totals.per_annum= Sum(persons.*.per_annum) }}
-						<td colspan=2>
-					</tr>
-				<tfoot>
-					<tr>
-						<td colspan=2>Totals
-						<td colspan=2>{{persons.$count}} rows
-						<td colspan=2>
-						<td>{{totals.salary}}
-						<td>{{totals.per_annum}}
-						<td colspan=2>
-					</tr>
-				<tbody>
-					<tr class="dynamic-template person-grid-row" data-dynamic-template-for-each="persons">
-						<td class=person-id>{{.id}}
-						<td>{{.last-name}}
-						<td>{{.first-name}}
-						<td>{{.address.city}}
-						<td><input name=".salary_month" type=number min=0>
-						<td><select name=..fte class="dynamic-template fte-select" data-dynamic-template-for='.id'></select>
-						<td>{{.salary= .salary_month * .fte}}
-						<td>{{.per_annum= .salary * 12 * 1.08}}
-						<td><input name=.description>
-						<td>
-							<button class="remove dynamic-value"></button>
-							<button class="move-up dynamic-value"></button>
-							<button class="move-down dynamic-value"></button>
-					</tr>
-			</table>
-		</div>		
 	</body>
 </html>

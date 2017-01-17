@@ -1,0 +1,197 @@
+/* 
+ * Header styling
+ *
+ * To enable the styling, use either a <header> element within a <div class="container"> element 
+ * or an element with the "header" class
+ */
+.container header,
+.header {
+	margin: 0;
+	padding: 0;
+	height: 61px;
+	font-family: 'Montserrat', Arial;
+	border-bottom: 1px solid #BFBFBF;
+}
+
+.container header nav,
+.header nav {
+	display: block;
+}
+
+.container header nav ul,
+.container header nav ul li,
+.header nav ul,
+.header nav ul li {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.container header nav ul li,
+.header nav ul li {
+	display: inline-block;
+	vertical-align: top;
+}
+
+.container header nav ul li a,
+.header nav ul li a {
+	text-decoration: none;
+}
+
+/* Topbar */
+.container header nav.topbar,
+.header nav.topbar {
+	margin: 0;
+	padding: 0 15px;
+	background: #404040;
+	color: #FFF;
+	text-align: right;
+}
+
+.container header nav.topbar ul li,
+.header nav.topbar ul li {
+	line-height: 45px;
+}
+
+.container header nav.topbar ul li.username,
+.header nav.topbar ul li.username {
+	font-size: 90%;
+	text-transform: uppercase;
+}
+
+.container header nav.topbar ul li.username.mobile,
+.header nav.topbar ul li.username.mobile {
+	display: none;
+}
+
+.container header nav.topbar ul li a,
+.header nav.topbar ul li a {
+	color: #FFF;
+}
+
+.container header nav.topbar ul li a:hover,
+.header nav.topbar ul li a:hover {
+	color: #22B6BA;
+}
+
+.container header nav.topbar ul li a i.fa,
+.header nav.topbar ul li a i.fa {
+	font-size: 150%;
+}
+
+/* Main menu */
+.container header nav.menu,
+.header nav.menu {
+	display: block;
+	padding: 0 15px;
+	background: #F8F8F8;
+}
+
+.container header nav.menu .logo,
+.container header nav.menu ul,
+.container header nav.menu ul li,
+.header nav.menu .logo,
+.header nav.menu ul,
+.header nav.menu ul li {
+	display: inline-block;
+	vertical-align: top;
+}
+
+.container header nav.menu ul li a i.fa,
+.header nav.menu ul li a i.fa {
+	margin-right: 5px;
+}
+
+/* Logo (may exist outside the nav element) */
+.container header .logo,
+.header .logo {
+	margin: 0 15px 0 0;
+	padding: 0;
+	height: 60px;
+}
+
+.container header .logo img, 
+.container header .logo h1,
+.header .logo img,
+.header .logo h1 {
+	display: inline-block;
+	vertical-align: top;
+}
+
+.container header .logo img, 
+.header .logo img {
+	height: 60px;
+}
+
+.container header .logo h1, 
+.header .logo h1 {
+	margin-top: 10px;
+	font-style: italic;
+	font-weight: 300;
+	font-size: 180%;
+	color: #E97D24;
+}
+
+/* Menu toggler for mobile (may exist outside the nav element) */
+.container header .toggleMenu,
+.header .toggleMenu {
+	display: none;
+}
+
+/* Menu */
+.container header nav.menu ul li,
+.header nav.menu ul li {
+	text-transform: uppercase;
+}
+
+.container header nav.menu ul li a,
+.header nav.menu ul li a {
+	padding: 0 15px;
+	line-height: 60px;
+	text-decoration: none;
+	font-size: 103%;
+	letter-spacing: 2px;
+	color: #000;
+}
+
+.container header nav.menu ul li a:hover,
+.header nav.menu ul li a:hover {
+	background-color: #BFBFBF;
+}
+
+/* Submenu */
+.container header nav.submenu,
+.header nav.submenu {
+	margin: 0;
+	padding: 0 15px;
+	min-height: 38px;
+	background: #F5F5F5;
+	border-top: solid 1px #BFBFBF;
+}
+
+.container header nav.submenu h3,
+.header nav.submenu h3 {
+	display: inline-block;
+	margin: 0;
+	line-height: 35px;
+}
+
+.container header nav.submenu ul,
+.container header nav.submenu ul li,
+.header nav.submenu ul,
+.header nav.submenu ul li {
+	display: inline-block;
+	vertical-align: top;
+}
+
+.container header nav.submenu ul li a,
+.header nav.submenu ul li a {
+	padding: 0 10px;
+	line-height: 37px;
+	outline: none;
+}
+
+.container header nav.submenu ul li a i,
+.header nav.submenu ul li a i {
+	margin-right: 5px;
+}

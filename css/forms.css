@@ -1,0 +1,249 @@
+/* 
+ * Form styling
+ *
+ * To enable the styling, use either a <form> element within a <div class="container"> element 
+ * or an element with the "form" class
+ */
+.container form,
+.form {
+	margin: 0;
+	padding: 0;
+}
+
+.container form.small,
+.form.small {
+	margin: 0 auto;
+	max-width: 720px;
+}
+
+.container form hr,
+.form hr {
+	margin: 3em;
+	border: none;
+	border-top: 1px solid #AAA;
+}
+
+.container form fieldset,
+.form fieldset {
+	position: relative;
+	margin: 0 0 10px 0;
+	padding: 0;
+	border: none;
+}
+
+.container form fieldset:last-child,
+.form fieldset:last-child {
+	margin-bottom: 0;
+}
+
+.container form fieldset label,
+.container form fieldset input, 
+.container form fieldset button,
+.container form fieldset select,
+.container form fieldset textarea,
+.form fieldset label,
+.form fieldset input, 
+.form fieldset button,
+.form fieldset select,
+.form fieldset textarea {
+	display: inline-block;
+	vertical-align: top;
+	font-family: 'Raleway', Arial;
+	font-size: 1em;
+}
+
+.container form fieldset label,
+.container form fieldset input, 
+.container form fieldset button,
+.container form fieldset select,
+.container form fieldset .uneditable,
+.form fieldset label,
+.form fieldset input, 
+.form fieldset button,
+.form fieldset select,
+.form fieldset .uneditable {
+	height: 36px;
+	line-height: 36px;
+}
+
+.container form fieldset label,
+.form fieldset label {
+	width: 25%;
+	font-weight: bold;
+}
+
+.container form fieldset input, 
+.container form fieldset button,
+.container form fieldset select,
+.container form fieldset textarea,
+.container form fieldset .uneditable,
+.form fieldset input, 
+.form fieldset button,
+.form fieldset select, 
+.form fieldset textarea,
+.form fieldset .uneditable {
+	margin: 0;
+	padding: 0 10px;
+	width: 50%;
+	border: 1px solid #AAA;
+	border-radius: 4px;
+}
+
+.container form fieldset select,
+.form fieldset select {
+	width: inherit;
+	max-width: 50%;
+}
+
+.container form fieldset .uneditable,
+.form fieldset .uneditable {
+	display: inline-block;
+	border: none;
+}
+
+.container form fieldset input, 
+.container form fieldset select,
+.container form fieldset textarea,
+.form fieldset input, 
+.form fieldset select,
+.form fieldset textarea {
+	/* Top inside shadow */
+	-webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+
+	/* Border color and shadow transition for highlighting */
+	-webkit-transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
+	-o-transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
+	transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
+}
+
+.container form fieldset input:focus, 
+.container form fieldset select:focus,
+.container form fieldset textarea:focus,
+.form fieldset input:focus, 
+.form fieldset select:focus,
+.form fieldset textarea:focus {
+	border-color: #66AFE9;
+	outline: 0;
+
+	/* Top inside shadow */
+	-webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(102, 175, 233, 0.6);
+	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(102, 175, 233, 0.6);
+}
+
+.container form fieldset input[type="file"],
+.form fieldset input[type="file"] {
+	padding: 6px 10px;
+	height: auto;
+	line-height: normal;
+	background-color: #FFF;
+}
+
+.container form fieldset textarea,
+.form fieldset textarea {
+	padding-top: 9px;
+	padding-bottom: 9px;
+	height: 100px;
+}
+
+/* Custom checkbox styling */
+.container form fieldset input[type="checkbox"],
+.form fieldset input[type="checkbox"] {
+	display: none;
+}
+
+.container form fieldset input[type="checkbox"] ~ label.checkboxReplacement,
+.form fieldset input[type="checkbox"] ~ label.checkboxReplacement {
+	display: inline-block;
+	padding-left: 1px;
+	width: 350px;
+	line-height: 2.5em;
+	font-family: FontAwesome;
+	font-weight: 100;
+	color: #333;
+}
+
+.container form fieldset input[type="checkbox"] ~ label.checkboxReplacement:after,
+.form fieldset input[type="checkbox"] ~ label.checkboxReplacement:after {
+	display: block;
+	vertical-align: middle;
+	font-size: 1.8em;
+	content: "\f096";
+}
+
+.container form fieldset input[type="checkbox"]:checked ~ label.checkboxReplacement:after,
+.form fieldset input[type="checkbox"]:checked ~ label.checkboxReplacement:after {
+	content: "\f046";
+}
+
+.container form fieldset input[type="submit"],
+.container form fieldset button,
+.form fieldset input[type="submit"],
+.form fieldset button {
+	color: #FFF;
+	background: #22B6BA;
+	border-color: #22B6BA;
+	border-radius: 0;
+	outline: none;
+}
+
+.container form fieldset input[type="submit"].delete,
+.container form fieldset button.delete,
+.form fieldset input[type="submit"].delete,
+.form fieldset button.delete {
+	background: #BB0000;
+	border-color: #BB0000;
+}
+
+.container form fieldset input[type="submit"].cancel,
+.container form fieldset button.cancel,
+.form fieldset input[type="submit"].cancel,
+.form fieldset button.cancel {
+	background: #BBB;
+	border-color: #BBB;
+}
+
+.container form fieldset input[type="submit"]:hover,
+.container form fieldset button:hover,
+.form fieldset input[type="submit"]:hover,
+.form fieldset button:hover {
+	cursor: pointer;
+	background: transparent;
+	color: #000;
+}
+
+.container form fieldset input[type="submit"].disabled,
+.container form fieldset button.disabled,
+.form fieldset input[type="submit"].disabled,
+.form fieldset button.disabled {
+	opacity: 0.5;
+}
+
+.container form fieldset input[type="submit"].disabled:hover,
+.container form fieldset button.disabled:hover,
+.form fieldset input[type="submit"].disabled:hover,
+.form fieldset button.disabled:hover {
+	cursor: not-allowed;
+}
+
+.container form fieldset div.fieldErrorText,
+.form fieldset div.fieldErrorText {
+	margin: 0 0 0 25%;
+	padding: 10px 10px 0 10px;
+	width: 50%;
+	color: #EE3333;
+}
+
+.container form fieldset input.readonly,
+.form fieldset input.readonly {
+	border: none;
+	-webkit-box-shadow: none;
+	-moz-box-shadow: none;
+	-o-box-shadow: none;
+    box-shadow: none;
+}
+
+.container form fieldset input.readonly:focus,
+.form fieldset input.readonly:focus {
+	outline: none;
+}

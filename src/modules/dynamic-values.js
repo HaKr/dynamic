@@ -24,13 +24,15 @@ var values_module = {
 };
 
 var
-	dynamic_utils = require('./dynamic-utils'),
-	logger = require('./browser_log').get_logger(values_module.info.Name),
+	dynamic_utils 					= require('./dynamic-utils'),
+	logger 							= require('./browser_log').get_logger(values_module.info.Name),
 	// selected_re=/(.+)\.@selected/g,
-	selected_index_name = '$selected',
-	selected_reference_token = '@',
-	selected_reference_re = new RegExp(selected_reference_token, 'g'),
-	formula_token = '='
+	meta_indicator 				= '$',
+	formula_indicator				= '=',
+	meta_selected_name 			= meta_indicator + 'selected',
+	meta_count_name 				= meta_indicator + 'count',
+	selected_reference_token 	= '@',
+	selected_reference_re 		= new RegExp(selected_reference_token, 'g')
 ;
 
 values_module.reference_parser = function(reference) {
@@ -108,25 +110,41 @@ values_module.get_or_define = function(value_name) {
 	return result;
 };
 
+var
+	value_types = {
+		unassigned: 0,
+		scalar: 		1,
+		list: 		2
+	}
+;
+
 function DynamicValue() {}
 DynamicValue.prototype.create = function( name ) {
 	this.name = name;
-	this.initialised = false;
 	this.value = "";
 	this.oldvalue = "";
 	this.default = "";
 	this.observers = [];
 	this.parent = null;
 	this.children = {};
-	this.child_counter_value = null;
+	this.type = value_types.unassigned;
+	this.metavalues={};
+	this.metainfo={};
+
+	var self = this;
 
 	Object.defineProperties( this, {
 		'bracket_notation': {
 			enumerable: false,
 			get: function() { return this.get_bracket_notation(); }
 		},
+	});
+	Object.defineProperties( this.metainfo, {
+		'reference': {
+			get: function() { return self.reference; }
+		},
 		'count': {
-			get: function() { return Object.keys( this.children ).length; }
+			get: function() { return Object.keys( self.children ).length; }
 		}
 	});
 	if (typeof this.children.forEach !== "function"){
@@ -143,6 +161,40 @@ DynamicValue.prototype.create = function( name ) {
 		}});
 	}
 };
+
+DynamicValue.prototype.clear_children = function() {
+	for (var child_name in this.children){
+		delete this.children[ child_name ];
+	}
+};
+
+DynamicValue.prototype.get_dynamic_value = function get_dynamic_value_for_value( value_name, must_exist ) {
+	var result = null;
+
+	if (typeof must_exist === "undefined"){
+		must_exist = false
+	}
+
+	if (dynamic_utils.starts_with(value_name, '.')) {
+		var
+			parent_value = this;
+		if (dynamic_utils.starts_with(value_name, '..') ){
+			parent_value = this.parent === null? this.get_final().parent : this.parent;
+			value_name = value_name.substring(1);
+		} else {
+			if (Object.keys(this.children ).length < 1){
+				parent_value = this.parent === null? this.get_final().parent : this.parent;
+			}
+		}
+		value_name = parent_value.name + value_name;
+	}
+
+	result = must_exist? values_module.get_by_name( value_name ): values_module.get_or_define( value_name );
+
+	return result;
+};
+
+
 
 var
 	empty_tests = {
@@ -170,11 +222,65 @@ var
 		}
 	};
 
+function is_scalar( val ){
+	var result = false;
+
+	if (val !== null){
+		if (val instanceof Object){
+			result = (val instanceof Date )|| val instanceof String || val instanceof Number || val instanceof Boolean
+		} else {
+			result = "number, string, boolean".indexOf( typeof val ) >= 0
+		}
+	}
+
+	return result;
+}
+
+function value_type_from_value( val ){
+	var
+		result;
+
+	if (val === null){
+		result = value_types.unassigned;
+	} else {
+		if (is_scalar( val )){
+			result = value_types.scalar;
+		} else {
+			result = value_types.list;
+		}
+	}
+
+	return result;
+}
+
 DynamicValue.prototype.get_bracket_notation = function() {
 	return this.name.split('.').map( function (name_part, ix){
 		name_part = name_part.toLowerCase().replace(/ -]/g,'_');
 		return (ix<1? name_part : '['+name_part+']')
 	}).join('');
+};
+
+DynamicValue.prototype.make_list = function( child_value ) {
+	this.value 						= {};
+	this.type 						= value_types.list;
+	
+	this.metavalues.count 		= values_module.get_or_define( this.name + '.' + meta_count_name );
+	this.metavalues.count.type = value_types.scalar;
+
+	this.metavalues.selected 	= values_module.get_or_define( this.name + '.' + meta_selected_name );
+	this.metavalues.selected.type = value_types.scalar;
+};
+
+DynamicValue.prototype.add_child = function( child_value ) {
+
+	if (this.type === value_types.unassigned){
+		this.make_list();
+	}
+
+	this.children[ child_value.reference ] = child_value;
+	this.value[ child_value.reference ] = child_value.get_value();
+
+	return this.value[child_value.reference];
 };
 
 DynamicValue.prototype.register_to_parent = function() {
@@ -205,15 +311,6 @@ DynamicValue.prototype.get_children = function() {
 	return result;
 }
 
-DynamicValue.prototype.add_child = function( child_value ) {
-
-	this.children[child_value.reference] = child_value;
-	this.update_from_child( child_value );
-
-
-
-	return this.value[child_value.reference];
-};
 
 DynamicValue.prototype.observe = function( name, observer, ref_object ) {
 	var self = this;
@@ -247,14 +344,18 @@ DynamicValue.prototype.unobserve = function(observer) {
 
 DynamicValue.prototype.is_empty = function() {
 	var
-		result = true,
-		test_value = this.get_value(),
-		worker = empty_tests[typeof test_value];
+		result = this.type === value_types.unassigned
+	;
 
-	if (typeof worker === "function") {
-		result = worker(test_value);
-	} else {
-		logger.warning('DynamicValue::IsEmpty not test for '+(typeof worker));
+	if (!result){
+			test_value = this.get_value(),
+			worker = empty_tests[typeof test_value];
+
+		if (typeof worker === "function") {
+			result = worker(test_value);
+		} else {
+			logger.warning('DynamicValue::IsEmpty not test for '+(typeof worker));
+		}
 	}
 
 	return result;
@@ -267,6 +368,7 @@ DynamicValue.prototype.get_full_reference = function() {
 DynamicValue.prototype.get_value = function() {
 	return typeof this.value === "object" && this.value !== null ? this.value.valueOf() : this.value;
 };
+
 
 DynamicValue.prototype.get_text = function() {
 	var result = '';
@@ -299,11 +401,9 @@ DynamicValue.prototype.is_deferred = function() {
 };
 
 DynamicValue.prototype.notify_structural_change = function() {
-	if (this.child_counter_value == null){
-		this.child_counter_value = values_module.get_or_define( this.name +'.$count');
+	if (this.metavalues.count){
+		this.metavalues.count.notify_observers();
 	}
-
-	this.child_counter_value.notify_observers();
 };
 
 DynamicValue.prototype.update_from_child = function( child_value ) {
@@ -357,13 +457,16 @@ DynamicValue.prototype.update_attributes = function() {
 		this.children[child_name].clear();
 	}, this);
 
-	this.notify_structural_change();
+	if (this.type === value_types.list){
+		this.notify_structural_change();
+	}
 };
 	// delete this.parent.value[ this.reference ];
 
 DynamicValue.prototype.do_set_value = function(newvalue) {
 	this.oldvalue = this.value;
 	this.value = newvalue;
+	this.type = value_type_from_value( this.value );
 	this.busy = true;
 
 	var self = this;
@@ -373,15 +476,19 @@ DynamicValue.prototype.do_set_value = function(newvalue) {
 		this.parent.update_from_child( this );
 	}
 
+
 	if (typeof this.value === "object") {
 		if (this.value !== null) {
 			this.update_attributes();
 		} else {
+			this.type = value_types.unassigned;
+
 			if (Object.keys(this.children).length < 1) {
 				this.value = "";
 			}
 		}
 	}
+
 	delete this.busy;
 };
 
@@ -446,31 +553,23 @@ function DynamicMetavalue() {}
 DynamicMetavalue.prototype = new DynamicValue();
 
 DynamicMetavalue.prototype.get_value = function() {
-	return this.parent[this.reference.substring(1)];
+	return this.parent.metainfo[this.reference.substring(1)];
 };
 
 DynamicMetavalue.prototype.do_set_value = function(newvalue) {
 	this.value = newvalue;
+	this.type = value_type_from_value( this.get_value() );
 
-	this.parent[this.reference.substring(1)] = newvalue;
+	this.parent.metainfo[this.reference.substring(1)] = newvalue;
 };
 
 DynamicMetavalue.prototype.register_to_parent = function() {
-	// this.value = this.parent.add_child( this );
+	this.metavalues[this.reference] = this;
 };
 
 DynamicMetavalue.prototype.set_up = function() {
 	DynamicValue.prototype.set_up.call(this);
-
-	// if (this.reference === selected_index_name){
-	// 	var x = values_module.get_or_define( this.parent.name + '.$selected');
-	// 	var self = this;
-	// 	this.observe( function() {
-	// 		var dv = values_module.get_or_define( self.parent.name + '.' + self.value );
-	// 		x.set_value( dv.get_value() );
-	// 	});
-
-	// }
+	this.type = value_type_from_value( this.get_value() );
 };
 
 function DynamicByReferenceValue() {}
@@ -509,7 +608,7 @@ DynamicByReferenceValue.prototype.set_up = function() {
 	if (m) {
 		var
 			left = this.name.substring(0, m.index),
-			index_value = values_module.get_or_define( left + selected_index_name ),
+			index_value = values_module.get_or_define( left + meta_selected_name ),
 			right = this.name.substring(m.index + 1)
 		;
 

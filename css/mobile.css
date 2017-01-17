@@ -1,0 +1,316 @@
+/* 
+ * Mobile and tablet styling 
+ */
+@media 
+only screen and (-webkit-min-device-pixel-ratio: 2) and (max-width: 1024px),
+only screen and (-moz-min-device-pixel-ratio: 2) and (max-width: 1024px), 
+only screen and (-o-min-device-pixel-ratio: 2/1) and (max-width: 1024px), 
+only screen and (min-device-pixel-ratio: 2) and (max-width: 1024px),
+only screen and (min-resolution: 192dpi) and (max-width: 1024px),
+only screen and (min-resolution: 2dppx) and (max-width: 1024px),
+only screen and (max-width: 1024px) {
+	/* General */
+	.container {
+		min-width: inherit;
+		overflow-x: hidden;
+	}
+	
+	pre code {
+		white-space: normal;
+		word-wrap: break-word;
+	}
+
+	/* Header */
+	.container header,
+	.header {
+		padding: 0;
+		min-height: 51px;
+		height: auto;
+	}
+
+	.container header .topbar,
+	.header .topbar {
+		display: none;
+	}
+
+	.container header nav.submenu,
+	.header nav.submenu {
+		display: none;
+		min-height: initial;
+	}
+	
+	.container header nav.submenu ul,
+	.header nav.submenu ul {
+		display: block;
+	}
+	
+	.container header nav.submenu ul li.no-mobile,
+	.header nav.submenu ul li.no-mobile {
+		display: none;
+	}
+
+	.container header nav.submenu h3,
+	.header nav.submenu h3 {
+		display: none;
+	}
+
+	.container header nav.menu,
+	.header nav.menu {
+		position: relative;
+		padding: 0;
+	}
+
+	.container header nav.menu ul,
+	.header nav.menu ul {
+		display: none;
+		border-top: 1px solid #AAA;
+	}
+
+	.container header nav.menu ul li,
+	.container header nav.menu ul li a,
+	.header nav.menu ul li,
+	.header nav.menu ul li a {
+		display: block;
+	}
+
+	.container header nav.menu ul li a,
+	.header nav.menu ul li a {
+		padding: 0 30px;
+		line-height: 3em;
+	}
+
+	.container header .logo,
+	.header .logo {
+		margin: 0 0 0 15px;
+		height: 55px;
+	}
+
+	.container header .logo h1,
+	.header .logo h1 {
+		margin: 8px 0 0 0;
+		font-size: 150%;
+	}
+
+	.container header nav.menu .toggleMenu,
+	.header nav.menu .toggleMenu {
+		position: absolute;
+		top: 0;
+		right: 0;
+		display: inline-block;
+		margin: 7px 15px 0 0;
+		padding: 7px 10px;
+		border: 1px solid #DDD;
+		border-radius: 4px;
+		background: #FFF;
+	}
+
+	/* Content */
+	.container main,
+	.main {
+		padding: 25px 15px 150px 15px;
+		width: 100% !important;
+	}
+
+	.container main button,
+	.main button {
+		display: block;
+	}
+
+	.container main h3, 
+	.main h3 {
+		margin: 1em 0 0.5em 0;
+		font-size: 1.2em;
+	}
+
+	/* Forms */
+	.container main form hr,
+	.main form hr {
+		margin: 1.5em 3em;
+	}
+
+	.container main form fieldset,
+	.main form fieldset {
+		margin-top: 5px;
+	}
+
+	.container main form fieldset label,
+	.container main form fieldset input,
+	.container main form fieldset textarea,
+	.container main form fieldset button,
+	.container main form fieldset input[type="submit"],
+	.main form fieldset label,
+	.main form fieldset input,
+	.main form fieldset textarea,
+	.main form fieldset button,
+	.main form fieldset input[type="submit"] {
+		display: block;
+		width: 100%;
+	}
+
+	.container main form fieldset label,
+	.main form fieldset label {
+		line-height: 1.5em;
+		height: 1.5em;
+	}
+	
+	.container main form fieldset label.no-mobile,
+	.main form fieldset label.no-mobile {
+		display: none;
+	}
+
+	.container form fieldset select, 
+	.form fieldset select {
+		width: 100%;
+		max-width: 100%;
+	}
+
+	/* Tables */
+	.container main table.topspacing,
+	.main table.topspacing {
+		margin-top: 20px;
+	}
+
+	.container main table th, 
+	.container main table td,
+	.main table th, 
+	.main table td {
+		display: none;
+	}
+
+	.container main table.mobile th, 
+	.container main table.mobile td,
+	.container main table th.mobile,
+	.container main table td.mobile,
+	.main table.mobile th, 
+	.main table.mobile td,
+	.main table th.mobile,
+	.main table td.mobile {
+		display: table-cell;
+		padding: 5px;
+		font-size: 1em;
+	}
+
+	.container main table th.mobile i,
+	.container main table td.mobile i,
+	.main table th.mobile i,
+	.main table td.mobile i {
+		font-size: 1.2em;
+	}
+
+	.container footer,
+	.footer {
+		padding: 25px 15px;
+		height: 121px;
+		font-size: 12px;
+	}
+
+	/* Login screen specifics */
+	.container main.login a.loginLink, 
+	.main.login a.loginLink {
+		width: 50%;
+	}
+
+	/* Messages */
+	div.error, 
+	div.warn, 
+	div.info {
+		width: 100%;
+		min-width: inherit;
+	}
+}
+
+
+/* 
+ * Mobile specific styling 
+ */
+@media 
+only screen and (-webkit-min-device-pixel-ratio: 2) and (max-width: 768px),
+only screen and (-moz-min-device-pixel-ratio: 2) and (max-width: 768px), 
+only screen and (-o-min-device-pixel-ratio: 2/1) and (max-width: 768px), 
+only screen and (min-device-pixel-ratio: 2) and (max-width: 768px),
+only screen and (min-resolution: 192dpi) and (max-width: 768px),
+only screen and (min-resolution: 2dppx) and (max-width: 768px),
+only screen and (max-width: 768px) {
+	.container header nav.topbar ul li.username, 
+	.header nav.topbar ul li.username {
+		display: none;
+	}
+
+	.container header nav.topbar ul li.username.mobile, 
+	.header nav.topbar ul li.username.mobile {
+		display: inline-block;
+	}
+
+	.container header nav.menu .logo,
+	.header nav.menu .logo {
+		margin: 0 0 0 15px;
+		height: 50px;
+	}
+
+	.container header nav.menu .logo img,
+	.header nav.menu .logo img {
+		height: 50px;
+	}
+
+	.container footer,
+	.footer {
+		padding: 25px 15px;
+		font-size: 12px;
+	}
+}
+
+
+/* 
+ * Tablet specific styling 
+ */
+@media 
+only screen and (-moz-min-device-pixel-ratio: 2) and (min-width: 768px) and (max-width: 1024px), 
+only screen and (-o-min-device-pixel-ratio: 2/1) and (min-width: 768px) and (max-width: 1024px), 
+only screen and (-webkit-min-device-pixel-ratio: 2) and (min-width: 768px) and (max-width: 1024px), 
+only screen and (min-device-pixel-ratio: 2) and (min-width: 768px) and (max-width: 1024px),
+only screen and (min-resolution: 192dpi) and (min-width: 768px) and (max-width: 1024px),
+only screen and (min-resolution: 2dppx) and (min-width: 768px) and (max-width: 1024px),
+only screen and (min-width: 768px) and (max-width: 1024px) {
+	.container {
+		font-size: 1.2em;
+	}
+
+	.container header,
+	.header {
+		min-height: 61px;
+	}
+
+	.container header nav.menu .logo,
+	.header nav.menu .logo {
+		height: 60px;
+	}
+
+	.container header nav.menu .toggleMenu, 
+	.header nav.menu .toggleMenu {
+		margin-top: 10px;
+	}
+}
+
+/* 
+ * Other sizes 
+ */
+@media 
+only screen and (-webkit-min-device-pixel-ratio: 2) and (max-width: 400px),
+only screen and (-moz-min-device-pixel-ratio: 2) and (max-width: 400px), 
+only screen and (-o-min-device-pixel-ratio: 2/1) and (max-width: 400px), 
+only screen and (min-device-pixel-ratio: 2) and (max-width: 400px),
+only screen and (min-resolution: 192dpi) and (max-width: 400px),
+only screen and (min-resolution: 2dppx) and (max-width: 400px),
+only screen and (max-width: 400px) {
+	.container main,
+	.main {
+		padding-bottom: 180px;
+	}
+
+	.container footer,
+	.footer {
+		padding: 25px 15px;
+		height: 155px;
+		font-size: 12px;
+	}
+}

@@ -1,32 +1,71 @@
 .hidden, .dynamic-template {
-	display: none;
+	display: none !important;
 }
 
-body {
-	padding-top: 1em;
+/* Main content */
+.container main {
+	padding: 0 1rem;
+	height: calc(100% - 61px);
 }
 
-label {
+/* Nested labels (HTML5 specifics)*/
+.container label.nested {
 	display: block;
-	width: 80ex;
-	height: 2.5em;
+	width: 100%;
+	height: 36px; 
+	line-height: 36px;
 }
 
-
-span.reallabel {
+.container label.nested span.reallabel,
+.container label.nested span.reallabel {
 	display: inline-block;
-	width: 20ex;
+	width: 25%;
+	font-weight: bold;
 }
 
-.selection {
-	border: dashed thin green;
-	padding: 1em;
-	margin: 1em 5em 3ex 5em;
+/* Forms */
+.container form.selection,
+.container .selected {
+	padding: 1rem;
+	margin: 2em auto;
+	max-width: 768px;
+	border: 1px solid #CCC;
 }
 
-.dynamic, .company, .person-record, .person-address,
-.company-address, .company-address-street {
-	display: inherit;
+.container form.selection fieldset button {
+	width: 35%;
+}
+
+.container form.selected fieldset label.nested {
+	margin-bottom: 10px;
+}
+
+.container form.selection fieldset #set-button {
+	margin-right: 5%;
+}
+
+.container form fieldset select {
+	max-width: 75%;
+}
+
+/* Company information */
+.company {
+	margin: 0 auto 2em auto;
+	padding: 1rem;
+	max-width: 768px;
+	border: 1px solid #CCC;
+}
+
+.container main h3 {
+    margin: 0 auto 1rem auto;
+    padding: 0 1rem;
+	max-width: 768px;
+}
+
+.please-select {
+	margin: 0 auto;
+	padding: 0 1rem;
+	max-width: 768px;
 }
 
 .salutation {
@@ -37,34 +76,216 @@ span.reallabel {
 	color: orange;
 }
 
-button.dynamic-value {
-	margin-left: 1em;
-	width: 3ex;
-	padding: 0.1ex;
-	color: blue;
+/* Tables */
+.container main table {
+	margin: 2em 0;
 }
 
-.person-id {
+
+.container main tr td i {
 	display: inline-block;
-	width: 6em;
-	text-align: right;
-	margin-right: 2ex;
-	background-color: rgba( 0, 127, 0, .2 ); 
-	color: orange;
-	padding-right: 1ex;
+	min-width: 1em;
+	width: 1em;
+	cursor: pointer;
 }
+
+.container main  i.remove {
+	color: red;
+}
+
+.container main tr td i {
+	color: #22B6BA;
+}
+
+.container table tr td label, 
+.container table tr td input, 
+.container table tr td select, 
+.container table tr td textarea {
+    font-family: 'Raleway', Arial;
+}
+
+.container table tr td label, 
+.container table tr td input, 
+.container table tr td button, 
+.container table tr td select, 
+.container table tr td textarea {
+    display: inline-block;
+    vertical-align: top;
+    font-size: 1em;
+}
+
+.container table tr td,
+.container table tr td label, 
+.container table tr td input, 
+.container table tr td button, 
+.container table tr td select {
+    height: 36px;
+    line-height: 36px;
+}
+
+.container table tr td input, 
+.container table tr td select, 
+.container table tr td textarea {
+    margin: 0;
+    padding: 0 10px;
+    border: 1px solid #AAA;
+    border-radius: 4px;
+}
+
+.container table tr td input, 
+.container table tr td select, 
+.container table tr td textarea {
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+    -webkit-transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
+    -o-transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
+    transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
+}
+
+.container table tr td input:focus, 
+.container table tr td select:focus, 
+.container table tr td textarea:focus {
+    border-color: #66AFE9;
+    outline: 0;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(102, 175, 233, 0.6);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(102, 175, 233, 0.6);
+}
+
+.container table tr td button {
+	margin-left: 0.5em;
+    width: 2.5em;
+	min-width: inherit;
+}
+
+.container table tr td button:first-child {
+	margin-left: 0;
+}
+
+.container table tr td.person-id {
+	min-width: 4em;
+	text-align: right;
+	color: #FF9800;
+	font-weight: bold;
+}
+
+.container table tr td input.salary {
+	width: 7em;
+}
+
+.container table tfoot tr td {
+	font-weight: bold;
+}
+
 
 input[type=number]{
 	text-align: right;
 }
 
 div.meta {
-	padding: 1em;
-	font-size: xx-small;
-	background-color: rgba( 0, 200,200, 0.3 );
+	padding: 2em;
+	font-size: 0.8em;
+    background-color: #FAFAFA;
+    border-bottom: 1px solid #CCC;
 }
 
 div.meta label {
-	height: 1em;
+	display: block;
+	height: 1.5em;
+	line-height: 1.5em;
 }
 
+/* Help text */
+.container main form fieldset .helpTextContainer.selected {
+	display: inline-block;
+	position: absolute;
+	top: 5px;
+	right: 20%;
+	padding: 0;
+	margin: 0;
+	border: none;
+
+}
+
+.placeholder {
+	color: grey;
+}
+
+.container main form fieldset .helpTextContainer a {
+	vertical-align: top;
+	color: #333;
+}
+
+.container main form fieldset .helpTextContainer a:hover {
+	cursor: pointer;
+}
+
+.container main form fieldset .helpTextContainer a:hover,
+.container main form fieldset .helpTextContainer a.purple {
+	color: #22B6BA;
+}
+
+.container main form fieldset .helpTextContainer a i.fa {
+	font-size: 1.8em;
+    vertical-align: middle;
+}
+
+.container main form fieldset .helpTextContainer .helpText {
+	display: none;
+	vertical-align: top;
+	position: absolute;
+	top: 0;
+	left: 25px;
+	width: 240px;
+	padding: 10px;
+	border: 1px solid #CCC;
+	border-radius: 3px;
+	background: #FFF;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.container main form fieldset .helpTextContainer .helpText.visible {
+	display: block;
+}
+
+.container main form fieldset .helpTextContainer a:hover + .helpText {
+	display: block;
+}
+
+.container main form fieldset .helpTextContainer .helpText i {
+	padding: 0 3px;
+	font-size: 0.9em;
+}
+
+option.selected {
+	color: blue !important;
+	font-weight: bold;
+	background-color: inherit !important;
+	margin: initial !important; 
+	padding: initial !important;
+}
+
+.container main .person-tile.selected, .container main tr.selected {
+    background-color: aliceblue;
+}
+
+.person-tile, .person-tile.selected {
+    display: inline-block;
+    width: 25em;
+    margin-right: 1ex;
+    margin-left: 3ex;
+    margin-bottom: 2ex;
+    background-color: rgba( 255, 154, 0, .25 );
+    padding: 2.5em;
+}
+
+.person-tile i {
+	float: right;
+	cursor: pointer;
+	color: #22B6BA;
+}
+
+address i.fa-envelope-o {
+	position: relative;
+    top: 2em;
+    right: -11em;
+}

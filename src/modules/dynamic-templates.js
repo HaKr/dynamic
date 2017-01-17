@@ -118,7 +118,7 @@ DynamicTemplateDefinition.prototype.merge_options = function( options ) {
 	});
 };
 
-DynamicTemplateDefinition.prototype.absorb = function(element, only_content) {
+DynamicTemplateDefinition.prototype.absorb = function( element, only_content ) {
 	var
 		self = this,
 		parent = self.content
@@ -128,7 +128,12 @@ DynamicTemplateDefinition.prototype.absorb = function(element, only_content) {
 
 	if (only_content && self.content.firstChild !== null){
 		// logger.debug('content only absorb');
-		parent = self.content.firstChild;
+		parent = dynamic_dom.get_element( self.content, '.dynamic-template-content' );
+		if (parent === null){
+			parent = self.content.firstChild;
+		} else {
+			dynamic_dom.remove_class( parent, 'dynamic-template-content' );
+		}
 	}
 
 	node_list.forEach(function(element_node) {
@@ -137,12 +142,23 @@ DynamicTemplateDefinition.prototype.absorb = function(element, only_content) {
 
 	if (only_content) {
 		dynamic_dom.get_attributes( element ).forEach( function ( attr ){
-			parent.setAttribute( attr.name, attr. value );
+			if (attr.name !== "class"){
+				parent.setAttribute( attr.name, attr. value );
+			}
+		}, this );
+		dynamic_dom.get_classes( element ).forEach( function ( class_name ){
+			dynamic_dom.add_class( parent, class_name );
 		}, this );
 		element.parentNode.removeChild(element);
 	}
 
 	return this;
+};
+
+DynamicTemplateDefinition.prototype.get_clone_from = function( other_definition ) {
+	other_definition.get_clone().forEach( function ( cloned_node ){
+		this.content.appendChild( cloned_node );
+	}, this);
 };
 
 DynamicTemplateDefinition.prototype.get_clone = function() {
@@ -434,9 +450,6 @@ DynamicTemplateInstance.prototype.build = function() {
 		this.child_nodes.forEach(function(child_node) {
 			if (typeof this.dynamic_value === "object" && this.dynamic_value !== null){
 				dynamic_dom.add_class( child_node, this.dynamic_value.name.replace('.','-') );
-				if (this.dynamic_value.parent !== null && this.dynamic_value.reference == this.dynamic_value.parent.selected){
-					dynamic_dom.add_class( child_node, 'selected' );
-				}
 			}
 			this.anchor.parentNode.insertBefore(child_node, this.anchor);
 		}, this );

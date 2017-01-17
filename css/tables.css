@@ -1,0 +1,149 @@
+/* Table */
+.container main table,
+.main table {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	max-width: 100%;
+	border-spacing: 0;
+}
+
+.container main table.small,
+.main table.small {
+	max-width: 720px;
+	margin: 0 auto;
+}
+
+.container main table.topspacing,
+.main table.topspacing {
+	margin-top: 50px;
+}
+
+/* Table rows */
+.container main table tr.highlightable:hover,
+.main table tr.highlightable:hover {
+	background-color: #DDD;
+}
+
+.container main table tr.highlighted,
+.main table tr.highlighted {
+	background-color: #FAFAFA;
+}
+
+/* General cell styling */
+.container main table th, 
+.container main table td,
+.main table th,
+.main table td {
+	margin: 0;
+	padding: 0.5em 0 0.5em 0.5em;
+	line-height: 1.3em;
+	text-align: left;
+	vertical-align: top;
+	border-bottom: 1px solid #999;
+}
+
+.container main table th:last-child, 
+.container main table td:last-child,
+.main table th:last-child,
+.main table td:last-child {
+	padding-right: 0.5em;
+}
+
+/* Table headers */
+.container main table th, 
+.main table th {
+	text-transform: uppercase;
+}
+
+.container main table th.date,
+.container main table td.date,
+.container main table th .date,
+.container main table td .date,
+.container main table th.nowrap,
+.container main table td.nowrap,
+.container main table th .nowrap,
+.container main table td .nowrap,
+.main table th.date,
+.main table td.date,
+.main table th .date,
+.main table td .date,
+.main table th.nowrap,
+.main table td.nowrap,
+.main table th .nowrap,
+.main table td .nowrap {
+	white-space: nowrap;
+}
+
+.container main table th p,
+.container main table td p,
+.main table th p,
+.main table td p {
+	margin: 0;
+	padding: 0;
+}
+
+.container main table th.left,
+.container main table td.left,
+.main table th.left,
+.main table td.left {
+	text-align: left;
+}
+
+.container main table th.centered,
+.container main table td.centered,
+.main table th.centered,
+.main table td.centered {
+	text-align: center;
+}
+
+.container main table th.right,
+.container main table td.right,
+.main table th.right,
+.main table td.right {
+	text-align: right;
+}
+
+.container main table td.link,
+.main table td.link {
+	padding: 0;
+}
+
+.container main table td.capitalize,
+.container main table td .capitalize,
+.main table td.capitalize,
+.main table td .capitalize {
+	text-transform: capitalize;
+}
+
+.container main table td a,
+.main table td a {
+	margin: 0;
+	padding: 0;
+	outline: none;
+}
+
+.container main table td.link a,
+.main table td.link a {
+	display: block;
+	padding: 0.5em;
+}
+
+/*
+ * Pagination
+ */
+.container main table .pagination,
+.main table .pagination {
+	text-align: center;
+	width: 100%;
+}
+
+.container main table .pagination a,
+.main table .pagination a {
+	text-decoration: none;
+}
+
+.container main table .pagination a:hover,
+.main table .pagination a:hover {
+	text-decoration: underline;
+}

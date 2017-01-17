@@ -1,0 +1,70 @@
+/* 
+ * Footer styling
+ *
+ * To enable the styling, use either a <footer> element within a <div class="container"> element 
+ * or an element with the "footer" class
+ */
+.container footer,
+.footer {
+	position: absolute;
+	bottom: 0;
+	margin: 0;
+	padding: 35px 15px;
+	width: 100%;
+	height: 130px;
+	background: #404040;
+	text-align: center;
+	font-weight: 200;
+	color: #FFF;
+}
+
+.container footer p,
+.footer p {
+	margin: 0;
+	color: #BFBFBF;
+}
+
+.container footer a, 
+.footer a {
+	text-decoration: none;
+	color: #FFF;
+}
+
+.container footer a:hover,
+footer a:hover {
+	color: #22B6BA;
+}
+
+.container footer ul,
+.container footer ul li,
+.footer ul,
+.footer ul li {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.container footer ul,
+.footer ul {
+	margin-top: 20px;
+}
+
+.container footer ul li,
+.footer ul li {
+	display: inline-block;
+	vertical-align: top;
+	padding: 0 10px;
+	border-right: 1px solid #F0F0F0;
+	text-transform: uppercase;
+}
+
+.container footer ul li:first-child,
+.footer ul li:first-child {
+	padding-left: 0;
+}
+
+.container footer ul li:last-child,
+.footer ul li:last-child {
+	padding-right: 0;
+	border-right: none;
+}

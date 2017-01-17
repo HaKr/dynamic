@@ -1,0 +1,20 @@
+/* 
+ * Login form styling
+ *
+ * To enable the styling, add the class "login" to either the <main> element or the <div class="main"> element
+ */
+.container main.login .loginLink,
+.main.login .loginLink {
+	width: 25%;
+	text-decoration: none;
+}
+
+.container main.login .loginLink.left,
+.main.login .loginLink.left {
+	text-align: left;
+}
+
+.container main.login .loginLink.right,
+.main.login .loginLink.right {
+	text-align: right;
+}

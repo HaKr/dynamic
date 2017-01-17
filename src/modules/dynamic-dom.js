@@ -98,6 +98,14 @@ dom_utils.insert_text_before = function(node, text) {
 	return result;
 };
 
+dom_utils.insert_comment_before = function( node, comment_text ) {
+	var result = document.createComment( comment_text );
+
+	node.parentNode.insertBefore(result, node);
+
+	return result;
+};
+
 dom_utils.remove_node = function(node) {
 	if (node.parentNode) {
 		node.parentNode.removeChild(node);
