@@ -6,7 +6,7 @@ Dynamic app is a framework to offer dynamic, interactive web pages, that are exc
 The framework is intended to manipulate data structures and thus is every input element and are all bindings related to the data element it references.
 
 ### Hello world example
-```html welcome
+```html
 <label>Please enter your name:
 	<input name=addressee value=world>
 </label>
@@ -17,7 +17,7 @@ Here we define an input element with the default value "world" and the given nam
 
 ### Hello world revised
 
-```html welcome
+```html
 <label>Please enter your name:
 	<input name=addressee>
 </label>
