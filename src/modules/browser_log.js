@@ -1,3 +1,7 @@
+var
+	dynamic_utils = require('./dynamic-utils');
+
+
 function Log() {
 	this.hasConsole = (typeof console === "object" && typeof console.log !== "undefined");
 	this.muted = false;
@@ -46,6 +50,7 @@ function LogInstance(name) {
 	});
 }
 
+
 Log.prototype.mute = function(onoff) {
 	if (typeof onoff !== "boolean") {
 		onoff = false;
@@ -59,6 +64,8 @@ Log.prototype.mute = function(onoff) {
 
 Log.prototype.get_logger = function(name) {
 	var result = null;
+
+	name = dynamic_utils.htmlID2OptionCase( name );
 
 	if (this.instances.hasOwnProperty(name)) {
 		result = this.instances[name];
@@ -84,7 +91,16 @@ Log.prototype.to_console = function(target, log_instance, params) {
 		if (typeof target === "object" && target.treshold >= log_instance.log_level) {
 			var args = Array.prototype.slice.call(params); //dynamic_utils.make_array( params );
 			if (typeof args[0] === "function") {
-				args[0]();
+				var 
+					callback = args[0],
+					thisArg  = args.length>1 ? args[1] : null
+				;
+
+				if (thisArg === null){
+					callback();
+				} else {
+					callback.call( thisArg );
+				}
 			} else {
 				var console_target = target.target;
 				if (typeof console_target.apply === "function") {

@@ -5,7 +5,17 @@
 /* Main content */
 .container main {
 	padding: 0 1rem;
-	height: calc(100% - 61px);
+	height: calc(100% - 150px);
+ 	min-height: 50px;
+    overflow-y: auto;
+}
+
+.container footer {
+	position: fixed;
+    padding: 16px 15px;
+    height: 5em;
+    font-size: smaller;
+    line-height: 1ex;
 }
 
 /* Nested labels (HTML5 specifics)*/
@@ -20,7 +30,10 @@
 .container label.nested span.reallabel {
 	display: inline-block;
 	width: 25%;
-	font-weight: bold;
+}
+
+.container label .data-item{
+	font-weight: bold;	
 }
 
 /* Forms */
@@ -45,7 +58,7 @@
 }
 
 .container form fieldset select {
-	max-width: 75%;
+	max-width: 50%;
 }
 
 /* Company information */
@@ -157,6 +170,10 @@
 	min-width: inherit;
 }
 
+.container form fieldset label, .form fieldset label {
+	font-weight: normal;
+}
+
 .container table tr td button:first-child {
 	margin-left: 0;
 }
@@ -168,7 +185,16 @@
 	font-weight: bold;
 }
 
-.container table tr td input.salary {
+.formatted.currency,
+.formatted.quantity {
+	display: inline-block;
+	text-align: right;
+}
+
+.container table tr td input.salary,
+.formatted.currency,
+.formatted.quantity
+ {
 	width: 7em;
 }
 
@@ -195,7 +221,7 @@ div.meta label {
 }
 
 /* Help text */
-.container main form fieldset .helpTextContainer.selected {
+.container main form fieldset .helpTextContainer {
 	display: inline-block;
 	position: absolute;
 	top: 5px;
@@ -268,24 +294,57 @@ option.selected {
     background-color: aliceblue;
 }
 
+.container main button.remove {
+	color: red;
+}
+
+.container main button.remove, .container main button.move-up, .container main button.move-down {
+	display: inline-block;
+	width: 1.5em;
+	height: 2.5em;
+	background-color: transparent;
+	padding: 0;
+	min-width: 1.5em;
+	border: none;
+}
+
+.person-record.formatted.quantity,
+.person-record.formatted.currency,
+.person-record.formatted.currency-int {
+	text-align: left;
+}
+
 .person-tile, .person-tile.selected {
     display: inline-block;
     width: 25em;
     margin-right: 1ex;
     margin-left: 3ex;
     margin-bottom: 2ex;
+    margin-top: 1.5em;
     background-color: rgba( 255, 154, 0, .25 );
     padding: 2.5em;
 }
 
-.person-tile i {
+.person-tile button {
 	float: right;
 	cursor: pointer;
-	color: #22B6BA;
+	color: #22B6BA !important;
+	margin-top: -0.7em;
+}
+
+.person-tile button.remove {
+	color: red !important;
 }
 
 address i.fa-envelope-o {
 	position: relative;
     top: 2em;
     right: -11em;
+}
+
+
+div .person-tile:first-of-type button.move-up,
+div .person-tile:last-of-type button.move-down,
+div .person-tile:only-of-type button.remove 	{
+	display: none;
 }

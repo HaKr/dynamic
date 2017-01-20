@@ -4,17 +4,16 @@
   "description": "Dynamic templates that appear on value changes",
   "main": "dynamic-server.js",
   "scripts": {
-    "testing": "browserify test/*.js | tape-run",
     "test": "tape -r ./src/modules/dynamic-values.js test/*.js",
-    "abc": "tape-run",
-    "watch": "npm-watch",
-    "taper": "tape-run",
-    "browserify": "browserify src/modules/*.js --outfile js/dynamic-app.js",
-    "copy-shared": "cp -r dynamic-app.* js /media/sf_eeg/dynamic/"
-  },
-  "watch": {
-    "browserify": "src/modules/*.js",
-    "copy-shared": [  "js/*.js",  "dynamic-app.*" ]
+    "watch:all": "parallelshell 'npm run watch:modules' 'npm run watch:components' 'npm run watch:www' 'npm run watch:dist'",
+    "livereload": "live-reload --port 9091 dist/",
+    "watch:modules": "watch 'npm run browserify' src/modules",
+    "watch:components": "watch 'npm run browserify' src/components",
+    "watch:www": "watch 'npm run copy-static' src/www",
+    "watch:dist": "watch 'npm run copy-shared' dist",
+    "browserify": "browserify src/modules/*.js src/components/*.js --outfile dist/js/dynamic-app.js",
+    "copy-static": "cp -r src/www/* dist/",
+    "copy-shared": "cp -r dist/* /media/sf_eeg/dynamic/"
   },
   "repository": {
     "type": "git",
@@ -31,9 +30,14 @@
     "event-emitter": "^0.3.4",
     "install": "^0.8.2",
     "npm": "^4.0.5",
-    "npm-watch": "^0.1.6",
+    "watch": "latest",
     "tape": "^4.6.3",
     "tape-run": "^2.1.5",
-    "tapes": "^4.1.0"
+    "tapes": "^4.1.0",
+    "live-reload": "latest",
+    "parallelshell": "latest"
+  },
+  "dependencies": {
+    "uuid": "^3.0.1"
   }
 }

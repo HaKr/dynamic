@@ -29,6 +29,8 @@ var
 	observer_module = require('./dynamic-observers.js'),
 	formula_module = require('./dynamic-formulas.js'),
 	logger = require('./browser_log').get_logger(dynamic_app.info.Name),
+	htmlcomment_logger = require('./browser_log').get_logger(template_module.info.Name+'$'+'HTML'),
+	uuid_generator = require('uuid/v4');
 	metalogger = require('./browser_log').get_logger('meta info')
 ;
 
@@ -100,7 +102,7 @@ dynamic_app.run = function() {
 
 	logger.info( dynamic_app.info );
 
-	dynamic_app.transform_labels();
+	// dynamic_app.transform_labels();
 
 	dynamic_app.vars.components.forEach( function register_components(component) {
 		component.locate();
@@ -207,19 +209,9 @@ dynamic_app.show_instance_info = function(){
 };
 
 module.exports = dynamic_app;
-window.$app = dynamic_app;
-
-dynamic_app.modules = {
-	values: value_module,
-	templates: template_module
-};
 
 var
 	dynamic_instance_class = {};
-
-dynamic_app.dynamic_value = function(value_name) {
-	return value_module.get_by_name(value_name);
-};
 
 dynamic_app.define_templates = function(template_element) {
 	var
@@ -239,19 +231,22 @@ dynamic_app.define_templates = function(template_element) {
 
 		template_name  = parser.name;
 		only_content 	= parser.options.hasOwnProperty( 'only_content' ) ? parser.options.only_content : false;
-		with_content	= parser.options.hasOwnProperty('with_content') ? parser.options.with_content : '',
+		with_content	= parser.options.hasOwnProperty('with_content') ? parser.options.with_content : '';
 		delete parser.options.only_content;
 
 		if (typeof template_name === "string" && template_name.length > 0) {
 			existing = template_module.get_template_by_name( template_name );
 
 			if (existing !== null) {
-				if (with_content.length>0){
-					template_name += "_" + with_content;
+				if ( parser.options.hasOwnProperty('with_content') ){
+					if (with_content.length>0){
+						template_name += "_" + with_content;
+					} else {
+						template_name += "_" + uuid_generator();
+					};
 					result = template_module.define( template_name, parser.options );	
 					// existing = null;
 					result.get_clone_from( existing );
-
 				} else {
 					result = existing;
 					result.merge_options( parser.options );
@@ -422,6 +417,12 @@ dynamic_value_class.get_elements = function( selector ) {
 	return result;
 };
 
+dynamic_value_class.get_instances = function(){
+	if ( typeof this.instances ==="undefined" ){
+		this.instances = [];
+	}
+	return this.instances;
+};
 
 dynamic_value_class.add_instance = function( instance ){
 	if ( typeof this.instances ==="undefined" ){
@@ -442,7 +443,7 @@ dynamic_value_class.remove_instance = function( instance ){
 	var 
 		exists_ix = this.instances.indexOf( instance );
 	if ( exists_ix < 0 ){
-		logger.error( 'Instance '+sequence+' already referenced on value '+this.name );
+		logger.error( 'Instance not referenced on value '+this.name, instance );
 	} else {
 		this.instances.splice( exists_ix, 1 );
 	}
@@ -506,7 +507,7 @@ dynamic_value_class.mark_selected = function(){
 			var
 				is_selected = child_value.reference === selected_reference;
 
-			child_value.instances.forEach( function ( child_instance ){
+			child_value.get_instances().forEach( function ( child_instance ){
 				var
 					element_node = child_instance.child_nodes[0];
 				if (is_selected){
@@ -576,12 +577,20 @@ dynamic_value_class.swap = function( offset ){
  * Template instance enhancements
  */
 dynamic_instance_class.get_values_and_templates = function() {
+	var
+		has_value = this.dynamic_value !== null
+	;
 
 	this.child_nodes.forEach(function(node) {
-		this.bind_textnodes(node);
-		this.bind_attributes(node);
+		if (has_value){
+		}
 		this.get_templates(node);
-		this.get_values(node);
+		if (has_value){
+			this.bind_textnodes(node);
+			this.bind_attributes(node);
+			this.get_values(node);
+		}
+		this.resolve_parameters( node );
 	}, this);
 };
 
@@ -673,9 +682,9 @@ dynamic_instance_class.get_templates = function(node) {
 			attributes[attr_match[1].replace('-', '_')] = attr_match[2];
 		});
 
-		logger.debug( function() {
-			dynamic_dom.insert_comment_before( comment_node, comment_node.textContent  );
-		});
+		htmlcomment_logger.info( function() {
+			this.placeholder_start = dynamic_dom.insert_comment_before( comment_node, comment_node.textContent  );
+		}, this);
 
 
 		var
@@ -686,9 +695,9 @@ dynamic_instance_class.get_templates = function(node) {
 			instancing_schema		= dynamic_placeholder.select_instancing(attributes.multiple)
 		;
 
-		logger.debug( function() {
-			dynamic_dom.insert_comment_before( comment_node, "End "+attributes.name  );
-		});
+		htmlcomment_logger.info( function() {
+			this.placeholder_last = dynamic_dom.insert_comment_before( comment_node, "End "+attributes.name  );
+		}, this );
 
 		template_placeholder.on_value_changed 	= instancing_schema.on_value_changed;
 		template_placeholder.is_multiple			= instancing_schema.multiple;
@@ -705,34 +714,42 @@ dynamic_instance_class.get_templates = function(node) {
 			template_instance.get_values_and_templates();
 		};
 
-		var dynamic_value = attributes.dynamic_value.length>0 ? this.get_dynamic_value( attributes.dynamic_value ) : this.dynamic_value;
-		this.add_observer(
-			dynamic_value.observe( 'placeholder_'+template_placeholder.definition.name, function change_placeholder(trigger_value) {
-				// if (template_placeholder.dynamic_value !== trigger_value ||  template_placeholder.dynamic_value.get_value() !== trigger_value.get_value() ){
-					logger.debug( dynamic_value.name+'['+trigger_value.name+']'+'('+(typeof template_placeholder.dynamic_value === "undefined"?'NIL':template_placeholder.dynamic_value.name)+') ==> instance(s) of ' + template_placeholder.definition.name );
-					template_placeholder.dynamic_value = trigger_value;
-					template_placeholder.on_value_changed(trigger_value);
-				// }
-			}, template_placeholder )
-		);
+		template_placeholder.dynamic_value = attributes.dynamic_value.length>0 ? this.get_dynamic_value( attributes.dynamic_value ) : null;
 
-		if (!template_placeholder.is_multiple && !dynamic_value.is_empty() ){
-			logger.debug( 'Instance(s) of ' + template_placeholder.definition.name + ' for ' + dynamic_value.name+'['+dynamic_value.get_final().name+']' );
-			template_placeholder.dynamic_value = dynamic_value;
-			template_placeholder.on_value_changed( dynamic_value );
-		} 
-		var delegated_value = dynamic_value.get_final();
-		if (delegated_value !== dynamic_value){
+		if (template_placeholder.dynamic_value !== null){
 			this.add_observer(
-				delegated_value.observe( 'placeholder_delegated'+template_placeholder.definition.name, function change_placeholder(trigger_value) {
+				template_placeholder.dynamic_value.observe( 'placeholder_'+template_placeholder.definition.name, function change_placeholder(trigger_value) {
 					// if (template_placeholder.dynamic_value !== trigger_value ||  template_placeholder.dynamic_value.get_value() !== trigger_value.get_value() ){
-						logger.debug( trigger_value.name+'('+(typeof template_placeholder.dynamic_value === "undefined"?'NIL':template_placeholder.dynamic_value.name)+') ==> instance(s) of ' + template_placeholder.definition.name );
-						template_placeholder.dynamic_value = trigger_value;
+						logger.debug( template_placeholder.dynamic_value.name+'['+trigger_value.name+']'+'('+(typeof template_placeholder.dynamic_value === "undefined"?'NIL':template_placeholder.dynamic_value.name)+') ==> instance(s) of ' + template_placeholder.definition.name );
+						// template_placeholder.dynamic_value = trigger_value;
 						template_placeholder.on_value_changed(trigger_value);
 					// }
 				}, template_placeholder )
 			);
+		
 
+			var delegated_value = template_placeholder.dynamic_value.get_final();
+
+
+			if (!template_placeholder.is_multiple &&  !delegated_value.is_empty() ){
+				logger.debug( 'Instance(s) of ' + template_placeholder.definition.name + ' for ' + template_placeholder.dynamic_value.name+'['+template_placeholder.dynamic_value.get_final().name+']' );
+				template_placeholder.on_value_changed( template_placeholder.dynamic_value );
+			} 
+
+			if (delegated_value !== template_placeholder.dynamic_value){
+				this.add_observer(
+					delegated_value.observe( 'placeholder_delegated'+template_placeholder.definition.name, function change_placeholder(trigger_value) {
+						// if (template_placeholder.dynamic_value !== trigger_value ||  template_placeholder.dynamic_value.get_value() !== trigger_value.get_value() ){
+							logger.debug( trigger_value.name+'('+(typeof template_placeholder.dynamic_value === "undefined"?'NIL':template_placeholder.dynamic_value.name)+') ==> instance(s) of ' + template_placeholder.definition.name );
+							template_placeholder.dynamic_value = trigger_value;
+							template_placeholder.on_value_changed(trigger_value);
+						// }
+					}, template_placeholder )
+				);
+
+			}
+		} else {
+			template_placeholder.set_instance( null );
 		}
 	
 
@@ -755,10 +772,10 @@ var
 					other_value = this.dynamic_value.swap(-1),
 					other_button = other_value.get_elements( '.move-up.dynamic-value' )[0] 
 				;
-				dynamic_dom.remove_class( other_button, 'hidden' );
+				// dynamic_dom.remove_class( other_button, 'hidden' );
 
 				if (!this.dynamic_value.can_swap(-1)){
-					dynamic_dom.add_class( this, 'hidden' );
+					// dynamic_dom.add_class( this, 'hidden' );
 				}
 			}, label: '^',
 			can_do: function( dynamic_value ){ return dynamic_value.can_swap(-1); }
@@ -769,10 +786,10 @@ var
 					other_value = this.dynamic_value.swap(1),
 					other_button = other_value.get_elements( '.move-down.dynamic-value' )[0] 
 				;
-				dynamic_dom.remove_class( other_button, 'hidden' );
+				// dynamic_dom.remove_class( other_button, 'hidden' );
 
 				if (!this.dynamic_value.can_swap(1)){
-					dynamic_dom.add_class( this, 'hidden' );
+					// dynamic_dom.add_class( this, 'hidden' );
 				}
 			}, label: 'v',
 			can_do: function( dynamic_value ){ return dynamic_value.can_swap(1); }
@@ -811,24 +828,24 @@ dynamic_instance_class.get_values = function(node) {
 			var dv = this.dynamic_value;
 			btn.dataset.dynamicValue = dv.name;
 
-			var 
-				i = document.createElement( 'i' );
-				i.className = btn.className;
-				button_title = btn.getAttribute( 'title')
-			;
+			// var 
+			// 	i = document.createElement( 'i' );
+			// 	i.className = btn.className;
+			// 	button_title = btn.getAttribute( 'title')
+			// ;
 
-			if (button_title !== null){
-				i.setAttribute( 'title', button_title  );
-			}	
+			// if (button_title !== null){
+			// 	i.setAttribute( 'title', button_title  );
+			// }	
 
-			btn.parentNode.insertBefore( i, btn );
-			btn.remove();
-			btn = i;
+			// btn.parentNode.insertBefore( i, btn );
+			// btn.remove();
+			// btn = i;
 			
 			Object.keys( button_commands ).forEach( function( command_name ){
 				if (btn.className.indexOf( command_name ) >= 0){
 					if (!button_commands[ command_name ].can_do( dv )){
-						dynamic_dom.add_class( btn, 'hidden' );
+						// dynamic_dom.add_class( btn, 'hidden' );
 					}
 
 					// btn.textContent = button_commands[ command_name ].label;
@@ -865,7 +882,16 @@ dynamic_instance_class.get_dynamic_value = function get_dynamic_value_for_instan
 	if (typeof this.dynamic_value === "object" && this.dynamic_value !== null){
 		result = this.dynamic_value.get_dynamic_value( value_name );
 	} else {
-		result = value_module.get_or_define( value_name );
+		var parent_instance = this.parent_instance;
+
+		for (var parent_instance = this.parent_instance; result === null && parent_instance !== null; parent_instance = parent_instance.parent){
+			if (parent_instance.dynamic_variable !== null ){
+				result = parent_instance.dynamic_value.get_dynamic_value( value_name );
+			}	
+		}
+		if (result === null){
+			result = value_module.get_or_define( value_name );
+		}
 	}
 
 	if (formula.length > 0){
@@ -880,6 +906,40 @@ dynamic_instance_class.get_dynamic_value = function get_dynamic_value_for_instan
 
 	return result;
 };
+
+dynamic_instance_class.resolve_parameters = function( element ) {
+		agument_elements = dynamic_dom.get_elements( element, '.argument' )
+	;
+
+	agument_elements.forEach( function parameter_to_argument( argument_element ){
+		var 
+			class_list = dynamic_dom.get_classes( argument_element ),
+			argument_index = class_list.indexOf('argument')
+		;
+
+		if (argument_index+1 < class_list.length){
+
+			var
+				argument_name = class_list[ argument_index+1 ],
+				param_element = dynamic_dom.get_element( element, '.parameter.'+argument_name ),
+				do_replace = dynamic_dom.has_class( argument_element, 'replace' )
+			;
+
+			if ( param_element === null){
+				logger.warning( 'No actual parameter found for argument '+ argument_name + ' on instance '+this.placeholder.definition.name );
+			} else {
+				dynamic_dom.remove_class( param_element, 'parameter');
+				dynamic_dom.remove_class( argument_element, 'argument' );
+				dynamic_dom.remove_class( argument_element, 'replace' );
+				dynamic_dom.move_element( param_element, argument_element, do_replace );
+				// actual.push( param_element );
+			}
+		}
+
+	}, this );
+};
+
+
 
 dynamic_instance_class.node_inserted = function( node ){
 	if (this.dynamic_value !== null){
@@ -979,6 +1039,15 @@ function AppControl( element, template_instance ) {
 	this.set_up();
 }
 
+var
+	// change_by_value = new Event( 'change_by_value' )
+	change_by_value = document.createEvent('Event')
+;
+
+// Define that the event name is 'build'.
+change_by_value.initEvent('change_by_value', true, true);
+
+
 AppControl.prototype.update_by_value = function(dynamic_value) {
 	var
 		dv_text = dynamic_value.get_text();
@@ -986,6 +1055,7 @@ AppControl.prototype.update_by_value = function(dynamic_value) {
 	if (this.element.value !== dv_text) {
 		// logger.debug('update control value from dynamic value', this);
 		this.element.value = dynamic_value.get_value();
+		this.element.dispatchEvent( change_by_value );
 	}
 };
 
@@ -1013,6 +1083,76 @@ AppControl.prototype.update_value = function() {
 	logger.debug('<<<<< update value "'+this.dynamic_value.name+'" from control "'+control_value+'"', this);
 };
 
+var
+	nf_locales, formatters
+;
+
+if (typeof Intl === "object"){
+	nf_locales = Intl.NumberFormat.supportedLocalesOf(),
+	formatters = {
+		'currency-int': new Intl.NumberFormat( nf_locales, { minimumFractionDigits: 0, maximumFractionDigits: 0 }),
+		'one-decimal': new Intl.NumberFormat( nf_locales, { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
+		currency: new Intl.NumberFormat( nf_locales, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+		quantity: new Intl.NumberFormat( nf_locales, { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+	}
+
+} else {
+
+	formatters = {
+		'currency-int': new IE9NumberFormatter(0),
+		'one-decimal': new IE9NumberFormatter(0),
+		currency: new IE9NumberFormatter(2),
+		quantity: new IE9NumberFormatter(3)
+	}
+}
+
+formatters.percentage = new PercentageFormatter();
+
+function IE9NumberFormatter( dec ){
+	this.decimals = dec;
+
+}
+
+IE9NumberFormatter.prototype.format = function( the_value ){
+	return new Number( the_value ).toFixed( this.decimals );
+}
+
+function PercentageFormatter(){
+	this.formatter = formatters['one-decimal'];
+}
+
+PercentageFormatter.prototype.format = function( perc_value ){
+	return this.formatter.format( new Number( perc_value ) * 100 ) +'%';
+};
+
+function ValueFormatter( app_control, formatter_name ){
+	var self = this;
+	this.app_control = app_control;
+	this.element = app_control.element;
+	this.formatter = formatters[ formatter_name ];
+
+	this.format_element = document.createElement('span');
+
+	dynamic_dom.add_class( this.format_element, 'formatted' );
+	dynamic_dom.add_class( this.format_element, formatter_name );
+
+	this.element.parentNode.insertBefore( this.format_element, this.element );
+	this.element.addEventListener('change_by_value', function(){  
+		self.format_value();
+	} );
+	this.element.remove();
+
+	this.format_value();
+}
+
+ValueFormatter.prototype.format_value = function(){
+	if (typeof this.element.value === "string" && this.element.value.length <1){
+		this.format_element.textContent = '';
+	} else {
+		this.format_element.textContent = this.formatter.format( this.element.value );
+	}
+};
+
 AppControl.prototype.set_up = function() {
 
 	var
@@ -1038,6 +1178,25 @@ AppControl.prototype.set_up = function() {
 	this.element.addEventListener('change', function() {
 		self.update_value();
 	});
+
+	if (this.element.readOnly){
+		var 
+			classes = dynamic_dom.get_classes( this.element ),
+			formatter = null,
+			class_name,
+			self = this
+		;
+
+		for (var i=0; formatter === null && i<classes.length; i++){
+			class_name = classes[i];
+			formatter = formatters[class_name];
+		}
+		if (typeof formatter === "object" && formatter !== null){
+			this.formatter = new ValueFormatter( this, class_name );
+
+		}
+
+	}
 
 };
 
@@ -1092,6 +1251,14 @@ dynamic_app.types.AppComponent.prototype.on_initialise = function(callback) {
 	this.on_initialise = callback;
 
 	return this;
+};
+
+dynamic_app.types.AppComponent.prototype.get_element = function( css_selector ){
+	return dynamic_dom.get_element( this.element, css_selector );
+};
+
+dynamic_app.types.AppComponent.prototype.get_elements = function( css_selector ){
+	return dynamic_dom.get_element( this.elements, css_selector );
 };
 
 dynamic_app.types.AppComponent.prototype.on_started = function(callback) {

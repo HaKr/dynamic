@@ -121,7 +121,7 @@ var
 function DynamicValue() {}
 DynamicValue.prototype.create = function( name ) {
 	this.name = name;
-	this.value = "";
+	this.content = "";
 	this.oldvalue = "";
 	this.default = "";
 	this.observers = [];
@@ -138,6 +138,10 @@ DynamicValue.prototype.create = function( name ) {
 			enumerable: false,
 			get: function() { return this.get_bracket_notation(); }
 		},
+		'value': {
+			get: function() { return this.get_value(); },
+			set: function( v ){ return this.set_value( v ); }
+		}
 	});
 	Object.defineProperties( this.metainfo, {
 		'reference': {
@@ -261,7 +265,7 @@ DynamicValue.prototype.get_bracket_notation = function() {
 };
 
 DynamicValue.prototype.make_list = function( child_value ) {
-	this.value 						= {};
+	this.content 						= {};
 	this.type 						= value_types.list;
 	
 	this.metavalues.count 		= values_module.get_or_define( this.name + '.' + meta_count_name );
@@ -278,13 +282,13 @@ DynamicValue.prototype.add_child = function( child_value ) {
 	}
 
 	this.children[ child_value.reference ] = child_value;
-	this.value[ child_value.reference ] = child_value.get_value();
+	this.content[ child_value.reference ] = child_value.get_value();
 
-	return this.value[child_value.reference];
+	return this.content[child_value.reference];
 };
 
 DynamicValue.prototype.register_to_parent = function() {
-	this.value = this.parent.add_child(this);
+	this.content = this.parent.add_child(this);
 };
 
 DynamicValue.prototype.set_up = function() {
@@ -292,7 +296,7 @@ DynamicValue.prototype.set_up = function() {
 		parts = this.name.split('.');
 
 	this.reference = parts.slice(-1)[0];
-	this.value = this.default;
+	this.content = this.default;
 
 	parent_ref = parts.slice(0, -1).join('.');
 	if (parent_ref.length > 0) {
@@ -366,7 +370,7 @@ DynamicValue.prototype.get_full_reference = function() {
 };
 
 DynamicValue.prototype.get_value = function() {
-	return typeof this.value === "object" && this.value !== null ? this.value.valueOf() : this.value;
+	return typeof this.content === "object" && this.content !== null ? this.content.valueOf() : this.content;
 };
 
 
@@ -411,23 +415,23 @@ DynamicValue.prototype.update_from_child = function( child_value ) {
 		had_keys, has_keys;
 
 	if (this.is_empty()) {
-		this.value = {};
+		this.content = {};
 		this.oldvalue = {};
 	}
 
 	var self = this;
 
-	had_keys = Object.keys( this.value ).length;
+	had_keys = Object.keys( this.content ).length;
 
 	if (!child_value.is_empty()) {
-		this.value[child_value.reference] 		= child_value.value;
+		this.content[child_value.reference] 		= child_value.content;
 		this.children[ child_value.reference ]	= child_value;
 	} else {
-		delete this.value[ child_value.reference ];
+		delete this.content[ child_value.reference ];
 		delete this.children[ child_value.reference ];
 	}
 	
-	has_keys = Object.keys( this.value ).length;
+	has_keys = Object.keys( this.content ).length;
 
 	if (had_keys !== has_keys){
 		if (!this.busy){
@@ -443,11 +447,11 @@ DynamicValue.prototype.update_from_child = function( child_value ) {
 DynamicValue.prototype.update_attributes = function() {
 	var
 		self = this,
-		value_keys = Object.keys(this.value);
+		value_keys = Object.keys(this.content);
 
 	value_keys.forEach(function(value_key) {
 		var
-			attribute_value = this.value[value_key],
+			attribute_value = this.content[value_key],
 			child_value = values_module.get_or_define(this.name + '.' + value_key);
 
 		child_value.set_value(attribute_value);
@@ -461,30 +465,30 @@ DynamicValue.prototype.update_attributes = function() {
 		this.notify_structural_change();
 	}
 };
-	// delete this.parent.value[ this.reference ];
+	// delete this.parent.content[ this.reference ];
 
 DynamicValue.prototype.do_set_value = function(newvalue) {
-	this.oldvalue = this.value;
-	this.value = newvalue;
-	this.type = value_type_from_value( this.value );
+	this.oldvalue = this.content;
+	this.content = newvalue;
+	this.type = value_type_from_value( this.content );
 	this.busy = true;
 
 	var self = this;
-	logger.debug( 'set value for  ref '+this.reference, this );
+	logger.debug( 'set content for  ref '+this.reference, this );
 
 	if (this.parent !== null) {
 		this.parent.update_from_child( this );
 	}
 
 
-	if (typeof this.value === "object") {
-		if (this.value !== null) {
+	if (typeof this.content === "object") {
+		if (this.content !== null) {
 			this.update_attributes();
 		} else {
 			this.type = value_types.unassigned;
 
 			if (Object.keys(this.children).length < 1) {
-				this.value = "";
+				this.content = "";
 			}
 		}
 	}
@@ -557,7 +561,7 @@ DynamicMetavalue.prototype.get_value = function() {
 };
 
 DynamicMetavalue.prototype.do_set_value = function(newvalue) {
-	this.value = newvalue;
+	this.content = newvalue;
 	this.type = value_type_from_value( this.get_value() );
 
 	this.parent.metainfo[this.reference.substring(1)] = newvalue;

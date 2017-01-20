@@ -1,54 +1,34 @@
-var dynamic = {
-	info: {
-		Name: "Dynamic Page1",
-		Description: "First web page based on the new framework",
-		Version: "1.01.1"
-	},
-	vars: {
-
-	},
-	types: {
-
-	}
-};
-
 var
-	dynamic_app = require('./dynamic-app.js'),
-	dynamic_dom = require('./dynamic-dom.js'),
-	logger = require('./browser_log').get_logger(dynamic.info.Name),
-	person_list;
+	dynamic_app = window.$dynamic,
+	logger 		= dynamic_app.get_logger("Dynamic person component"),
+
+	person_list
+;
 
 logger.module.set_default_level( logger.module.Levels.ERROR );
 
 dynamic_app.register_component('.dynamic-person')
 	.on_initialise(function(component_element) {
 
-		logger.info(dynamic.info);
+		logger.info("Initialise, set toggleHelpText to do nothing");
 
 		window.toggleHelpText = function( element ){
 
 		};
 
 	})
-	.on_started(function(component_element) {
+	.on_started( function(component_element) {
 
-		var
-			show_button = dynamic_dom.get_element(component_element, '#show-button'),
-			set_button = dynamic_dom.get_element(component_element, '#set-button'),
-			
-			dv_persons = dynamic_app.dynamic_value('persons');
-
-		set_button.addEventListener('click', function() {
-			dv_persons.set_value(person_list);
+		this.get_element( '#set-button' ).addEventListener('click', function() {
+			dynamic_app.get_dynamic_value('persons').set_value( person_list );
 		});
 
-		show_button.addEventListener('click', function() {
-			console.debug('Person list:', person_list, 'Dynamic variable:', dv_persons);
+		this.get_element( '#show-button' ).addEventListener('click', function() {
+			console.debug('Person list:', person_list );
 		});
 
 	});
 
-module.exports = dynamic;
 
 person_list = {
 	person_1: {
@@ -91,7 +71,7 @@ person_list = {
 				city: 'City 202',
 				street: 'Street-202'
 			}
-		},
+		}
 	},
 	person_3: {
 		'last-name': "Last 3",
@@ -111,6 +91,10 @@ person_list = {
 		'last-name': "Last 4",
 		id: 1004,
 		'first-name': "First 4",
+		description: 'person four',
+		address: {
+			city: 'Mountain View'
+		}
 	},
 	person_5: {
 		'last-name': "Last 5",
@@ -126,6 +110,8 @@ person_list = {
 				city: 'City 505'
 			}
 		},
+		description: 'person five'
+
 	},
 	person_6: {
 		'last-name': "Last 6",
@@ -135,6 +121,7 @@ person_list = {
 			street: '6nd Street'
 		},
 		'first-name': "First 6",
+		description: 'person six',
 		id: 1006
 	}
 };

@@ -168,12 +168,20 @@ function FunctionSum( formula_value, params ){
 		if (this.parent_value === null){
 			logger.error( 'unknown reference "'+parent_ref+'"');
 		} else {
-			var child_values = this.parent_value.get_children();
+			var 
+				child_values = this.parent_value.get_children(),
+				child_count  = 0
+			;
 			child_values.forEach( function( child_value ){
 				var operand = child_value.name + childs_ref;
-				this.formula_value.push_operand( operand );
+				// TODO: proper check if value can exist
+				if (value_module.get_by_name( operand.split('.').slice(0,-1).join('.') ) !== null){
+					child_count++;
+					this.formula_value.push_operand( operand );
+				}
+
 			}, this );
-			this.operand_count = child_values.length;
+			this.operand_count = child_count;
 		}
 	}
 }

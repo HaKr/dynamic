@@ -71,6 +71,7 @@ var templates_module = {
 
 var
 	logger = require('./browser_log').get_logger(templates_module.info.Name),
+	htmlcomment_logger = require('./browser_log').get_logger(templates_module.info.Name+'$'+'HTML'),
 	dynamic_dom = require('./dynamic-dom.js'),
 	dynamic_utils = require('./dynamic-utils');
 
@@ -136,19 +137,13 @@ DynamicTemplateDefinition.prototype.absorb = function( element, only_content ) {
 		}
 	}
 
+
 	node_list.forEach(function(element_node) {
 		parent.appendChild(element_node);
 	});
 
 	if (only_content) {
-		dynamic_dom.get_attributes( element ).forEach( function ( attr ){
-			if (attr.name !== "class"){
-				parent.setAttribute( attr.name, attr. value );
-			}
-		}, this );
-		dynamic_dom.get_classes( element ).forEach( function ( class_name ){
-			dynamic_dom.add_class( parent, class_name );
-		}, this );
+		dynamic_dom.move_attributes( element, parent );
 		element.parentNode.removeChild(element);
 	}
 
@@ -213,7 +208,7 @@ DynamicTemplatePlaceholder.prototype.check_complete = function( dynamic_value ) 
 	}
 
 	if (result){
-		this.set_instance( this.dynamic_value );
+		this.set_instance( dynamic_value );
 	} else {
 		this.empty();
 	}
@@ -226,12 +221,12 @@ DynamicTemplatePlaceholder.prototype.check_completed = function( dynamic_value )
 		result = false;
 
 	if (typeof dynamic_value !== "undefined"){
-		if (this.dynamic_value !== dynamic_value){
+		if (this.instance_value !== dynamic_value){
 			this.clear();
-			this.dynamic_value = dynamic_value;
+			this.instance_value = dynamic_value;
 		}
 
-		result = !this.dynamic_value.is_empty();
+		result = !this.instance_value.is_empty();
 	}
 
 
@@ -244,7 +239,7 @@ DynamicTemplatePlaceholder.prototype.check_completed = function( dynamic_value )
 	}
 
 	if (result){
-		this.set_instance( this.dynamic_value );
+		this.set_instance( this.instance_value );
 	} else {
 		this.empty();
 	}
@@ -288,9 +283,6 @@ DynamicTemplatePlaceholder.prototype.build_instance = function( definition, dyna
 
 
 DynamicTemplatePlaceholder.prototype.add_instance = function( dynamic_value, before_instance) {
-	if (typeof dynamic_value === "undefined" || dynamic_value === null ){
-		logger.error( 'placeholder add instance without dynamic_value', dynamic_value, this );
-	}
 	var result = this.build_instance( this.definition, dynamic_value, before_instance );
 	this.instances.push(result);
 
@@ -418,13 +410,29 @@ DynamicTemplateInstance.prototype.node_inserted = function( node ){
 	//
 };
 
-DynamicTemplateInstance.prototype.swap = function( other_instance ) {
 
-	this.child_nodes.forEach(function(child_node) {
+DynamicTemplateInstance.prototype.swap = function( other_instance ) {
+	var
+		my_nodes = [], other_nodes = [];
+
+	htmlcomment_logger.debug( function(){
+		my_nodes.push( this.instance_first );
+		other_nodes.push( other_instance.instance_first );
+	}, this );
+
+	my_nodes = my_nodes.concat( this.child_nodes );
+	other_nodes = other_nodes.concat( other_instance.child_nodes );
+
+	htmlcomment_logger.debug( function(){
+		my_nodes.push( this.instance_last );
+		other_nodes.push( other_instance.instance_last );
+	}, this );
+
+	my_nodes.forEach(function(child_node) {
 		this.anchor.parentNode.insertBefore(child_node, other_instance.last);
 	}, this );
 
-	other_instance.child_nodes.forEach(function(child_node) {
+	other_nodes.forEach(function(child_node) {
 		other_instance.anchor.parentNode.insertBefore(child_node, this.last);
 	}, this );
 
@@ -445,7 +453,14 @@ DynamicTemplateInstance.prototype.build = function() {
 
 	if (this.placeholder !== null){
 
+		var value_name ;
+
 		this.first = dynamic_dom.insert_text_before(this.anchor, '\n');
+
+		htmlcomment_logger.debug( function(){
+			value_name = (typeof this.dynamic_value === "object" && this.dynamic_value !== null) ? (' for ' +this.dynamic_value.name) : '';
+			this.instance_first = dynamic_dom.insert_comment_before(this.anchor, 'Start instance '+this.placeholder.definition.name + value_name );
+		}, this );
 
 		this.child_nodes.forEach(function(child_node) {
 			if (typeof this.dynamic_value === "object" && this.dynamic_value !== null){
@@ -454,6 +469,9 @@ DynamicTemplateInstance.prototype.build = function() {
 			this.anchor.parentNode.insertBefore(child_node, this.anchor);
 		}, this );
 
+		htmlcomment_logger.debug( function(){
+			this.instance_last = dynamic_dom.insert_comment_before(this.anchor, this.placeholder.definition.name + ' instance'+value_name + ' end' );
+		}, this );
 		
 		this.last = dynamic_dom.insert_text_before(this.anchor, '\n');
 	}
@@ -494,6 +512,13 @@ DynamicTemplateInstance.prototype.remove = function() {
 			dynamic_dom.remove_node(child_node);
 		});
 		dynamic_dom.remove_node(this.first);
+
+		htmlcomment_logger.debug( function(){
+			dynamic_dom.remove_node( this.instance_last );
+			dynamic_dom.remove_node( this.instance_first );
+		}, this );
+
+
 	}
 
 	if (this.parent_instance !== null){

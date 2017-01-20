@@ -34,9 +34,12 @@ if (typeof test_element.classList === "object") {
 	};
 
 	dom_utils.remove_class = function(element, css_class) {
-		element.classList.remove(css_class);
-		if (element.className.length < 1) {
-			element.removeAttribute('class');
+		if (typeof element === "object" && element !== null){
+
+			element.classList.remove(css_class);
+			if (element.className.length < 1) {
+				element.removeAttribute('class');
+			}
 		}
 
 		return element;
@@ -53,16 +56,18 @@ if (typeof test_element.classList === "object") {
 	};
 
 	dom_utils.remove_class = function(element, css_class) {
-		if (element.className.indexOf(css_class) >= 0) {
-			var classes = dom_utils.get_classes(element);
+		if (typeof element === "object" && element !== null){
+			if (element.className.indexOf(css_class) >= 0) {
+				var classes = dom_utils.get_classes(element);
 
-			var result = classes.filter(function(class_name) {
-				return class_name !== css_class;
-			});
+				var result = classes.filter(function(class_name) {
+					return class_name !== css_class;
+				});
 
-			element.className = result.join(" ").trim();
-			if (element.className.length < 1) {
-				element.removeAttribute('class');
+				element.className = result.join(" ").trim();
+				if (element.className.length < 1) {
+					element.removeAttribute('class');
+				}
 			}
 		}
 
@@ -79,6 +84,19 @@ if (typeof test_element.classList === "object") {
 		}
 	};
 }
+
+dom_utils.has_class = function( element, class_name ){
+	var
+		result = false
+	;
+
+	if (typeof element === "object" && element !== null){
+		var class_list = dom_utils.get_classes( element );
+		result = class_list.indexOf( class_name ) >= 0;
+	}
+
+	return result;
+};
 
 dom_utils.get_clone = function(node) {
 	var result = node.cloneNode(true);
@@ -107,9 +125,37 @@ dom_utils.insert_comment_before = function( node, comment_text ) {
 };
 
 dom_utils.remove_node = function(node) {
-	if (node.parentNode) {
-		node.parentNode.removeChild(node);
+	if (typeof node === "object" && node !== null){
+		if (node.parentNode) {
+			node.parentNode.removeChild(node);
+		}
 	}
+};
+
+dom_utils.move_element = function( src_element, dst_element, do_replace ){
+	if (do_replace){
+		dst_element.parentNode.insertBefore( src_element, dst_element );
+		dom_utils.move_attributes( dst_element, src_element );
+		dom_utils.remove_node( dst_element );
+	} else {
+		dom_utils.move_attributes( src_element, dst_element );
+		dom_utils.get_nodes( src_element ).forEach( function move_child_node( child_node ){
+			dst_element.appendChild( child_node );
+		})
+		src_element.remove();
+	}
+};
+
+dom_utils.move_attributes = function( src_element, dst_element ){
+	dom_utils.get_attributes( src_element ).forEach( function ( attr ){
+		if (attr.name !== "class"){
+			dst_element.setAttribute( attr.name, attr. value );
+		}
+	}, this );
+	dom_utils.get_classes( src_element ).forEach( function ( class_name ){
+		dom_utils.add_class( dst_element, class_name );
+	}, this );
+
 };
 
 dom_utils.get_attributes = function(element) {
