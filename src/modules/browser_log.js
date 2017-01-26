@@ -1,7 +1,6 @@
 var
 	dynamic_utils = require('./dynamic-utils');
 
-
 function Log() {
 	this.hasConsole = (typeof console === "object" && typeof console.log !== "undefined");
 	this.muted = false;
@@ -50,7 +49,6 @@ function LogInstance(name) {
 	});
 }
 
-
 Log.prototype.mute = function(onoff) {
 	if (typeof onoff !== "boolean") {
 		onoff = false;
@@ -65,7 +63,7 @@ Log.prototype.mute = function(onoff) {
 Log.prototype.get_logger = function(name) {
 	var result = null;
 
-	name = dynamic_utils.htmlID2OptionCase( name );
+	name = dynamic_utils.htmlID2OptionCase(name);
 
 	if (this.instances.hasOwnProperty(name)) {
 		result = this.instances[name];
@@ -91,15 +89,14 @@ Log.prototype.to_console = function(target, log_instance, params) {
 		if (typeof target === "object" && target.treshold >= log_instance.log_level) {
 			var args = Array.prototype.slice.call(params); //dynamic_utils.make_array( params );
 			if (typeof args[0] === "function") {
-				var 
+				var
 					callback = args[0],
-					thisArg  = args.length>1 ? args[1] : null
-				;
+					thisArg = args.length > 1 ? args[1] : null;
 
-				if (thisArg === null){
+				if (thisArg === null) {
 					callback();
 				} else {
-					callback.call( thisArg );
+					callback.call(thisArg);
 				}
 			} else {
 				var console_target = target.target;
@@ -119,24 +116,23 @@ Log.prototype.to_console = function(target, log_instance, params) {
 	}
 };
 
-Log.prototype.set_default_level = function( default_level ) {
+Log.prototype.set_default_level = function(default_level) {
 	var self = this;
 
-	Object.keys(this.instances).forEach(function( logger_name ) {
+	Object.keys(this.instances).forEach(function(logger_name) {
 		this.instances[logger_name].log_level = default_level;
 	}, this);
 
 	this.default_level = default_level;
 };
 
-
 LogInstance.prototype.get_module = function() {
 	return LogModule;
 };
 
-LogInstance.prototype.set_level = function( new_level ) {
+LogInstance.prototype.set_level = function(new_level) {
 	this.log_level = new_level;
-	
+
 	return this;
 };
 

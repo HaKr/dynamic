@@ -4,21 +4,20 @@ var dynamic_observers = {
 		Description: "Watch for value changes and update text and attributes.",
 		Version: "1.01.1"
 	},
-	vars: {
-	},
+	vars: {},
 	types: {
 		TextObserver: TextObserver,
 		AttributeObserver: AttributeObserver
 	},
 	api: {
-		contains_binding: function contains_binding( text ){
-			return binding_finder.test( text )
+		contains_binding: function contains_binding(text) {
+			return binding_finder.test(text);
 		},
-		create_text_observer: function create_text_observer( node, instance ){
-			return new dynamic_observers.types.TextObserver( node, instance );
+		create_text_observer: function create_text_observer(node, instance) {
+			return new dynamic_observers.types.TextObserver(node, instance);
 		},
-		create_attribute_observer: function create_attribute_observer( node, attribute_name, instance ){
-			return new dynamic_observers.types.AttributeObserver( node, attribute_name, instance );
+		create_attribute_observer: function create_attribute_observer(node, attribute_name, instance) {
+			return new dynamic_observers.types.AttributeObserver(node, attribute_name, instance);
 		},
 
 	}
@@ -28,8 +27,7 @@ var
 	dynamic_dom = require('./dynamic-dom.js'),
 	dynamic_utils = require('./dynamic-utils'),
 	value_module = require('./dynamic-values.js'),
-	logger = require('./browser_log').get_logger(dynamic_observers.info.Name)
-;
+	logger = require('./browser_log').get_logger(dynamic_observers.info.Name);
 
 module.exports = dynamic_observers.api;
 
@@ -49,7 +47,6 @@ var
 	binding_finder = new RegExp(bind_pattern),
 	binding_replacer = new RegExp(bind_pattern, 'g');
 
-
 function LiteralPart(text) {
 	this.text = text;
 }
@@ -58,7 +55,7 @@ LiteralPart.prototype.get_text = function() {
 	return this.text;
 };
 
-function DynamicPart( value, binding_observer ) {
+function DynamicPart(value, binding_observer) {
 	this.dynamic_value = value;
 	this.delegate_value = null;
 	this.binding_observer = binding_observer;
@@ -66,27 +63,27 @@ function DynamicPart( value, binding_observer ) {
 
 	var self = this;
 
-	this.value_observer = this.dynamic_value.observe( 'binding', function update_binding(the_value) {
+	this.value_observer = this.dynamic_value.observe('binding', function update_binding(the_value) {
 		self.text = the_value.get_text();
 		self.binding_observer.set_text_content();
 
 		if (the_value !== self.dynamic_value && self.delegate_value !== the_value) {
 			logger.debug('Dynamic part updated by reference', self);
 			self.delegate_value = the_value;
-			if (typeof self.delegate_observer !== "undefined" && self.delegate_observer !== null ) {
+			if (typeof self.delegate_observer !== "undefined" && self.delegate_observer !== null) {
 				logger.debug('Dynamic part removing reference observer', self.delegate_observer);
 				self.delegate_observer.remove();
 			}
-			self.delegate_observer = self.delegate_value.observe( 'delegated binding', function update_binding_by_delegate(dv) {
+			self.delegate_observer = self.delegate_value.observe('delegated binding', function update_binding_by_delegate(dv) {
 				logger.debug('Dynamic part updating binding by reference', self, dv);
 				self.text = dv.get_text();
 				self.binding_observer.set_text_content();
-			}, self );
+			}, self);
 
 			if (typeof self.binding_observer.instance !== "undefined") {
 				self.binding_observer.instance.add_observer(self.delegate_observer);
 			} else {
-				logger.error( 'binding observer instance undefined', self );
+				logger.error('binding observer instance undefined', self);
 			}
 		}
 	}, this);
@@ -112,7 +109,7 @@ BindingObserver.prototype.add_literal = function(text) {
 };
 
 BindingObserver.prototype.add_dynamic = function(dynamic_value) {
-	this.parts.push(new DynamicPart( dynamic_value, this ));
+	this.parts.push(new DynamicPart(dynamic_value, this));
 };
 
 BindingObserver.prototype.add_parts = function() {
@@ -126,7 +123,7 @@ BindingObserver.prototype.add_parts = function() {
 			var left_part = test_value.substring(0, part_start);
 			this.add_literal(left_part);
 		}
-		var dynamic_value = this.instance.get_dynamic_value( value_name );
+		var dynamic_value = this.instance.get_dynamic_value(value_name);
 		this.instance.add_value(dynamic_value);
 		this.add_dynamic(dynamic_value);
 
@@ -184,7 +181,6 @@ AttributeObserver.prototype.set_text_content = function() {
 		}
 	});
 	if (complete) {
-		this.element.setAttribute( this.attribute_name, result.trim() );
+		this.element.setAttribute(this.attribute_name, result.trim());
 	}
 };
-

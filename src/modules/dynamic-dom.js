@@ -19,14 +19,13 @@ waitForDOMContent();
 var
 	test_element = document.createElement("P");
 
-(function (arr) {
-    arr.forEach(function (item) {
-        item.remove = item.remove || function () {
-            this.parentNode.removeChild(this);
-        };
-    });
+(function(arr) {
+	arr.forEach(function(item) {
+		item.remove = item.remove || function() {
+			this.parentNode.removeChild(this);
+		};
+	});
 })([Element.prototype, CharacterData.prototype, DocumentType.prototype]);
-
 
 if (typeof test_element.classList === "object") {
 	dom_utils.get_classes = function(element) {
@@ -34,7 +33,7 @@ if (typeof test_element.classList === "object") {
 	};
 
 	dom_utils.remove_class = function(element, css_class) {
-		if (typeof element === "object" && element !== null){
+		if (typeof element === "object" && element !== null) {
 
 			element.classList.remove(css_class);
 			if (element.className.length < 1) {
@@ -45,9 +44,9 @@ if (typeof test_element.classList === "object") {
 		return element;
 	};
 
-	dom_utils.add_class = function ( element, class_name ){
-		if (typeof element.classList !== "undefined"){
-			element.classList.add( class_name.replace(/\s/g,'_') );
+	dom_utils.add_class = function(element, class_name) {
+		if (typeof element.classList !== "undefined") {
+			element.classList.add(class_name.replace(/\s/g, '_'));
 		}
 	};
 } else {
@@ -56,7 +55,7 @@ if (typeof test_element.classList === "object") {
 	};
 
 	dom_utils.remove_class = function(element, css_class) {
-		if (typeof element === "object" && element !== null){
+		if (typeof element === "object" && element !== null) {
 			if (element.className.indexOf(css_class) >= 0) {
 				var classes = dom_utils.get_classes(element);
 
@@ -74,25 +73,24 @@ if (typeof test_element.classList === "object") {
 		return element;
 	};
 
-	dom_utils.add_class = function ( element, class_name ){
-		if (typeof element.className !== "undefined"){
+	dom_utils.add_class = function(element, class_name) {
+		if (typeof element.className !== "undefined") {
 			var existing = element.className;
 
-			if (existing.indexOf(class_name) < 0){
-				element.className = (existing.length>0? existing + ' ' : '') + class_name.replace(/\s/g,'_');
+			if (existing.indexOf(class_name) < 0) {
+				element.className = (existing.length > 0 ? existing + ' ' : '') + class_name.replace(/\s/g, '_');
 			}
 		}
 	};
 }
 
-dom_utils.has_class = function( element, class_name ){
+dom_utils.has_class = function(element, class_name) {
 	var
-		result = false
-	;
+		result = false;
 
-	if (typeof element === "object" && element !== null){
-		var class_list = dom_utils.get_classes( element );
-		result = class_list.indexOf( class_name ) >= 0;
+	if (typeof element === "object" && element !== null) {
+		var class_list = dom_utils.get_classes(element);
+		result = class_list.indexOf(class_name) >= 0;
 	}
 
 	return result;
@@ -116,8 +114,8 @@ dom_utils.insert_text_before = function(node, text) {
 	return result;
 };
 
-dom_utils.insert_comment_before = function( node, comment_text ) {
-	var result = document.createComment( comment_text );
+dom_utils.insert_comment_before = function(node, comment_text) {
+	var result = document.createComment(comment_text);
 
 	node.parentNode.insertBefore(result, node);
 
@@ -125,36 +123,36 @@ dom_utils.insert_comment_before = function( node, comment_text ) {
 };
 
 dom_utils.remove_node = function(node) {
-	if (typeof node === "object" && node !== null){
+	if (typeof node === "object" && node !== null) {
 		if (node.parentNode) {
 			node.parentNode.removeChild(node);
 		}
 	}
 };
 
-dom_utils.move_element = function( src_element, dst_element, do_replace ){
-	if (do_replace){
-		dst_element.parentNode.insertBefore( src_element, dst_element );
-		dom_utils.move_attributes( dst_element, src_element );
-		dom_utils.remove_node( dst_element );
+dom_utils.move_element = function(src_element, dst_element, do_replace) {
+	if (do_replace) {
+		dst_element.parentNode.insertBefore(src_element, dst_element);
+		dom_utils.move_attributes(dst_element, src_element);
+		dom_utils.remove_node(dst_element);
 	} else {
-		dom_utils.move_attributes( src_element, dst_element );
-		dom_utils.get_nodes( src_element ).forEach( function move_child_node( child_node ){
-			dst_element.appendChild( child_node );
-		})
+		dom_utils.move_attributes(src_element, dst_element);
+		dom_utils.get_nodes(src_element).forEach(function move_child_node(child_node) {
+			dst_element.appendChild(child_node);
+		});
 		src_element.remove();
 	}
 };
 
-dom_utils.move_attributes = function( src_element, dst_element ){
-	dom_utils.get_attributes( src_element ).forEach( function ( attr ){
-		if (attr.name !== "class"){
-			dst_element.setAttribute( attr.name, attr. value );
+dom_utils.move_attributes = function(src_element, dst_element) {
+	dom_utils.get_attributes(src_element).forEach(function(attr) {
+		if (attr.name !== "class") {
+			dst_element.setAttribute(attr.name, attr.value);
 		}
-	}, this );
-	dom_utils.get_classes( src_element ).forEach( function ( class_name ){
-		dom_utils.add_class( dst_element, class_name );
-	}, this );
+	}, this);
+	dom_utils.get_classes(src_element).forEach(function(class_name) {
+		dom_utils.add_class(dst_element, class_name);
+	}, this);
 
 };
 
@@ -206,8 +204,8 @@ dom_utils.get_elements = function(outer_element, css_selector) {
 		}
 	}
 
-	if (typeof outer_element.querySelector === "function"){
-	
+	if (typeof outer_element.querySelector === "function") {
+
 		if (id_re.test(css_selector)) {
 			match = css_selector.match(id_re);
 			var element = document.getElementById(match[1]);
@@ -223,7 +221,7 @@ dom_utils.get_elements = function(outer_element, css_selector) {
 			} else {
 				element_list = outer_element.querySelectorAll(css_selector);
 			}
-	
+
 			for (var i = 0; i < element_list.length; i++) {
 				result.push(element_list[i]);
 			}
@@ -239,32 +237,36 @@ dom_utils.get_element = function(outer_element, css_selector) {
 	return result.length > 0 ? result[0] : null;
 };
 
-dom_utils.option_from_class = function( element, option_name, options_argument ){
+dom_utils.option_from_class = function(element, option_name, options_argument) {
 	var
-		options = dynamic_utils.object_merge({ default: false, remove: true, get_value: false, remove_value: false }, options_argument ),
+		options = dynamic_utils.object_merge({
+			default: false,
+			remove: true,
+			get_value: false,
+			remove_value: false
+		}, options_argument),
 		result = options.default;
 
-	if ( dom_utils.has_class( element, option_name) ){
+	if (dom_utils.has_class(element, option_name)) {
 		result = true;
 
-		if (options.get_value){
-			var 
-				class_list = dom_utils.get_classes( element )
-				value_index = class_list.indexOf( option_name )
-			;
+		if (options.get_value) {
+			var
+				class_list = dom_utils.get_classes(element);
+			value_index = class_list.indexOf(option_name);
 
-			if (value_index+1 < class_list.length){
-				result = class_list[ value_index+1 ];
-				if (options.remove_value){
-					dom_utils.remove_class( element, result );
+			if (value_index + 1 < class_list.length) {
+				result = class_list[value_index + 1];
+				if (options.remove_value) {
+					dom_utils.remove_class(element, result);
 				}
 			} else {
 				result = options.default;
 			}
 		}
 
-		if (options.remove){
-			dom_utils.remove_class( element, option_name );
+		if (options.remove) {
+			dom_utils.remove_class(element, option_name);
 		}
 	}
 
