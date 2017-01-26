@@ -106,18 +106,18 @@ test('Dynamic values in action', function (t) {
 	t.equals( dv_person_one_first.get_value(), person_list.person_1['first-name'], "First name as expected." );
 
 	dv_persons_selected.set_value( 'person_1' );
-	t.equals( dv_person_current.get_value(), dv_person_one.get_value(), "First person selected." );
+	t.equals( dv_person_current.get_final().get_value(), dv_person_one.get_value(), "First person selected." );
 
 	dv_persons_selected.set_value( 'person_3' );
-	t.equals( dv_person_current.get_value(), person_list[dv_person_three_reference.get_value()], "Third person unmodified." );
+	t.equals( dv_person_current.get_final().get_value(), person_list[dv_person_three_reference.get_value()], "Third person unmodified." );
 
 	dv_person_current.observe( 'person_current', function( dv ){
 		t.equals( dv.get_value(), person_list.person_5, 'Fifth person selected (1-3).' );
 	})
 
 	dv_persons_selected.set_value( 'person_5' );
-	t.equals( dv_person_current.get_value()['company']['address']['city'], person_list.person_5.company.address.city, "Fifth person selected (2-3)." );
-	t.equals( dv_person_current.get_value()['company']['address']['city'], dv_person_five_company_city.get_value(), "Fifth person selected (3-3)." );
+	t.equals( dv_person_current.get_final().get_value()['company']['address']['city'], person_list.person_5.company.address.city, "Fifth person selected (2-3)." );
+	t.equals( dv_person_current.get_final().get_value()['company']['address']['city'], dv_person_five_company_city.get_value(), "Fifth person selected (3-3)." );
 
 	t.end();
 });
