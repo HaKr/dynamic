@@ -465,6 +465,20 @@ DynamicValue.prototype.update_attributes = function() {
 		this.notify_structural_change();
 	}
 };
+
+
+DynamicValue.prototype.set_metainfo = function( child_value, newvalue ) {
+	var
+		child_reference = child_value.reference.substring(1);
+	;
+
+	if (!this.metavalues.hasOwnProperty( child_reference )){
+		this.metavalues[ child_reference ] = child_value;
+	}
+
+	this.metainfo[ child_reference ] = newvalue;
+};
+
 	// delete this.parent.content[ this.reference ];
 
 DynamicValue.prototype.do_set_value = function(newvalue) {
@@ -475,6 +489,10 @@ DynamicValue.prototype.do_set_value = function(newvalue) {
 
 	var self = this;
 	logger.debug( 'set content for  ref '+this.reference, this );
+
+	Object.keys(this.metavalues).forEach( function reset_meta_info( meta_value_name ){
+		this.metavalues[ meta_value_name ].set_value( "" );
+	}, this );
 
 	if (this.parent !== null) {
 		this.parent.update_from_child( this );
@@ -564,7 +582,7 @@ DynamicMetavalue.prototype.do_set_value = function(newvalue) {
 	this.content = newvalue;
 	this.type = value_type_from_value( this.get_value() );
 
-	this.parent.metainfo[this.reference.substring(1)] = newvalue;
+	this.parent.set_metainfo( this, newvalue );
 };
 
 DynamicMetavalue.prototype.register_to_parent = function() {
@@ -577,7 +595,7 @@ DynamicMetavalue.prototype.set_up = function() {
 };
 
 function DynamicByReferenceValue() {}
-DynamicByReferenceValue.prototype = new DynamicMetavalue();
+DynamicByReferenceValue.prototype = new DynamicValue();
 
 DynamicByReferenceValue.prototype.get_full_reference = function() {
 	return this.name;
@@ -593,10 +611,13 @@ DynamicByReferenceValue.prototype.is_deferred = function() {
 
 function by_reference_updater( dynamic_value ) {
 	return function( index_value ){
-		if (!index_value.is_empty() || index_value == 0){
+		if (!index_value.is_empty()){
 			dynamic_value.delegate_value = values_module.get_or_define(dynamic_value.parent_ref + index_value.get_value() + dynamic_value.child_ref);
 			logger.debug('By ref index changed', index_value, dynamic_value );
 			dynamic_value.notify_observers(dynamic_value.delegate_value);
+		} else {
+			dynamic_value.delegate_value = null;
+			dynamic_value.notify_observers( null );
 		}
 	}
 }
@@ -626,20 +647,20 @@ DynamicByReferenceValue.prototype.set_up = function() {
 	}
 };
 
-DynamicByReferenceValue.prototype.get_value = function() {
-	var result = '';
+// DynamicByReferenceValue.prototype.get_value = function() {
+// 	var result = '';
 
-	if (this.delegate_value !== null) {
-		result = this.delegate_value.get_value();
-	}
-	return result;
-};
+// 	if (this.delegate_value !== null) {
+// 		result = this.delegate_value.get_value();
+// 	}
+// 	return result;
+// };
 
-DynamicByReferenceValue.prototype.set_value = function(newvalue) {
-	if (this.delegate_value !== null) {
-		result = this.delegate_value.set_value(newvalue);
-	}
-};
+// DynamicByReferenceValue.prototype.set_value = function(newvalue) {
+// 	if (this.delegate_value !== null) {
+// 		result = this.delegate_value.set_value(newvalue);
+// 	}
+// };
 
 DynamicByReferenceValue.prototype.is_empty = function() {
 	var

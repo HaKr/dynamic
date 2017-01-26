@@ -5,25 +5,25 @@ var
 	person_list
 ;
 
-logger.module.set_default_level( logger.module.Levels.ERROR );
+logger.module.set_default_level( logger.module.Levels.DEBUG );
+logger.module.get_logger('Data Communication').set_level( logger.module.Levels.INFO );
 
-dynamic_app.register_component('.dynamic-person')
+
+dynamic_app.register_component('.simulator-buttons')
 	.on_initialise(function(component_element) {
 
-		logger.info("Initialise, set toggleHelpText to do nothing");
-
-		window.toggleHelpText = function( element ){
-
-		};
-
 	})
-	.on_started( function(component_element) {
+	.on_visible( function(component_element) {
 
-		this.get_element( '#set-button' ).addEventListener('click', function() {
+		this.safe_element_listener( '#set-button', 'click', function() {
 			dynamic_app.get_dynamic_value('persons').set_value( person_list );
 		});
 
-		this.get_element( '#show-button' ).addEventListener('click', function() {
+		this.safe_element_listener( '#reset-button', 'click', function() {
+			dynamic_app.get_dynamic_value('persons').set_value( null );
+		});
+
+		this.safe_element_listener( '#show-button', 'click', function() {
 			console.debug('Person list:', person_list );
 		});
 

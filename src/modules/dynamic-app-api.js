@@ -18,6 +18,14 @@ function DynamicApp( ){
 	};
 
 	var self = this;
+	dynamic_app_module.before_run = function(){
+		self.before_run();
+	}
+}
+
+
+DynamicApp.prototype.before_run = function(){
+	var self = this;
 
 	logger.debug( function() {
 		self.components 	= dynamic_app_module.vars.components;
@@ -29,6 +37,8 @@ function DynamicApp( ){
 		self.observers    	= values_module.vars.observers;
 		self.values    		= values_module.vars.values;
 		self.aliases 		= values_module.vars.aliases;
+
+		self.controls 		= dynamic_app_module.vars.controls;
 	});
 
 }

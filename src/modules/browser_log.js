@@ -134,6 +134,12 @@ LogInstance.prototype.get_module = function() {
 	return LogModule;
 };
 
+LogInstance.prototype.set_level = function( new_level ) {
+	this.log_level = new_level;
+	
+	return this;
+};
+
 LogInstance.prototype.debug = function() {
 	LogModule.to_console(LogModule.Targets.DEBUG, this, arguments);
 };

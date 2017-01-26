@@ -239,6 +239,38 @@ dom_utils.get_element = function(outer_element, css_selector) {
 	return result.length > 0 ? result[0] : null;
 };
 
+dom_utils.option_from_class = function( element, option_name, options_argument ){
+	var
+		options = dynamic_utils.object_merge({ default: false, remove: true, get_value: false, remove_value: false }, options_argument ),
+		result = options.default;
+
+	if ( dom_utils.has_class( element, option_name) ){
+		result = true;
+
+		if (options.get_value){
+			var 
+				class_list = dom_utils.get_classes( element )
+				value_index = class_list.indexOf( option_name )
+			;
+
+			if (value_index+1 < class_list.length){
+				result = class_list[ value_index+1 ];
+				if (options.remove_value){
+					dom_utils.remove_class( element, result );
+				}
+			} else {
+				result = options.default;
+			}
+		}
+
+		if (options.remove){
+			dom_utils.remove_class( element, option_name );
+		}
+	}
+
+	return result;
+};
+
 // ELEMENT_NODE 	1
 // //ATTRIBUTE_NODE 	2
 // TEXT_NODE 	3

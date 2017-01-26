@@ -62,6 +62,7 @@ var templates_module = {
 			this.child_instances = [];
 			this.observers = {};
 			this.placeholders = [];
+			this.dynamic_value = null;
 
 			this.sequence = ++templates_module.vars.instance_sequence;
 			templates_module.vars.Instances.push( this );
@@ -196,6 +197,10 @@ DynamicTemplatePlaceholder.prototype.add_value = function( dynamic_value ) {
 DynamicTemplatePlaceholder.prototype.check_complete = function( dynamic_value ) {
 	var
 		result = false;
+
+	if (dynamic_value !== null){
+		dynamic_value = dynamic_value.get_final();
+	}
 
 	result = this.range.includes( dynamic_value );
 
@@ -346,6 +351,7 @@ DynamicTemplateInstance.prototype.debug_info = function() {
 
 DynamicTemplateInstance.prototype.enhance = function( methods ) {
 	Object.keys( methods ).forEach( function enhance_instance( method_name ){
+		DynamicTemplateInstance.prototype[ 'super_' + method_name ] = DynamicTemplateInstance.prototype[ method_name ];
 		DynamicTemplateInstance.prototype[ method_name ] = methods[ method_name ];
 		this[ method_name ] = methods[ method_name ];
 	} );

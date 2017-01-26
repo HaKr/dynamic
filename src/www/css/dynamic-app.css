@@ -46,16 +46,14 @@
 }
 
 .container form.selection fieldset button {
-	width: 35%;
+	width: 20%;
+	margin-right: 2%;
 }
 
 .container form.selected fieldset label.nested {
 	margin-bottom: 10px;
 }
 
-.container form.selection fieldset #set-button {
-	margin-right: 5%;
-}
 
 .container form fieldset select {
 	max-width: 50%;
@@ -267,6 +265,7 @@ div.meta label {
 	border-radius: 3px;
 	background: #FFF;
 	box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+	z-index: 99;
 }
 
 .container main form fieldset .helpTextContainer .helpText.visible {

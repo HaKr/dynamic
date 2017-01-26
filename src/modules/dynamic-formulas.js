@@ -173,9 +173,12 @@ function FunctionSum( formula_value, params ){
 				child_count  = 0
 			;
 			child_values.forEach( function( child_value ){
-				var operand = child_value.name + childs_ref;
+				var 
+					operand = child_value.name + childs_ref,
+					operand_value_parent = value_module.get_by_name( operand.split('.').slice(0,-1).join('.') )
+				;
 				// TODO: proper check if value can exist
-				if (value_module.get_by_name( operand.split('.').slice(0,-1).join('.') ) !== null){
+				if (operand_value_parent !== null && !operand_value_parent.is_empty()){
 					child_count++;
 					this.formula_value.push_operand( operand );
 				}

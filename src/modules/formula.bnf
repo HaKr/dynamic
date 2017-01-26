@@ -1,0 +1,65 @@
+2 + 3 * 4		=> (2, (3, 4) * ) + 
+2 * 3 + 4		=> ((2, 3) *, 4 ) + 
+( 2 + 3 ) * 4	=> ((2, 3) +, 4 *)
+
+
+FORMULA ::= SIMPLE_EXPRESSION | OPERATION
+
+SIMPLE_EXPRESSION ::= PRECEDENCE_EXPRESSION | VALUE
+
+PRECEDEDENCE_EXPRESSION ::= '('  FORMULA ')'
+
+OPERATION ::= SIMPLE_EXPRESSION ( OPERATOR SIMPLE_EXPRESSION ) +
+
+OPERATOR ::= '*' | '/' | '+' | '-'
+
+VALUE ::= LITERAL | FUNCTION | IDENTIFIER
+
+LITERAL ::= NUMBER | STRING
+
+NUMBER ::= ^(?:[0-9]+(?:\.[0-9]*)?)|(?:\.[0-9]+)
+
+STRING ::= '"' ANY  '"' | "'"  ANY  "'"
+
+FUNCTION ::= NAME '(' ( PARAMETER (',' PARAMETER)* )? ')'
+
+NAME ::= \w*
+
+IDENTIFIER ::= (?:\w+(?:[-]\w+)*)(?:\.[$]?(?:(?:\w+(?:[-]\w+)*)|[@*]))*
+
+
+
+// G4
+
+grammar calculator;
+
+equation
+   : expression relop expression
+   ;
+
+expression
+   : multiplyingExpression ((PLUS | MINUS) multiplyingExpression)*
+   ;
+
+multiplyingExpression
+   : powExpression ((TIMES | DIV) powExpression)*
+   ;
+
+powExpression
+   : atom (POW atom)*
+   ;
+
+atom
+   : scientific
+   | variable
+   | LPAREN expression RPAREN
+   | func
+   ;
+
+scientific
+   : number (E number)?
+   ;
+
+func
+   : funcname LPAREN expression (COMMA expression)* RPAREN
+   ;

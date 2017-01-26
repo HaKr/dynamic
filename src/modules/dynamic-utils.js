@@ -128,6 +128,22 @@ dynamic_utils.array_duplicate = function( ar ){
 };
 dynamic_utils.list_duplicate = dynamic_utils.array_duplicate;
 
+dynamic_utils.object_merge$ = function( a, b ){
+	if (typeof b === "object" && b !== null){
+		Object.keys( b ).forEach( function do_merge( b_key ){
+			a[ b_key ] = b[ b_key ];
+		} );
+	}
+
+	return a;
+};
+
+dynamic_utils.object_merge = function( a, b ){
+	var result = dynamic_utils.list_duplicate( a );
+
+	return dynamic_utils.object_merge$( result, b );
+};
+
 dynamic_utils.array_diff = function(a, b) {
 	return a.filter(function(i) {
 		return b.indexOf(i) < 0;

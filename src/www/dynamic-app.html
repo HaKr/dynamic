@@ -31,27 +31,32 @@
 			</nav>
 		</header>
 
+
+		<form data-action=https://api.myjson.com/bins/{{search.leistungsjahr}} data-format=json name=persons method=get class="get-person-list-call">
+			<input type=hidden name=search.leistungsjahr>
+		</form>
+
 		<!-- some common templates -->
-		<div class="helpTextContainer dynamic-template help-text">
+		<div class="helpTextContainer define dynamic-template help-text">
 			<a class=""><i class="fa fa-question-circle-o"></i></a>
 			<div class="replace argument helpText"></div>
 		</div>
 
-		<label class="nested dynamic-template labeled-item">
+		<label class="nested define dynamic-template labeled-item">
 			<span class="argument reallabel"></span> 
 			<span class="replace argument data-item"></span>
 		</label>
 
-		<fieldset class="dynamic-template input-with-help">
+		<fieldset class="define dynamic-template input-with-help">
 			<label class="nested">
 				<span class="argument reallabel"></span> 
 				<input class="replace argument input">
 			</label>
-			<div class="dynamic-template help-text" data-dynamic-template-options="with-content"></div>
+			<div class="dynamic-template help-text" data-dynamic-template-with-content></div>
 		</fieldset>
 
 			<!-- Template that will be used in the table -->
-			<select class="dynamic-template fte-select">
+			<select class="define dynamic-template fte-select">
 				<option value="" class=placeholder>Choose the number of contract hours per week.</option>
 				<option value={{fte.fulltime}}>Fulltime</option>
 				<option value={{fte.36}}>36 uur</option>
@@ -70,16 +75,53 @@
 		
 			<form class=selection action="javascript:;">
 
+				<fieldset class="dynamic-template input-with-help simulator-level-select" data-dynamic-template-with-content>
+					<label class="parameter reallabel">Simulation</label>
+					<select class="parameter input simulator-level-selector unset persons" name=simulator.level>
+						<option value="" class="placeholder">Choose the simulation.</option>
+						<option value=1>With buttons</option>
+						<option value=2 title="Internet connection is required">With data server</option>
+					</select>
+
+					<p class="parameter helpText">First, it is required to select what simulation type you want to perform
+
+				</fieldset>
+
 				<!-- Simulator buttons, one simulates the GET of person data, the second logs that data to the console -->
-				<fieldset>
+				<fieldset  class="dynamic-template simulator-buttons" data-dynamic-template-for=simulator.level data-dynamic-template-options="range=[1,1]">
 					<label>Actions</label
-					><button type="button" id=set-button>Simulate Get Person list call</button
-					><button type="button" id=show-button>Show person in console</button>
+						><button id=set-button title='Simulate a "Get Person List" call'>Simulate</button
+						><button id=show-button title="log content of 'Person List' to the browser's console (open with F12), so you can see how this is updated live through the controls on this page">Show person</button>
+						<button id=reset-button title='Set the "Person List" back to unassigned'>Reset</button>
+				</fieldset>
+
+				<fieldset class="dynamic-template input-with-help simulator-select" data-dynamic-template-for=simulator.level data-dynamic-template-options="range=[2,2]" data-dynamic-template-with-content>
+					<label class="parameter reallabel">Person list</label>
+					<select class="parameter input lj-select  un-set persons.$selected" name=search.leistungsjahr>
+						<option value="" class=placeholder>Choose a list</option>
+						<!-- 6q4u5 -->
+						<option value=6q4u5>List one</option>
+						<option value=1dprcd>List two</option>
+						<option value=qt3ud>List three</option>
+					</select>
+
+					<p class="parameter helpText">Once a value is selected, the data will get retrieved.
+
+				</fieldset>
+
+				<fieldset class="dynamic-template explain" data-dynamic-template-for="persons" data-dynamic-template-options="range=<>">
+					<p class="dynamic-template explain-no-level" data-dynamic-template-for=simulator.level data-dynamic-template-options="range=<>">
+						Please select the simulation type first.
+					<p class="dynamic-template explain-level-1" data-dynamic-template-for=simulator.level data-dynamic-template-options="range=[1,1]">
+						The "Simulate" button sets the person list data to some sample value, the "Show" button logs the list data to the browser's console, and the "Reset" buttons
+						clears the simulated Person List data.
+					<p class="dynamic-template explain-level-2" data-dynamic-template-for=simulator.level data-dynamic-template-options="range=[2,2]">
+						Please select which "Person list" you want to retrieve from the data server.
 				</fieldset>
 
 				<fieldset class="dynamic-template input-with-help person-select" data-dynamic-template-with-content data-dynamic-template-for="persons">
 					<label class="parameter reallabel">Show info for</label>
-					<select class="person-select parameter input" name=.$selected>
+					<select class="person-select parameter input un-set persons.@" name=.$selected>
 						<option class="placeholder" value="">Choose a person</option>
 
 						<option value={{.$reference}} class="dynamic-template person-select-option" data-dynamic-template-for-each="persons">
@@ -93,8 +135,32 @@
 			</form>
 
 			<div class="dynamic-template please-select">
-				<p>Please click on the Simulate button above...
-			</div>
+			<h2>Proudly presenting the Dynamic App framework</h2>
+			<h3>An HTML template with value binding and automatic instancing</h3>
+			<p>
+				The MVC design pattern is a great one and already implemented in various frameworks. Some, like
+				<a href=http://www.oracle.com/technetwork/articles/javaee/jsp-21-136414.html>JSP</a>,
+				<a href=http://www.thymeleaf.org/>Thymeleaf</a> rely mainly on server-side generated content and a fast-growing number (
+				<a href=https://angularjs.org/>Angular</a>,
+				<a href=http://handlebarsjs.com/>Handlebars</a>,
+				<a href=http://knockoutjs.com/>Knockout</a>,
+				<a href=https://vuejs.org/>Vue</a>, and many more ) emphasize on client-side routing and rendering. Other platforms (e.g. <a href=http://rubyonrails.org/>Ruby on Rails</a>) are a mixture, where the developers are invited to use the approach they understand
+				best.<br> New HTML developments are not compatible with older browsers ( <a href=https://developer.mozilla.org/nl/docs/Web/HTML/Element/template>&lt;template&gt; tag</a>, <a href=https://www.polymer-project.org/1.0/>Polymer</a> ).
+
+				<h3>Serve data and web pages</h3>
+				<p>
+					The framework presented here, assumes that the Models, including business rules reside on a data server and the Controllers (with possibly workflow) on a Web server. Of course these two servers can be one instance, but also on different, load-balanced
+					ones.
+
+					<p>The Controllers should output clean, valid HTML5 with the accompanying CSS. These pages themselves only provide data interaction, client-side, to the user. The data to be shown and/or manipulated is retrieved asynchronously from the data server.
+
+						<p>Presenting an IE9+ and other browsers compatible framework. Fully written in ECMA script v5 (the Javascript of those browers). It aims to deliver both HTML templates to ensure a standardised way of rendering commonly used element constructs as well
+							as value binding to automate most of the template instantiation and linking all elements and nodes that logically represent the same data items.
+
+							<p>The shown Javascript in the right panel uses the proposed framework. This dedicated code is only necessary since the proposed data server is not available on the Codepen.io website (and also not yet implemented)
+
+								<p>Try to set other log levels in the Javascript and see what happens on the console, and even in the element inspector.
+		</div>
 
 			<div class="dynamic-template persons-retrieved" data-dynamic-template-for="persons" data-dynamic-template-options="on-empty=please-select">
 
@@ -106,26 +172,26 @@
 				<form id="build_input" method="post" action="/api/build-input" class="dynamic-template person-record-input selected" data-dynamic-template-for="persons.@">
 					<fieldset>
 
-						<fieldset class="dynamic-template input-with-help" data-dynamic-template-with-content>
+						<fieldset class="dynamic-template input-with-help person.first-name" data-dynamic-template-with-content>
 							<label class="parameter reallabel">First name</label>
 							<input class="parameter input" name=.first-name>
 							<div class="parameter helpText" >
-								<p>Enter <i class="fa fa-pencil"></i> the <b>first name</b> of the selected person.
+								<p>Enter <i class="fa fa-pencil"></i> the <b>first name </b> of the {{.last-name}}.
 								<p>Observe how this name is copied all over this page.
 							</div>
 						</fieldset>
 
 
-						<fieldset class="dynamic-template input-with-help" data-dynamic-template-with-content>
+						<fieldset class="dynamic-template input-with-help person.last-name" data-dynamic-template-with-content>
 							<label class="parameter reallabel">Last name</label>
 							<input class="parameter input" name=.last-name>
 							<div class="parameter helpText" >
-								Enter <i class="fa fa-pencil"></i> the <b>family name</b> of the selected person.
+								Enter <i class="fa fa-pencil"></i> the <b>family name </b> of {{.first-name}}.
 							</div>
 						</fieldset>
 
 						<div class="dynamic-template person-input-has-company" data-dynamic-template-for=persons.@.company>
-							<fieldset class="dynamic-template input-with-help" data-dynamic-template-with-content>
+							<fieldset class="dynamic-template input-with-help monthly-salary" data-dynamic-template-with-content>
 								<label class="parameter reallabel">Salary</label>
 								<select class="parameter input" name=.salary_month>
 									<option value="" class=placeholder>Choose a monthly reimbursement for a FTE</option>
@@ -136,13 +202,14 @@
 									<option value=4000>Senior</option>
 									<option value=5000>Principal</option>
 								</select>
-								<p class="parameter helpText">Select what reimbursement {{.last-name}} gets for this job.
+								<p class="parameter helpText">Select what reimbursement {{..last-name}} gets for this job.
 							</fieldset>
 
 							<fieldset class="dynamic-template input-with-help" data-dynamic-template-with-content>
 								<label class="parameter reallabel">FTE</label>
-								<select name=.fte class="dynamic-template fte-select parameter input" data-dynamic-template-for='.id'></select>
-								<p class="parameter helpText">Select what percentage of 40 hours {{.last-name}} is working.
+								<!-- data-dynamic-template-for='..id' -->
+								<select name=.fte class="dynamic-template fte-select parameter input" data-dynamic-template-with-content></select>
+								<p class="parameter helpText">Select what percentage of 40 hours {{..last-name}} is working.
 							</fieldset>
 						</div>
 
@@ -178,7 +245,7 @@
 					</label>
 
 					<!-- value based templates -->
-					<label class="dynamic-template labeled-item" data-dynamic-template-with-content data-dynamic-template-for=persons.@.company>
+					<div class="dynamic-template labeled-item" data-dynamic-template-with-content data-dynamic-template-for=persons.@.company>
 						<span class="parameter reallabel">Annual salary</span> 
 						<span class="parameter data-item">
 							<span class='dynamic-template fte-explain' data-dynamic-template-for=.fte data-dynamic-template-options="range=[0,1]">
@@ -191,7 +258,7 @@
 							€ <input readonly class=currency-int type=number name=.per_annum>							
 							</span>
 						</span>
-					</label>
+					</div>
 
 					<address class="dynamic-template address" data-dynamic-template-for="persons.@.address"></address>
 				</div>
@@ -204,7 +271,15 @@
 				<table class="dynamic-template person-grid" data-dynamic-template-for="persons">
 					<thead>
 						<tr>
-							<th>id <th>Last <th>First <th>City <i class="fa fa-sort-alpha-asc"></i><th>Salary base and FTE <th>Monthly salary <th>Annual salary<th>Notes <i class="fa fa-sort-alpha-asc"></i><th>
+							<th>id
+							<th>Last
+							<th>First
+							<th>City <i class="fa fa-sort-alpha-asc"></i>
+							<th>Salary base and FTE
+							<th>Monthly salary
+							<th>Annual salary
+							<th>Notes <i class="fa fa-sort-alpha-asc"></i>
+							<th>
 						</tr>
 					<tbody>
 						<tr class="dynamic-template person-grid-row" data-dynamic-template-for-each="persons" data-dynamic-template-options="sort=address.city,description">
@@ -217,21 +292,22 @@
 									<input name=".salary_month" step=25 class="salary" type=number min=0>
 									<select name=.fte class="dynamic-template fte-select" data-dynamic-template-with-content></select>
 								</span>
-							<td><input readonly class="currency dynamic-template person-has-company-salary" data-dynamic-template-for=.company type=number name=".salary= .salary_month * .fte">
-							<td><input readonly class="currency dynamic-template person-has-company-annual" data-dynamic-template-for=.company type=number name=".per_annum= .salary * 12 * 1.08">
-							<td>{{.description}}
-							<td><button class="fa fa-times             remove    dynamic-value" title="remove {{.first-name}} {{.last-name}}."></button>
+								<td><input readonly class="currency dynamic-template person-has-company-salary" data-dynamic-template-for=.company type=number name=".salary= .salary_month * .fte">
+								<td><input readonly class="currency dynamic-template person-has-company-annual" data-dynamic-template-for=.company type=number name=".per_annum= .salary * 12 * 1.08">
+								<td>{{.description}}
+								<td><button class="fa fa-times             remove    dynamic-value" title="remove {{.first-name}} {{.last-name}}."></button>
 						</tr>
-					<tfoot>
-						<tr>
-							<td colspan=2>Totals
-							<td colspan=2>{{persons.$count}} rows
-							<td colspan=1>
-							<td><input readonly class=currency type=number name="totals.salary= 	Sum(persons.*.company.salary)">
-							<td><input readonly class=currency type=number name="totals.per_annum= Sum(persons.*.company.per_annum)">
-							<td colspan=2>
-						</tr>
+						<tfoot>
+							<tr>
+								<td colspan=2>Totals
+								<td colspan=2>{{persons.$count}} rows
+								<td colspan=1>
+								<td><input readonly class=currency type=number name="totals.salary=    Sum(persons.*.company.salary)">
+								<td><input readonly class=currency type=number name="totals.per_annum= Sum(persons.*.company.per_annum)">
+								<td colspan=2>
+							</tr>
 				</table>
+
 
 				<div class=person-tiles>
 					<div  class="dynamic-template person-tile" data-dynamic-template-for-each="persons" >

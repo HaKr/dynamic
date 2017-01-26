@@ -24,14 +24,15 @@ var dynamic_app = {
 var
 	dynamic_dom = require('./dynamic-dom.js'),
 	dynamic_utils = require('./dynamic-utils'),
-	value_module = require('./dynamic-values.js'),
-	template_module = require('./dynamic-templates.js'),
+	values_module = require('./dynamic-values.js'),
+	templates_module = require('./dynamic-templates.js'),
 	observer_module = require('./dynamic-observers.js'),
 	formula_module = require('./dynamic-formulas.js'),
 	logger = require('./browser_log').get_logger(dynamic_app.info.Name),
-	htmlcomment_logger = require('./browser_log').get_logger(template_module.info.Name+'$'+'HTML'),
+	htmlcomment_logger = require('./browser_log').get_logger(templates_module.info.Name+'$'+'HTML'),
 	uuid_generator = require('uuid/v4');
-	metalogger = require('./browser_log').get_logger('meta info')
+	metalogger = require('./browser_log').get_logger('meta info'),
+	xhrlogger =  require('./browser_log').get_logger('Data Communication')
 ;
 
 var
@@ -55,6 +56,24 @@ var
 	comment_re = new RegExp(comment_pattern)
 ;
 
+var
+	keywords = {
+		template_tag: 			'template',
+		template_for: 			'for',
+		template_for_each: 	'for-each',
+		template_include: 	'include',
+		template_define: 		'define',
+		template_argument: 	'argument',
+		template_parameter: 	'parameter',
+		template_sort: 		'sort',
+
+		range_all: 				'[]',
+		range_empty: 			'<>'
+	},
+	template_options_from_class = {
+
+	}
+
 parse_options[template_tag] = template_options;
 
 dynamic_dom.events.on('DOM ready', function() {
@@ -70,39 +89,14 @@ dynamic_app.register_component = function(css_selector) {
 	return result;
 };
 
-var label_find_re = /([^:]*):\s*(.*)/;
-
-dynamic_app.transform_labels = function(){
-	var replace_count = 0;
-
-	dynamic_dom.get_elements( 'label').forEach(function(label_element) {
-		dynamic_dom.get_nodes(label_element, {
-			node_type: Node.TEXT_NODE
-		}, function(text_node) {
-			if (label_find_re.test(text_node.textContent)) {
-				var
-					match = text_node.textContent.match(label_find_re),
-					reallabel = match[1],
-					remainder = match[2];
-
-				var span = document.createElement('span');
-				span.className = 'reallabel';
-				span.textContent = reallabel;
-				text_node.parentNode.insertBefore(span, text_node);
-				text_node.textContent = remainder;
-				replace_count++;
-			}
-		});
-	});
-
-	logger.debug('Replaced ' + replace_count + ' text labels.');
-};
 
 dynamic_app.run = function() {
+	if (typeof dynamic_app.before_run === "function"){
+		dynamic_app.before_run()
+	}
 
 	logger.info( dynamic_app.info );
 
-	// dynamic_app.transform_labels();
 
 	dynamic_app.vars.components.forEach( function register_components(component) {
 		component.locate();
@@ -113,10 +107,10 @@ dynamic_app.run = function() {
 		var
 			old_instances_info = {}
 		;
-		dynamic_app.debug_templates 		= value_module.get_or_define( 'debug.template_count' );
-		dynamic_app.debug_placeholders 	= value_module.get_or_define( 'debug.placeholder_count' );
-		dynamic_app.debug_instances 		= value_module.get_or_define( 'debug.instance_count' );
-		dynamic_app.debug_observers 		= value_module.get_or_define( 'debug.observer_count' );
+		dynamic_app.debug_templates 		= values_module.get_or_define( 'debug.template_count' );
+		dynamic_app.debug_placeholders 	= values_module.get_or_define( 'debug.placeholder_count' );
+		dynamic_app.debug_instances 		= values_module.get_or_define( 'debug.instance_count' );
+		dynamic_app.debug_observers 		= values_module.get_or_define( 'debug.observer_count' );
 
 		dynamic_app.update_meta_info = function(){
 			var
@@ -127,14 +121,14 @@ dynamic_app.run = function() {
 				placeholder_count = 0
 			;
 
-			dynamic_app.debug_templates.set_value( Object.keys( template_module.vars.Definitions ).length );
-			dynamic_app.debug_placeholders.set_value( Object.keys( template_module.vars.Placeholders ).length );
-			dynamic_app.debug_instances.set_value( Object.keys( template_module.vars.Instances ).length );
-			dynamic_app.debug_observers.set_value( Object.keys( value_module.vars.observers ).length );
+			dynamic_app.debug_templates.set_value( Object.keys( templates_module.vars.Definitions ).length );
+			dynamic_app.debug_placeholders.set_value( Object.keys( templates_module.vars.Placeholders ).length );
+			dynamic_app.debug_instances.set_value( Object.keys( templates_module.vars.Instances ).length );
+			dynamic_app.debug_observers.set_value( Object.keys( values_module.vars.observers ).length );
 
-			Object.keys( template_module.vars.Instances ).forEach( function (ik){
+			Object.keys( templates_module.vars.Instances ).forEach( function (ik){
 				var 
-					instance = template_module.vars.Instances[ik],
+					instance = templates_module.vars.Instances[ik],
 					instance_info = instance.debug_info();
 					instances_info[ instance_info.id ] = instance_info;
 					delete instance_info.id
@@ -172,9 +166,9 @@ dynamic_app.run = function() {
 	});
 
 	dynamic_app.define_templates();
-	value_module.enhance( dynamic_value_class );
+	values_module.enhance( dynamic_value_class );
 
-	dynamic_app.vars.main_instance = template_module.create_instance( document.body );
+	dynamic_app.vars.main_instance = templates_module.create_instance( document.body );
 	dynamic_app.vars.main_instance.enhance( dynamic_instance_class );
 	dynamic_app.vars.main_instance.get_values_and_templates();
 
@@ -191,9 +185,9 @@ dynamic_app.show_instance_info = function(){
 		placeholder_count = 0
 	;
 
-	Object.keys( template_module.vars.Instances ).reverse().forEach( function (ik){
+	Object.keys( templates_module.vars.Instances ).reverse().forEach( function (ik){
 		var 
-			instance = template_module.vars.Instances[ik],
+			instance = templates_module.vars.Instances[ik],
 			info     = instance.debug_info()
 		;
 		instance_count++;
@@ -221,7 +215,7 @@ dynamic_app.define_templates = function(template_element) {
 		only_content 	= false,
 		with_content   = '',
 		template_name  = '',
-		range				= '<>',
+		range				= keywords.range_all,
 		is_body 			= typeof template_element === "undefined";
 
 	if (!is_body) {
@@ -235,16 +229,17 @@ dynamic_app.define_templates = function(template_element) {
 		delete parser.options.only_content;
 
 		if (typeof template_name === "string" && template_name.length > 0) {
-			existing = template_module.get_template_by_name( template_name );
+			existing = templates_module.get_template_by_name( template_name );
 
 			if (existing !== null) {
 				if ( parser.options.hasOwnProperty('with_content') ){
 					if (with_content.length>0){
 						template_name += "_" + with_content;
 					} else {
-						template_name += "_" + uuid_generator();
+						var additional_name = dynamic_dom.option_from_class( template_element, template_name, { default: uuid_generator(), remove: false, get_value: true, remove_value: false } );
+						template_name += "_" + additional_name;
 					};
-					result = template_module.define( template_name, parser.options );	
+					result = templates_module.define( template_name, parser.options );	
 					// existing = null;
 					result.get_clone_from( existing );
 				} else {
@@ -252,11 +247,11 @@ dynamic_app.define_templates = function(template_element) {
 					result.merge_options( parser.options );
 				}
 			} else {
-				result = template_module.define( template_name, parser.options );
+				result = templates_module.define( template_name, parser.options );
 			}
 
 			if (parser.options.hasOwnProperty('for') || parser.options.hasOwnProperty('for_each') || parser.options.hasOwnProperty('with_content')) {
-				range = parser.options.hasOwnProperty('range') ? parser.options.range : '<>';
+				range = parser.options.hasOwnProperty('range') ? parser.options.range : keywords.range_all;
 				var 
 					dynamic_value_name 	= parser.options.hasOwnProperty('for') ? parser.options['for'] : parser.options.hasOwnProperty('for_each')? parser.options.for_each : '',
 					multiple 				= parser.options.hasOwnProperty('for_each'),
@@ -317,7 +312,7 @@ dynamic_placeholder.single_instance = function(dynamic_value) {
 	// logger.debug('Single instance of ' + this.definition.name + ' for ' + dynamic_value.name, this);
 	// this.dynamic_value = dynamic_value.get_final();
 
-	this.check_complete( dynamic_value.get_final() );
+	this.check_complete( dynamic_value );
 };
 
 dynamic_placeholder.multiple_instance = function(dynamic_value) {
@@ -578,12 +573,10 @@ dynamic_value_class.swap = function( offset ){
  */
 dynamic_instance_class.get_values_and_templates = function() {
 	var
-		has_value = this.dynamic_value !== null
+		has_value = this.dynamic_value !== null || this === dynamic_app.vars.main_instance
 	;
 
 	this.child_nodes.forEach(function(node) {
-		if (has_value){
-		}
 		this.get_templates(node);
 		if (has_value){
 			this.bind_textnodes(node);
@@ -591,6 +584,7 @@ dynamic_instance_class.get_values_and_templates = function() {
 			this.get_values(node);
 		}
 		this.resolve_parameters( node );
+		this.trigger_component( node );
 	}, this);
 };
 
@@ -720,7 +714,7 @@ dynamic_instance_class.get_templates = function(node) {
 			this.add_observer(
 				template_placeholder.dynamic_value.observe( 'placeholder_'+template_placeholder.definition.name, function change_placeholder(trigger_value) {
 					// if (template_placeholder.dynamic_value !== trigger_value ||  template_placeholder.dynamic_value.get_value() !== trigger_value.get_value() ){
-						logger.debug( template_placeholder.dynamic_value.name+'['+trigger_value.name+']'+'('+(typeof template_placeholder.dynamic_value === "undefined"?'NIL':template_placeholder.dynamic_value.name)+') ==> instance(s) of ' + template_placeholder.definition.name );
+						// logger.debug( template_placeholder.dynamic_value.name+'['+trigger_value.name+']'+'('+(typeof template_placeholder.dynamic_value === "undefined"?'NIL':template_placeholder.dynamic_value.name)+') ==> instance(s) of ' + template_placeholder.definition.name );
 						// template_placeholder.dynamic_value = trigger_value;
 						template_placeholder.on_value_changed(trigger_value);
 					// }
@@ -731,7 +725,7 @@ dynamic_instance_class.get_templates = function(node) {
 			var delegated_value = template_placeholder.dynamic_value.get_final();
 
 
-			if (!template_placeholder.is_multiple &&  !delegated_value.is_empty() ){
+			if (!template_placeholder.is_multiple &&  template_placeholder.range.includes( delegated_value ) ){
 				logger.debug( 'Instance(s) of ' + template_placeholder.definition.name + ' for ' + template_placeholder.dynamic_value.name+'['+template_placeholder.dynamic_value.get_final().name+']' );
 				template_placeholder.on_value_changed( template_placeholder.dynamic_value );
 			} 
@@ -740,7 +734,7 @@ dynamic_instance_class.get_templates = function(node) {
 				this.add_observer(
 					delegated_value.observe( 'placeholder_delegated'+template_placeholder.definition.name, function change_placeholder(trigger_value) {
 						// if (template_placeholder.dynamic_value !== trigger_value ||  template_placeholder.dynamic_value.get_value() !== trigger_value.get_value() ){
-							logger.debug( trigger_value.name+'('+(typeof template_placeholder.dynamic_value === "undefined"?'NIL':template_placeholder.dynamic_value.name)+') ==> instance(s) of ' + template_placeholder.definition.name );
+							// logger.debug( trigger_value.name+'('+(typeof template_placeholder.dynamic_value === "undefined"?'NIL':template_placeholder.dynamic_value.name)+') ==> instance(s) of ' + template_placeholder.definition.name );
 							template_placeholder.dynamic_value = trigger_value;
 							template_placeholder.on_value_changed(trigger_value);
 						// }
@@ -760,37 +754,21 @@ dynamic_instance_class.get_templates = function(node) {
 };
 
 var
-	control_tags = ['input', 'select'],
+	control_tags = {form: FormControl, input: AppControl, select: AppControl },
 	button_commands = {
-		remove: { event_handler: function remove_dynamic_variable(){
+		remove: { event_handler: function remove_dynamic_value(){
 				this.dynamic_value.remove();
 			}, label: '-',
 			can_do: function( dynamic_value ){ return true; }
 		},
-		'move-up': { event_handler: function move_up_dynamic_variable(){
-				var 
-					other_value = this.dynamic_value.swap(-1),
-					other_button = other_value.get_elements( '.move-up.dynamic-value' )[0] 
-				;
-				// dynamic_dom.remove_class( other_button, 'hidden' );
-
-				if (!this.dynamic_value.can_swap(-1)){
-					// dynamic_dom.add_class( this, 'hidden' );
-				}
+		'move-up': { event_handler: function move_up_dynamic_value(){
+				this.dynamic_value.swap(-1);
 			}, label: '^',
 			can_do: function( dynamic_value ){ return dynamic_value.can_swap(-1); }
 
 		},
-		'move-down': { event_handler: function move_down_dynamic_variable(){
-				var 
-					other_value = this.dynamic_value.swap(1),
-					other_button = other_value.get_elements( '.move-down.dynamic-value' )[0] 
-				;
-				// dynamic_dom.remove_class( other_button, 'hidden' );
-
-				if (!this.dynamic_value.can_swap(1)){
-					// dynamic_dom.add_class( this, 'hidden' );
-				}
+		'move-down': { event_handler: function move_down_dynamic_value(){
+				this.dynamic_value.swap(1);
 			}, label: 'v',
 			can_do: function( dynamic_value ){ return dynamic_value.can_swap(1); }
 
@@ -798,9 +776,11 @@ var
 	}
 ;
 
+
+
 dynamic_instance_class.get_values = function(node) {
 
-	control_tags.forEach( function( control_tag ) {
+	Object.keys( control_tags ).forEach( function( control_tag ) {
 		var tag_elements = dynamic_dom.get_elements(node, control_tag);
 		if (typeof node.tagName === "string" && node.tagName.toLowerCase() === control_tag) {
 			tag_elements.splice(0, 0, node);
@@ -810,10 +790,12 @@ dynamic_instance_class.get_values = function(node) {
 			if (typeof tag_element.dataset !== "object"){
 				tag_element.dataset = {};
 			}
-			if (tag_element.dataset.hasOwnProperty('dynamicValue')){
-				logger.warning( 'element already has a value', tag_element.dataset.dynamicValue, tag_element);
-			} else {
-				this.define_control(tag_element);
+			if (tag_element.name.length>0){
+				if (tag_element.dataset.hasOwnProperty('dynamicValue')){
+					logger.warning( 'element already has a value', tag_element.dataset.dynamicValue, tag_element);
+				} else {
+					this.define_control(tag_element, control_tags[ control_tag ] );
+				}
 			}
 		}, this );
 	}, this );
@@ -828,20 +810,6 @@ dynamic_instance_class.get_values = function(node) {
 			var dv = this.dynamic_value;
 			btn.dataset.dynamicValue = dv.name;
 
-			// var 
-			// 	i = document.createElement( 'i' );
-			// 	i.className = btn.className;
-			// 	button_title = btn.getAttribute( 'title')
-			// ;
-
-			// if (button_title !== null){
-			// 	i.setAttribute( 'title', button_title  );
-			// }	
-
-			// btn.parentNode.insertBefore( i, btn );
-			// btn.remove();
-			// btn = i;
-			
 			Object.keys( button_commands ).forEach( function( command_name ){
 				if (btn.className.indexOf( command_name ) >= 0){
 					if (!button_commands[ command_name ].can_do( dv )){
@@ -859,12 +827,21 @@ dynamic_instance_class.get_values = function(node) {
 
 };
 
-dynamic_instance_class.define_control = function(tag_element) {
+dynamic_instance_class.define_control = function( tag_element, control_constructor ) {
 	if (typeof this.controls === "undefined"){
 		this.controls = [];
 	}
 	
-	this.controls.push(new AppControl(tag_element, this));
+	this.controls.push(new control_constructor( tag_element, this ));
+};
+
+dynamic_instance_class.remove = function(){
+	this.super_remove();
+
+	dynamic_utils.make_array( this.controls ).forEach( function remove_control( the_control ){
+		the_control.remove();
+	}, this );
+	this.controls = [];
 };
 
 dynamic_instance_class.get_dynamic_value = function get_dynamic_value_for_instance( value_name ) {
@@ -884,13 +861,13 @@ dynamic_instance_class.get_dynamic_value = function get_dynamic_value_for_instan
 	} else {
 		var parent_instance = this.parent_instance;
 
-		for (var parent_instance = this.parent_instance; result === null && parent_instance !== null; parent_instance = parent_instance.parent){
-			if (parent_instance.dynamic_variable !== null ){
+		for (var parent_instance = this.parent_instance; result === null && parent_instance !== null; parent_instance = parent_instance.parent_instance){
+			if (parent_instance.dynamic_value !== null ){
 				result = parent_instance.dynamic_value.get_dynamic_value( value_name );
 			}	
 		}
 		if (result === null){
-			result = value_module.get_or_define( value_name );
+			result = values_module.get_or_define( value_name );
 		}
 	}
 
@@ -940,6 +917,12 @@ dynamic_instance_class.resolve_parameters = function( element ) {
 };
 
 
+dynamic_instance_class.trigger_component = function( element ) {
+	dynamic_app.vars.components.forEach( function trigger_components(component) {
+		component.notify_when_visible( element );
+	});
+};
+
 
 dynamic_instance_class.node_inserted = function( node ){
 	if (this.dynamic_value !== null){
@@ -947,6 +930,37 @@ dynamic_instance_class.node_inserted = function( node ){
 	}
 };
 
+dynamic_instance_class.get_control_attribute_observer = function( element, attribute_name ){
+	var result = null;
+
+	Object.keys( this.observers ).forEach( function examine_observer_for_attribute( observer_name ){
+		var observer = this.observers[ observer_name ];
+
+		if (observer.ref_object.hasOwnProperty('binding_observer') && observer.ref_object.binding_observer.element === element && observer.ref_object.binding_observer.attribute_name === attribute_name){
+
+			result= observer.ref_object.binding_observer;
+		}
+	}, this );
+
+	return result;
+};
+
+
+dynamic_instance_class.get_control_observer_values = function( element ){
+	var result = {};
+
+	Object.keys( this.observers ).forEach( function examine_observer_for_element( observer_name ){
+		var observer = this.observers[ observer_name ];
+
+		if (observer.ref_object.hasOwnProperty('binding_observer') && observer.ref_object.binding_observer.element === element){
+			var dynamic_value = observer.dynamic_value;
+
+			result[ dynamic_value.name ] = dynamic_value;
+		}
+	}, this );
+
+	return result;
+};
 
 /* 
  * local support classes
@@ -1032,12 +1046,151 @@ AttributeParser.prototype.parse = function(element) {
 };
 
 
-function AppControl( element, template_instance ) {
+function AppControl$base( element, template_instance ){
+
+}
+
+AppControl$base.prototype.create = function( element, template_instance ){
 	this.element 	= element;
 	this.instance 	= template_instance;
+	this.value_name = this.element.name;
+
+	this.dynamic_value 						= this.instance.get_dynamic_value( this.value_name );
+	this.unset_value 							= null;
+	this.element.name 						= this.dynamic_value.bracket_notation
+	this.element.dataset.dynamicValue 	= this.dynamic_value.name;
+
 
 	this.set_up();
+};
+
+AppControl$base.prototype.remove = function(){
+	this.element = null;
+	this.instance = null;
+	this.dynamic_value = null;
+
+	if (this.element !== null){
+		delete this.element.dataset.dynamicValue;	
+	}
+};
+
+
+
+function FormControl( form_element, template_instance ) {
+	AppControl$base.prototype.create.call( this, form_element, template_instance );
 }
+
+FormControl.prototype = new AppControl$base();
+FormControl.constructor = FormControl;
+
+FormControl.prototype.submit = function(){
+    this.xhr.open(this.element.method || "GET", this.element.action );
+    this.form_data  = new FormData( this.element );
+    this.form_data.append( 'authorization_token', 'jjdk' );
+
+    xhrlogger.info( 'Data retrieval:', this.form_data, this.xhr );
+
+    this.xhr.send( this.form_data );
+};
+
+FormControl.prototype.remove = function(){
+		this.xhr = null;
+		this.form_data = null;
+  		this.dynamic_value.set_value( null );
+
+		AppControl$base.prototype.remove.call( this );
+};
+
+FormControl.prototype.check_complete = function(){
+	var 
+		result = true,
+		value_names = Object.keys( this.dynamic_values )
+	;
+
+	for (var vni=0; result && vni<value_names.length; vni++ ){
+		var dynamic_value = this.dynamic_values[ value_names[ vni ] ];
+		result = !dynamic_value.is_empty();
+	}
+
+	if (result && value_names.length>0){
+		this.submit();
+	} else {
+		this.dynamic_value.set_value( null );
+	}
+
+};
+
+FormControl.prototype.set_up = function(){
+	var self = this;
+
+    this.xhr = new XMLHttpRequest();
+
+    this.dynamic_values = this.instance.get_control_observer_values( this.element );
+
+    this.format = 'json';
+
+	 var attr_observer = this.instance.get_control_attribute_observer( this.element, 'data-action' );
+ 	if (attr_observer !== null){
+ 		attr_observer.attribute_name = 'action';
+ 	}
+ 
+    if (this.element.dataset.hasOwnProperty('action')){
+    	
+    	delete this.element.dataset.action;
+    }
+
+    if (this.element.dataset.hasOwnProperty('format')){
+    	this.format = this.element.dataset.format;
+
+    	delete this.element.dataset.format;
+    }
+
+	var
+		value_names = Object.keys( this.dynamic_values )
+	;
+
+	for (var vni=0; vni<value_names.length; vni++ ){
+		var dynamic_value = this.dynamic_values[ value_names[ vni ] ];
+
+		this.instance.add_observer(
+			dynamic_value.observe( 'form-is-complete_'+this.element.name, function is_form_complete(dv) {
+				self.check_complete( dv );
+			}, this )
+		);
+	}
+
+    this.xhr.addEventListener("load", function(event) {
+    	try {
+    		var payload = JSON.parse( event.target.responseText );
+    		xhrlogger.info( 'Data retrieved',payload );
+    		self.dynamic_value.set_value( payload );
+    	} catch( err ){
+    		xhrlogger.error("Data parse error", err, self.xhr );
+    	}
+    });
+
+    // We define what will happen in case of error
+    this.xhr.addEventListener("error", function(event) {
+      xhrlogger.error( "Data connection failed", event, self.xhr );
+    });
+
+    this.element.addEventListener( 'submit', function form_submit(event) {
+      event.preventDefault();
+
+      self.submit();
+    });
+
+    this.check_complete();
+
+};
+ 
+
+function AppControl( element, template_instance ) {
+	AppControl$base.prototype.create.call( this, element, template_instance );
+}
+
+AppControl.prototype = new AppControl$base();
+AppControl.constructor = AppControl;
 
 var
 	// change_by_value = new Event( 'change_by_value' )
@@ -1049,16 +1202,25 @@ change_by_value.initEvent('change_by_value', true, true);
 
 
 AppControl.prototype.update_by_value = function(dynamic_value) {
-	var
-		dv_text = dynamic_value.get_text();
+	if (this.element !== null){
+		var
+			dv_text = dynamic_value.get_text();
 
-	if (this.element.value !== dv_text) {
-		// logger.debug('update control value from dynamic value', this);
-		this.element.value = dynamic_value.get_value();
-		this.element.dispatchEvent( change_by_value );
+		if (this.element.value !== dv_text) {
+			// logger.debug('update control value from dynamic value', this);
+			this.element.value = dynamic_value.get_value();
+			this.element.dispatchEvent( change_by_value );
+		}
 	}
 };
 
+AppControl.prototype.remove = function(){
+		if (this.element.type !== 'hidden'){
+			this.dynamic_value.set_value("");
+		}
+
+		AppControl$base.prototype.remove.call( this );
+};
 
 AppControl.prototype.update_value = function() {
 	var
@@ -1157,25 +1319,37 @@ AppControl.prototype.set_up = function() {
 
 	var
 		name = this.element.name,
+		unsetter = dynamic_dom.option_from_class( this.element, 'unset', {default: '', get_value: true, remove_value: true, remove: true }),
 		self = this;
 
-	this.dynamic_value 						= this.instance.get_dynamic_value( name );
-	this.element.name 						= this.dynamic_value.bracket_notation
-	this.element.dataset.dynamicValue 	= this.dynamic_value.name;
-
-	if (this.element.value !== "") {
+	if (this.element.value !== "" && this.dynamic_value.is_empty()) {
 		self.update_value();
 	} else {
 		self.update_by_value(this.dynamic_value);
 	}
 
+	if (unsetter.length>0){
+		this.unset_value = this.instance.get_dynamic_value( unsetter );
+	}
+
 	this.instance.add_observer(
-		this.dynamic_value.observe( 'control-'+this.element.tagName+'-'+name, function update_control(dv) {
+		this.dynamic_value.observe( 'control-'+this.element.tagName+'-'+this.value_name, function update_control(dv) {
 			self.update_by_value(dv);
 		}, this )
 	);
+
+	this.element.addEventListener('change_by_value', function(){  
+		if (self.unset_value !== null){
+			self.unset_value.set_value( null );
+		}
+	} );
+
 	
 	this.element.addEventListener('change', function() {
+		if (self.unset_value !== null){
+			self.unset_value.set_value( null );
+		}
+
 		self.update_value();
 	});
 
@@ -1211,10 +1385,10 @@ range_testers = {
 
 function ValueRange( range ){
 	this.range = range;
-	this.lower_bound_check = true;
-	this.upper_bound_check = true;
+	this.lower_bound_check = this.range === keywords.range_all;
+	this.upper_bound_check = this.range === keywords.range_all;
 
-	if (range !== '<>'){
+	if (range !== keywords.range_all && range !== keywords.range_empty){
 		var parts = range.split(',');
 
 		this.lower_bound = parts[0].substring(1);
@@ -1232,8 +1406,8 @@ ValueRange.prototype.includes =function( dynamic_value ){
 	var
 		result;
 
-	if (dynamic_value.is_empty()){
-		result = false;
+	if (dynamic_value === null || dynamic_value.is_empty()){
+		result = this.range === keywords.range_empty;
 	} else {
 		var
 			val = dynamic_value.get_value(),
@@ -1261,8 +1435,27 @@ dynamic_app.types.AppComponent.prototype.get_elements = function( css_selector )
 	return dynamic_dom.get_element( this.elements, css_selector );
 };
 
+dynamic_app.types.AppComponent.prototype.safe_element_listener = function( css_selector, event_name, callback ){
+	var
+		element = this.get_element( css_selector )
+	;
+
+	if (element !== null){
+		element.addEventListener( event_name, callback );
+	}
+
+	return element;
+};
+
+
 dynamic_app.types.AppComponent.prototype.on_started = function(callback) {
 	this.on_started = callback;
+
+	return this;
+};
+
+dynamic_app.types.AppComponent.prototype.on_visible = function(callback) {
+	this.on_visible = callback;
 
 	return this;
 };
@@ -1272,6 +1465,28 @@ dynamic_app.types.AppComponent.prototype.locate = function() {
 
 	return this;
 };
+
+dynamic_app.types.AppComponent.prototype.notify_when_visible = function( element ) {
+
+	if (typeof this.on_visible === "function"){
+		if (this.selector.startsWith('.')){
+			if (dynamic_dom.has_class( element, this.selector.substring(1) ) ){
+				this.element = element;
+			} else {
+				this.element = null;
+			}
+		} else {
+			this.element = dynamic_dom.get_element( element, this.selector);
+		}
+		if (this.element !== null ) {
+			this.on_visible( this.element );
+		}
+
+	}
+
+	return this;
+};
+
 
 dynamic_app.types.AppComponent.prototype.initialise = function(callback) {
 	if (this.element !== null && typeof this.on_initialise == "function") {
