@@ -32,9 +32,7 @@
 		</header>
 
 
-		<form data-action=https://api.myjson.com/bins/{{search.leistungsjahr}} data-format=json name=persons method=get class="get-person-list-call">
-			<input type=hidden name=search.leistungsjahr>
-		</form>
+		<form data-action=https://api.myjson.com/bins/{{search.leistungsjahr}} name=persons method=get></form>
 
 		<!-- some common templates -->
 		<div class="helpTextContainer define dynamic-template help-text">
@@ -88,14 +86,14 @@
 				</fieldset>
 
 				<!-- Simulator buttons, one simulates the GET of person data, the second logs that data to the console -->
-				<fieldset  class="dynamic-template simulator-buttons" data-dynamic-template-for=simulator.level data-dynamic-template-options="range=[1,1]">
+				<fieldset  class="dynamic-template simulator-buttons when simulator.level is 1">
 					<label>Actions</label
 						><button id=set-button title='Simulate a "Get Person List" call'>Simulate</button
 						><button id=show-button title="log content of 'Person List' to the browser's console (open with F12), so you can see how this is updated live through the controls on this page">Show person</button>
 						<button id=reset-button title='Set the "Person List" back to unassigned'>Reset</button>
 				</fieldset>
 
-				<fieldset class="dynamic-template input-with-help simulator-select" data-dynamic-template-for=simulator.level data-dynamic-template-options="range=[2,2]" data-dynamic-template-with-content>
+				<fieldset class="dynamic-template input-with-help simulator-select when simulator.level is 2" data-dynamic-template-with-content>
 					<label class="parameter reallabel">Person list</label>
 					<select class="parameter input lj-select  un-set persons.$selected" name=search.leistungsjahr>
 						<option value="" class=placeholder>Choose a list</option>
@@ -109,22 +107,22 @@
 
 				</fieldset>
 
-				<fieldset class="dynamic-template explain" data-dynamic-template-for="persons" data-dynamic-template-options="range=<>">
-					<p class="dynamic-template explain-no-level" data-dynamic-template-for=simulator.level data-dynamic-template-options="range=<>">
+				<fieldset class="dynamic-template explain when no persons available">
+					<p class="dynamic-template explain-no-level when simulator.level not available">
 						Please select the simulation type first.
-					<p class="dynamic-template explain-level-1" data-dynamic-template-for=simulator.level data-dynamic-template-options="range=[1,1]">
+					<p class="dynamic-template explain-level-1 when simulator.level is 1">
 						The "Simulate" button sets the person list data to some sample value, the "Show" button logs the list data to the browser's console, and the "Reset" buttons
 						clears the simulated Person List data.
-					<p class="dynamic-template explain-level-2" data-dynamic-template-for=simulator.level data-dynamic-template-options="range=[2,2]">
+					<p class="dynamic-template explain-level-2 when simulator.level is 2">
 						Please select which "Person list" you want to retrieve from the data server.
 				</fieldset>
 
-				<fieldset class="dynamic-template input-with-help person-select" data-dynamic-template-with-content data-dynamic-template-for="persons">
+				<fieldset class="dynamic-template input-with-help person-select when persons available" data-dynamic-template-with-content>
 					<label class="parameter reallabel">Show info for</label>
-					<select class="person-select parameter input un-set persons.@" name=.$selected>
+					<select class="person-select parameter input" name=.$selected>
 						<option class="placeholder" value="">Choose a person</option>
 
-						<option value={{.$reference}} class="dynamic-template person-select-option" data-dynamic-template-for-each="persons">
+						<option value={{.$reference}} class="dynamic-template person-select-option for each persons">
 							{{.first-name}} {{.last-name}}
 						</option>
 
@@ -134,7 +132,7 @@
 				
 			</form>
 
-			<div class="dynamic-template please-select">
+			<div class="dynamic-template please-select when no persons available">
 			<h2>Proudly presenting the Dynamic App framework</h2>
 			<h3>An HTML template with value binding and automatic instancing</h3>
 			<p>
@@ -162,14 +160,14 @@
 								<p>Try to set other log levels in the Javascript and see what happens on the console, and even in the element inspector.
 		</div>
 
-			<div class="dynamic-template persons-retrieved" data-dynamic-template-for="persons" data-dynamic-template-options="on-empty=please-select">
+			<div class="dynamic-template persons-retrieved when persons available">
 
 				<!-- company info; company address will be added later in this HTML -->
-				<div class="dynamic-template company" data-dynamic-template-for="persons.@.company" title="{{.title}}">
+				<div class="dynamic-template company when persons.@.company" title="{{.title}}">
 					<h2>{{.name}}</h2>
 				</div>
 
-				<form id="build_input" method="post" action="/api/build-input" class="dynamic-template person-record-input selected" data-dynamic-template-for="persons.@">
+				<form id="build_input" method="post" action="/api/build-input" class="dynamic-template person-record-input for selected persons" >
 					<fieldset>
 
 						<fieldset class="dynamic-template input-with-help person.first-name" data-dynamic-template-with-content>
@@ -190,7 +188,7 @@
 							</div>
 						</fieldset>
 
-						<div class="dynamic-template person-input-has-company" data-dynamic-template-for=persons.@.company>
+						<div class="dynamic-template person-input-has-company when persons.@.company">
 							<fieldset class="dynamic-template input-with-help monthly-salary" data-dynamic-template-with-content>
 								<label class="parameter reallabel">Salary</label>
 								<select class="parameter input" name=.salary_month>
@@ -223,7 +221,7 @@
 				-->
 				<address class="dynamic-template address">
 					<i class="fa fa-envelope-o"></i>
-					<label class="dynamic-template labeled-item" data-dynamic-template-with-content data-dynamic-template-for=".street">
+					<label class="dynamic-template labeled-item when .street" data-dynamic-template-with-content>
 						<span class="parameter reallabel">Address</span> 
 						<span class="parameter data-item">{{.street}} {{.number}}</span>
 					</label>
@@ -233,7 +231,7 @@
 					</label>
 				</address>
 
-				<div title="{{.last-name}}, {{.first-name}}" class="dynamic-template person-record selected" data-dynamic-template-for="persons.@">
+				<div title="{{.last-name}}, {{.first-name}}" class="dynamic-template person-record for selected persons">
 					<input type=hidden name=.id>
 					<label class="dynamic-template labeled-item" data-dynamic-template-with-content>
 						<span class="parameter reallabel">First name</span> 
@@ -245,30 +243,30 @@
 					</label>
 
 					<!-- value based templates -->
-					<div class="dynamic-template labeled-item" data-dynamic-template-with-content data-dynamic-template-for=persons.@.company>
+					<div class="dynamic-template labeled-item when persons.@.company" data-dynamic-template-with-content >
 						<span class="parameter reallabel">Annual salary</span> 
 						<span class="parameter data-item">
-							<span class='dynamic-template fte-explain' data-dynamic-template-for=.fte data-dynamic-template-options="range=[0,1]">
+							<span class='dynamic-template fte-explain when .fte in [0,1]'>
 							(
-							<span class='dynamic-template fte-fulltime-text-full' data-dynamic-template-for=.fte data-dynamic-template-options="range=[0.9,1]">fulltime,</span>
-							<span class='dynamic-template fte-fulltime-text-part' data-dynamic-template-for=.fte data-dynamic-template-options="range=[0.25,0.9>">parttime,</span>
-							<span class='dynamic-template fte-fulltime-text-other' data-dynamic-template-for=.fte data-dynamic-template-options="range=[0,0.25>">freelance,</span>
-							<span class='dynamic-template fte-fulltime' data-dynamic-template-for=.fte><input readonly class=percentage name="..fte"></span>
+							<span class='dynamic-template fte-fulltime-text-full  when .fte in [0.9,1]'>fulltime,</span>
+							<span class='dynamic-template fte-fulltime-text-part  when .fte in [0.25,0.9>'>parttime,</span>
+							<span class='dynamic-template fte-fulltime-text-other when .fte in [0,0.25>'>freelance,</span>
+							<span class='fte-fulltime-percentage' ><input readonly class=percentage name=".fte"></span>
 							)
 							€ <input readonly class=currency-int type=number name=.per_annum>							
 							</span>
 						</span>
 					</div>
 
-					<address class="dynamic-template address" data-dynamic-template-for="persons.@.address"></address>
+					<address class="dynamic-template address for persons.@.address"></address>
 				</div>
 
 				<!-- addition to the company template above, only the children of this DIV are added -->
 				<div class="dynamic-template company" data-dynamic-template-options="only-content">
-					<address class="dynamic-template address" data-dynamic-template-for=".address"></address>
+					<address class="dynamic-template address for .address"></address>
 				</div>
 
-				<table class="dynamic-template person-grid" data-dynamic-template-for="persons">
+				<table class="dynamic-template person-grid for persons">
 					<thead>
 						<tr>
 							<th>id
@@ -282,18 +280,18 @@
 							<th>
 						</tr>
 					<tbody>
-						<tr class="dynamic-template person-grid-row" data-dynamic-template-for-each="persons" data-dynamic-template-options="sort=address.city,description">
+						<tr class="dynamic-template person-grid-row for each persons" data-dynamic-template-options="sort=address.city,description">
 							<td class=person-id>{{.id}}
 							<td>{{.last-name}}
 							<td>{{.first-name}}
 							<td>{{.address.city}}
 							<td>
-								<span class="dynamic-template person-has-company" data-dynamic-template-for=.company>
+								<span class="dynamic-template person-has-company for .company">
 									<input name=".salary_month" step=25 class="salary" type=number min=0>
 									<select name=.fte class="dynamic-template fte-select" data-dynamic-template-with-content></select>
 								</span>
-								<td><input readonly class="currency dynamic-template person-has-company-salary" data-dynamic-template-for=.company type=number name=".salary= .salary_month * .fte">
-								<td><input readonly class="currency dynamic-template person-has-company-annual" data-dynamic-template-for=.company type=number name=".per_annum= .salary * 12 * 1.08">
+								<td><input readonly class="currency dynamic-template person-has-company-salary for .company" type=number name=".salary= .salary_month * .fte">
+								<td><input readonly class="currency dynamic-template person-has-company-annual for .company" type=number name=".per_annum= .salary * 12 * 1.08">
 								<td>{{.description}}
 								<td><button class="fa fa-times             remove    dynamic-value" title="remove {{.first-name}} {{.last-name}}."></button>
 						</tr>
@@ -310,7 +308,7 @@
 
 
 				<div class=person-tiles>
-					<div  class="dynamic-template person-tile" data-dynamic-template-for-each="persons" >
+					<div  class="dynamic-template person-tile for each persons" >
 						{{.id}}	{{.last-name}}, {{first-name}}	{{.address.city}}
 							<button class="fa fa-times             remove    dynamic-value" title="remove {{.first-name}} {{.last-name}}."></button
 							><button class="fa fa-arrow-circle-down move-down dynamic-value"></button

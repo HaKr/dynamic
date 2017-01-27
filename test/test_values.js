@@ -1,11 +1,11 @@
 var 
-	logger_name = 'test_values',
+	logger_name = 'test Values',
  	logger = require('../src/modules/browser_log').get_logger( logger_name ),
 	test = require('tape'),
 	values_module = require('../src/modules/dynamic-values.js'),
 	test_persons 
 	;
- 
+
 test('Basic Values API ', function (t) {
 
 	var log_config = {};

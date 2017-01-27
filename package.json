@@ -29,13 +29,14 @@
     "browserify": "^13.1.1",
     "event-emitter": "^0.3.4",
     "install": "^0.8.2",
+    "jshint": "^2.9.4",
+    "live-reload": "latest",
     "npm": "^4.0.5",
-    "watch": "latest",
+    "parallelshell": "latest",
     "tape": "^4.6.3",
     "tape-run": "^2.1.5",
     "tapes": "^4.1.0",
-    "live-reload": "latest",
-    "parallelshell": "latest"
+    "watch": "latest"
   },
   "dependencies": {
     "uuid": "^3.0.1"

@@ -28,6 +28,8 @@ var
 	templates_module = require('./dynamic-templates.js'),
 	observer_module = require('./dynamic-observers.js'),
 	formula_module = require('./dynamic-formulas.js'),
+	ClassNameParser = require('./dynamic_class_parser.js'),
+
 	logger = require('./browser_log').get_logger(dynamic_app.info.Name),
 	htmlcomment_logger = require('./browser_log').get_logger(templates_module.info.Name + '$' + 'HTML'),
 	uuid_generator = require('uuid/v4'),
@@ -1039,14 +1041,43 @@ AttributeParser.prototype.parse = function(element) {
 	if (ix + 2 < class_names.length) {
 		this.options.type = class_names[ix + 2];
 	}
+
+	var class_parser = new ClassNameParser( class_names.join(' ') );
+	class_parser.parse();
+	var remove_classes = class_parser.remove_names;
+
+	if (remove_classes.length>0){
+		remove_classes.forEach( function remove_one_class( class_name ){
+			dynamic_dom.remove_class( element, class_name );
+		});
+
+		this.options.from_class = true;
+		this.options.dynamic_value_name = class_parser.dynamic_value_name;
+		this.options.place_here = class_parser.place_here;
+		this.options.multiple = class_parser.multiple;
+		this.options.range = class_parser.range;
+
+		if (this.options.place_here){
+			if (this.options.multiple){
+				this.options.for_each = this.options.dynamic_value_name;
+			} else {
+				this.options.for = this.options.dynamic_value_name;
+			}
+		}
+	} else {
+		this.options.from_class = false;
+	}
+
 	this.parse_attributes(dynamic_dom.get_attributes(element)).forEach(function(attr_name) {
 		element.removeAttribute(attr_name);
 	});
+
 
 	// this.options.content = element.textContent.trim();
 	dynamic_dom.remove_class(element, this.data_name);
 	return this;
 };
+
 
 function AppControl$base(element, template_instance) {
 
@@ -1213,7 +1244,12 @@ AppControl.prototype.update_by_value = function(dynamic_value) {
 };
 
 AppControl.prototype.remove = function() {
-	if (this.element.type !== 'hidden') {
+	// clear the selection of references to other objects.
+	// those start always with the dollar sign
+	// this way, when an instance gets removed, any previous selection gets cleared
+	// to prevent confusion upon subsequent instances
+	if ( this.dynamic_value.reference.startsWith('$') &&
+		this.element.type !== 'hidden' && !this.element.readOnly && !this.element.disabled && typeof this.element.options === "object") {
 		this.dynamic_value.set_value("");
 	}
 
