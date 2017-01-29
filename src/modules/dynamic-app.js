@@ -238,7 +238,7 @@ dynamic_app.define_templates = function(template_element) {
 				var
 					dynamic_value_name = parser.options.hasOwnProperty('for') ? parser.options['for'] : parser.options.hasOwnProperty('for_each') ? parser.options.for_each : '',
 					multiple = parser.options.hasOwnProperty('for_each'),
-					sort_order = parser.options.hasOwnProperty('sort_order') ? parser.options.sort_order : '',
+					sort_order = parser.options.hasOwnProperty('sort') ? parser.options.sort : '',
 					comment_node = document.createComment("<" + template_tag + " name=" + template_name + " dynamic-value=" + dynamic_value_name + " range=" + range + " multiple=" + multiple + " with_content=" + with_content + " sort=" + sort_order + ">");
 
 				if (parser.options.hasOwnProperty('for_each') && dynamic_value_name.length < 1) {
@@ -1063,7 +1063,6 @@ AttributeParser.prototype.parse = function(element) {
 		this.options.place_here = class_parser.place_here;
 		this.options.multiple = class_parser.multiple;
 		this.options.range = class_parser.range;
-		this.options.sort_order = class_parser.sort_order;
 
 		if (this.options.place_here){
 			if (this.options.multiple){
@@ -1256,7 +1255,7 @@ AppControl.prototype.remove = function() {
 	// those start always with the dollar sign
 	// this way, when an instance gets removed, any previous selection gets cleared
 	// to prevent confusion upon subsequent instances
-	if ( dynamic_utils.starts_with( this.dynamic_value.reference, '$' ) &&
+	if ( this.dynamic_value.reference.startsWith('$') &&
 		this.element.type !== 'hidden' && !this.element.readOnly && !this.element.disabled && typeof this.element.options === "object") {
 		this.dynamic_value.set_value("");
 	}
@@ -1527,7 +1526,7 @@ dynamic_app.types.AppComponent.prototype.locate = function() {
 dynamic_app.types.AppComponent.prototype.notify_when_visible = function(element) {
 
 	if (typeof this.on_visible === "function") {
-		if (dynamic_utils.starts_with( this.selector, '.' )) {
+		if (this.selector.startsWith('.')) {
 			if (dynamic_dom.has_class(element, this.selector.substring(1))) {
 				this.element = element;
 			} else {

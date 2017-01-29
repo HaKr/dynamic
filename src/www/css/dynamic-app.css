@@ -117,7 +117,7 @@ i.fa.fa-envelope-o::before {
 	color: green;
 }
 
-.please-enter-value {
+.please-enter-value, .assistance {
 	color: orange;
 }
 
@@ -262,6 +262,27 @@ div.meta label {
 	margin: 0;
 	border: none;
 
+}
+
+form + p.assistance {
+	color: transparent;
+}
+
+form:invalid + p.assistance {
+	color: initial;
+}
+
+
+input:invalid {
+	background-color: rgba( 255,60,60, 0.09 );
+}
+
+input:valid {
+	background-color: rgba( 80,255,80, 0.06 );
+}
+
+input:optional {
+	background-color: rgba( 80,255,60, 0.03 );
 }
 
 .placeholder {

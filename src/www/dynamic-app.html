@@ -35,7 +35,7 @@
 
 		<!-- some common templates -->
 		<div class="helpTextContainer define dynamic-template help-text">
-			<a></a>
+			<a class=""><i class="fa fa-question-circle-o"></i></a>
 			<div class="replace argument helpText"></div>
 		</div>
 
@@ -73,9 +73,9 @@
 			<form class=selection action="javascript:;">
 
 				<fieldset class="dynamic-template input-with-help simulator-level-select" data-dynamic-template-with-content>
-					<label class="parameter reallabel">Simulation</label>
+					<label class="parameter reallabel">Simulation type</label>
 					<select class="parameter input simulator-level-selector unset persons" name=simulator.level>
-						<option value="" class="placeholder">Choose the simulation.</option>
+						<option value="" class="placeholder">Choose the simulation type.</option>
 						<option value=1>With buttons</option>
 						<option value=2 title="Internet connection is required">With data server</option>
 					</select>
@@ -96,10 +96,9 @@
 					<label class="parameter reallabel">Person list</label>
 					<select class="parameter input lj-select  un-set persons.$selected" name=search.leistungsjahr>
 						<option value="" class=placeholder>Choose a list</option>
-						<!-- 6q4u5 -->
-						<option value=6q4u5>  List one   </option>
-						<option value=1dprcd> List two   </option>
-						<option value=qt3ud>  List three </option>
+						<option value=6q4u5>List one</option>
+						<option value=1dprcd>List two</option>
+						<option value=qt3ud>List three</option>
 					</select>
 
 					<p class="parameter helpText">Once a value is selected, the data will get retrieved.
@@ -132,37 +131,32 @@
 			</form>
 
 			<div class="dynamic-template please-select when no persons available">
-
-				<h2>Proudly presenting the Dynamic App framework</h2>
-				<h3>An HTML template with value binding and automatic instancing</h3>
-				
-				<p>
-					The MVC design pattern is a great one and already implemented in various frameworks. Some, like
-					<a href=http://www.oracle.com/technetwork/articles/javaee/jsp-21-136414.html>JSP</a>,
-					<a href=http://www.thymeleaf.org/>Thymeleaf</a> rely mainly on server-side generated content and a fast-growing number (
-					<a href=https://angularjs.org/>Angular</a>,
-					<a href=http://handlebarsjs.com/>Handlebars</a>,
-					<a href=http://knockoutjs.com/>Knockout</a>,
-					<a href=https://vuejs.org/>Vue</a>, and many more ) emphasize on client-side routing and rendering. Other platforms (e.g. <a href=http://rubyonrails.org/>Ruby on Rails</a>) are a mixture, where the developers are invited to use the approach they understand
-					best.<br> New HTML developments are not compatible with older browsers ( <a href=https://developer.mozilla.org/nl/docs/Web/HTML/Element/template>&lt;template&gt; tag</a>, <a href=https://www.polymer-project.org/1.0/>Polymer</a> ).
+			<h2>Proudly presenting the Dynamic App framework</h2>
+			<h3>An HTML template with value binding and automatic instancing</h3>
+			<p>
+				The MVC design pattern is a great one and already implemented in various frameworks. Some, like
+				<a href=http://www.oracle.com/technetwork/articles/javaee/jsp-21-136414.html>JSP</a>,
+				<a href=http://www.thymeleaf.org/>Thymeleaf</a> rely mainly on server-side generated content and a fast-growing number (
+				<a href=https://angularjs.org/>Angular</a>,
+				<a href=http://handlebarsjs.com/>Handlebars</a>,
+				<a href=http://knockoutjs.com/>Knockout</a>,
+				<a href=https://vuejs.org/>Vue</a>, and many more ) emphasize on client-side routing and rendering. Other platforms (e.g. <a href=http://rubyonrails.org/>Ruby on Rails</a>) are a mixture, where the developers are invited to use the approach they understand
+				best.<br> New HTML developments are not compatible with older browsers ( <a href=https://developer.mozilla.org/nl/docs/Web/HTML/Element/template>&lt;template&gt; tag</a>, <a href=https://www.polymer-project.org/1.0/>Polymer</a> ).
 
 				<h3>Serve data and web pages</h3>
 				<p>
 					The framework presented here, assumes that the Models, including business rules reside on a data server and the Controllers (with possibly workflow) on a Web server. Of course these two servers can be one instance, but also on different, load-balanced
 					ones.
 
-				<p>
-					The Controllers should output clean, valid HTML5 with the accompanying CSS. These pages themselves only provide data interaction, client-side, to the user. The data to be shown and/or manipulated is retrieved asynchronously from the data server.
+					<p>The Controllers should output clean, valid HTML5 with the accompanying CSS. These pages themselves only provide data interaction, client-side, to the user. The data to be shown and/or manipulated is retrieved asynchronously from the data server.
 
-				<p>
-					Presenting an IE9+ and other browsers compatible framework. Fully written in ECMA script v5 (the Javascript of those browers). It aims to deliver both HTML templates to ensure a standardised way of rendering commonly used element constructs as well
-					as value binding to automate most of the template instantiation and linking all elements and nodes that logically represent the same data items.
+						<p>Presenting an IE9+ and other browsers compatible framework. Fully written in ECMA script v5 (the Javascript of those browers). It aims to deliver both HTML templates to ensure a standardised way of rendering commonly used element constructs as well
+							as value binding to automate most of the template instantiation and linking all elements and nodes that logically represent the same data items.
 
-				<p>
-					The shown Javascript in the right panel uses the proposed framework. This dedicated code is only necessary since the proposed data server is not available on the Codepen.io website (and also not yet implemented)
+							<p>The shown Javascript in the right panel uses the proposed framework. This dedicated code is only necessary since the proposed data server is not available on the Codepen.io website (and also not yet implemented)
 
-				<p>	Try to set other log levels in the Javascript and see what happens on the console, and even in the element inspector.
-			</div>
+								<p>Try to set other log levels in the Javascript and see what happens on the console, and even in the element inspector.
+		</div>
 
 			<div class="dynamic-template persons-retrieved when persons available">
 
@@ -178,7 +172,7 @@
 							<label class="parameter reallabel">First name</label>
 							<input class="parameter input" name=.first-name>
 							<div class="parameter helpText" >
-								<p>Enter &#x270d; the <b>first name </b> of {{.last-name}}.
+								<p>Enter <i class="fa fa-pencil"></i> the <b>first name </b> of the {{.last-name}}.
 								<p>Observe how this name is copied all over this page.
 							</div>
 						</fieldset>
@@ -188,7 +182,7 @@
 							<label class="parameter reallabel">Last name</label>
 							<input class="parameter input" name=.last-name>
 							<div class="parameter helpText" >
-								Enter the <b>family name </b> of {{.first-name}}.
+								Enter <i class="fa fa-pencil"></i> the <b>family name </b> of {{.first-name}}.
 							</div>
 						</fieldset>
 

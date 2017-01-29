@@ -3,29 +3,33 @@
 	<head>
 		<meta charset="utf-8">
 		<title>Dynamic App: Person info 2</title>
-		<link rel="stylesheet" media="all" href="dynamic-app.css">
+		<link rel="stylesheet" media="all" href="css/dynamic-app.css">
 		<script src="js/dynamic-app.js"></script>
 	</head>
 
 	<body>
-		<fieldset>
-			<label>First name:
-				<input name=person.first-name>
-			</label>
-			
-			<label>Family name:
-				<input name=person.last-name>
-			</label>
-		</fieldset>
+		<form action="#">
+			<fieldset>
+				<label>First name:
+					<input name=person.first-name required>
+				</label>
+				
+				<label>Middle name or initial:
+					<input name=person.middle-name>
+				</label>
+				
+				<label>Family name:
+					<input name=person.last-name required>
+				</label>
 
-		<p class="dynamic-template person-data" 
-			data-dynamic-template-for=person
-			data-dynamic-template-options="on-empty=please-enter-value;incomplete=wait"
-		>
-				Hello {{.first-name}} {{.last-name}}!
-	
+				<input type=hidden name="person.full-name= person.first-name | person.middle-name | person.last-name">
+				<input type=hidden name="person.required-name= person.first-name & person.last-name">
+			</fieldset>
+		</form>
+		<p class="assistance">Please enter at least your first and last name in the input boxes above.
 
-		<p class="dynamic-template please-enter-value">Please enter your name in the input boxes above.
+		<p class="dynamic-template person-data when person.required-name">
+				Hello {{.full-name}}!
 
 	</body>
 </html>

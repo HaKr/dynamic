@@ -47,13 +47,9 @@ FormulaValue.prototype.make_formula = function(formula) {
 };
 
 FormulaValue.prototype.calculate_simple_operation = function(operation) {
-	var operands = [];
+	var operands = this.operands.splice( 0, operation.operands );
 
-	for (oi = 0; oi < operation.operands; oi++) {
-		operands.push(this.operands.pop());
-	}
-
-	this.push_literal(operation.operation.apply(this, operands.reverse()));
+	this.push_literal( operation.operation.apply( this, operands ), true );
 
 };
 
@@ -63,11 +59,9 @@ FormulaValue.prototype.calculate = function() {
 		operators = dynamic_utils.array_duplicate(this.operators),
 		operands = dynamic_utils.array_duplicate(this.operands);
 
-	logger.debug('calculate ' + this.formula + ' for ' + this.name + ' = ' + result);
-
 	while (this.operands.length > 1) {
 		var
-			operator = operators.pop();
+			operator = this.operators.shift();
 
 		this.calculate_simple_operation(operator);
 	}
@@ -78,6 +72,9 @@ FormulaValue.prototype.calculate = function() {
 	result = operand.get_value();
 
 	this.operands = operands;
+	this.operators = operators;
+
+	logger.info('calculate ' + this.formula + ' for ' + this.name + ' = ' + result);
 
 	this.set_value(result);
 
@@ -105,10 +102,41 @@ function set_numerical_value(param) {
 	return result;
 }
 
+function concat_values_and( op1, op2 ){
+	var
+		result = '';
+
+	if (op1.include() && op2.include()){
+		result = op1.get_value() + ' ' + op2.get_value()
+	}
+
+	return result;
+}
+
+
+function concat_values_or( op1, op2 ){
+	var
+		result = '';
+
+	if (op1.include() || op2.include()){
+		result = op1.get_value() + (op1.include() && op2.include()?' ':'') + op2.get_value()
+	}
+
+	return result;
+}
+
 var
-	naive_re = /\s*(([+\-*\/])\s*((?:[@$.]|\w)+))/g,
-	first_re = /^(.*?)(?:(\s+[+\-*\/])|$)/,
+	naive_re = /\s*(([+\-*\/\&|])\s*((?:[@$.]|\S)+))/g,
+	first_re = /^(.*?)(?:(\s+[+\-*\/\&|])|$)/,
 	operations = {
+		'&': {
+			operands: 2,
+			operation: concat_values_and
+		},
+		'|': {
+			operands: 2,
+			operation: concat_values_or
+		},
 		'+': {
 			operands: 2,
 			operation: function f_add(op1, op2) {
@@ -135,20 +163,26 @@ var
 		}
 	};
 
-FormulaValue.prototype.push_operator = function(operator) {
-	var worker = operations[operator];
-	this.operators.push(worker);
+FormulaValue.prototype.push_operator = function( operator ) {
+	var worker = operations[ operator ];
+	this.operators.push( worker );
 };
 
-FormulaValue.prototype.push_literal = function(operand) {
-	this.operands.push({
+FormulaValue.prototype.push_literal = function( operand, do_replace ) {
+	var literal_operand = {
 		include: function() {
 			return true;
 		},
 		get_value: function() {
 			return operand;
 		}
-	});
+	};
+
+	if (typeof do_replace === "boolean" && do_replace){
+		this.operands.splice( 0,0, literal_operand );
+	} else {
+		this.operands.push( literal_operand );
+	}
 };
 
 FormulaValue.prototype.push_operand = function(operand) {

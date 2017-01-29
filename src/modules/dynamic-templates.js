@@ -195,7 +195,7 @@ DynamicTemplatePlaceholder.prototype.check_complete = function(dynamic_value) {
 	var
 		result = false;
 
-	if (dynamic_value !== null) {
+	if (!dynamic_utils.is_null( dynamic_value ) ) {
 		dynamic_value = dynamic_value.get_final();
 	}
 
