@@ -1,5 +1,3 @@
-var
-	dynamic_utils = require('./dynamic-utils');
 
 function Log() {
 	this.hasConsole = (typeof console === "object" && typeof console.log !== "undefined");
@@ -59,6 +57,22 @@ Log.prototype.mute = function(onoff) {
 
 	return result;
 };
+
+
+var dynamic_utils={};
+
+var CAPITALMATCHER = /([A-Z])/g;
+var HTMLIDMATCHER = /[\-._:\s](\w)/g;
+
+function htmlidreplacer(match, firstLetter) {
+	return firstLetter.toUpperCase();
+}
+
+
+dynamic_utils.htmlID2OptionCase = function(htmlid) {
+	return htmlid.substring(0, 1).toLowerCase() + htmlid.substring(1).replace(HTMLIDMATCHER, htmlidreplacer);
+};
+
 
 Log.prototype.get_logger = function(name) {
 	var result = null;

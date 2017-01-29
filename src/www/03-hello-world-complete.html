@@ -13,12 +13,9 @@
 			<input name=addressee>
 		</label>
 		
-		<p class="dynamic-template please-enter-value">Please enter your name in the input box above.
+		<p class="dynamic-template please-enter-value when addressee not available">Please enter your name in the input box above.
 
-		<p class="dynamic-template salutation" 
-			data-dynamic-template-for=addressee
-			data-dynamic-template-options="on-empty=please-enter-value"
-		>
+		<p class="dynamic-template salutation when addressee not empty">
 				Hello {{addressee}}!
 	
 	</body>

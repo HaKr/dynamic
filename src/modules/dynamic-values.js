@@ -31,11 +31,20 @@ var
 	formula_indicator = '=',
 	meta_selected_name = meta_indicator + 'selected',
 	meta_count_name = meta_indicator + 'count',
-	selected_reference_token = '@',
-	selected_reference_re = new RegExp(selected_reference_token, 'g');
+	selected_reference_token = '@'
+;
 
 values_module.reference_parser = function(reference) {
 	return new ReferenceParser(reference);
+};
+
+values_module.reset_for_test = function(){
+	values_module.vars = {
+		values: {},
+		aliases: {},
+		observers: {},
+		observer_index: 0
+	};
 };
 
 values_module.enhance = function(methods) {
@@ -127,6 +136,7 @@ DynamicValue.prototype.create = function(name) {
 	this.type = value_types.unassigned;
 	this.metavalues = {};
 	this.metainfo = {};
+	this.suppress_parent_notifications = false;
 
 	var self = this;
 
@@ -232,28 +242,14 @@ var
 		}
 	};
 
-function is_scalar(val) {
-	var result = false;
-
-	if (val !== null) {
-		if (val instanceof Object) {
-			result = (val instanceof Date) || val instanceof String || val instanceof Number || val instanceof Boolean;
-		} else {
-			result = "number, string, boolean".indexOf(typeof val) >= 0;
-		}
-	}
-
-	return result;
-}
-
 function value_type_from_value(val) {
 	var
 		result;
 
-	if (val === null) {
+	if (typeof val === "undefined" || val === null) {
 		result = value_types.unassigned;
 	} else {
-		if (is_scalar(val)) {
+		if (dynamic_utils.is_scalar(val)) {
 			result = value_types.scalar;
 		} else {
 			result = value_types.list;
@@ -270,20 +266,47 @@ DynamicValue.prototype.get_bracket_notation = function() {
 	}).join('');
 };
 
-DynamicValue.prototype.make_list = function(child_value) {
-	this.content = {};
+
+DynamicValue.prototype.make_selectable = function() {
+	this.make_list();
+
+	if (!this.metavalues.hasOwnProperty( 'selected' )){
+		this.metavalues.selected = values_module.get_or_define(this.name + '.' + meta_selected_name);
+		this.metavalues.selected.type = value_types.scalar;
+	}
+
+	return this.metavalues.selected;
+};
+
+DynamicValue.prototype.make_list = function() {
 	this.type = value_types.list;
 
-	this.metavalues.count = values_module.get_or_define(this.name + '.' + meta_count_name);
-	this.metavalues.count.type = value_types.scalar;
+	if (!this.metavalues.hasOwnProperty( 'count' )){
+		this.metavalues.count = values_module.get_or_define(this.name + '.' + meta_count_name);
+		this.metavalues.count.type = value_types.scalar;
+	}
 
-	this.metavalues.selected = values_module.get_or_define(this.name + '.' + meta_selected_name);
-	this.metavalues.selected.type = value_types.scalar;
+	return this.metavalues.count;
+};
+
+var
+	type_enforcers = [];
+
+	type_enforcers[ value_types.list ] = DynamicValue.prototype.make_list;
+
+DynamicValue.prototype.enforce_type = function() {
+	var
+		enforcer = type_enforcers[ this.type ];
+
+	if (typeof enforcer === "function"){
+		enforcer.call( this );
+	}
 };
 
 DynamicValue.prototype.add_child = function(child_value) {
 
 	if (this.type === value_types.unassigned) {
+		this.content = {};
 		this.make_list();
 	}
 
@@ -307,7 +330,7 @@ DynamicValue.prototype.set_up = function() {
 	parent_ref = parts.slice(0, -1).join('.');
 	if (parent_ref.length > 0) {
 		this.parent = values_module.get_or_define(parent_ref);
-		this.register_to_parent();
+		// this.register_to_parent();
 	}
 };
 
@@ -396,7 +419,7 @@ DynamicValue.prototype.set_current = function(current_ref) {
 };
 
 DynamicValue.prototype.clear = function() {
-	return this.set_value(null);
+	return this.set_value( null );
 };
 
 DynamicValue.prototype.get_final = function() {
@@ -413,18 +436,50 @@ DynamicValue.prototype.notify_structural_change = function() {
 	}
 };
 
-DynamicValue.prototype.update_from_child = function(child_value) {
-	var
-		had_keys, has_keys;
+function StructureAnalyser( dynamic_value ){
+	this.dynamic_value = dynamic_value;
+	this.had_keys = typeof this.dynamic_value.content === "object"? Object.keys(this.dynamic_value.content).length : 0;
+}
 
-	if (this.is_empty()) {
-		this.content = {};
-		this.oldvalue = {};
+
+StructureAnalyser.prototype.analyse = function( suppress_structural ){
+if (typeof suppress_structural !== "boolean"){
+	suppress_structural = false;
+}
+
+	this.has_keys = typeof this.dynamic_value.content === "object"? Object.keys(this.dynamic_value.content).length : 0;
+
+	if (this.has_keys<1){
+		this.dynamic_value.type = value_types.unassigned;
+		this.dynamic_value.content = '';
 	}
 
-	var self = this;
+	if (this.had_keys !== this.has_keys  ) {
 
-	had_keys = Object.keys(this.content).length;
+		logger.debug( 'Structural change for '+this.dynamic_value.name+' from '+this.had_keys+' to '+ this.has_keys);
+
+		this.dynamic_value.metavalues.count.notify_observers();
+
+		if ( !suppress_structural && (this.had_keys === 0 || this.has_keys ===0 ) ) {
+			// notify observers that we've changed from null, "" or {} to some content
+			this.dynamic_value.notify_observers();
+		}
+	}
+};
+
+DynamicValue.prototype.update_from_child = function(child_value) {
+	var
+		structure_analyser = new StructureAnalyser( this );
+
+	logger.info( '+++UFC '+this.name+' from '+ child_value.reference+' from '+pp(this.content), this.is_empty(), child_value.is_empty(), pp(child_value.content) );
+
+	if (this.type !== value_types.list) {
+		this.oldvalue = {};
+		this.content = {};
+
+		this.make_list();
+	}
+
 
 	if (!child_value.is_empty()) {
 		this.content[child_value.reference] = child_value.content;
@@ -434,84 +489,107 @@ DynamicValue.prototype.update_from_child = function(child_value) {
 		delete this.children[child_value.reference];
 	}
 
-	has_keys = Object.keys(this.content).length;
+	structure_analyser.analyse();
 
-	if (had_keys !== has_keys) {
-		if (!this.busy) {
-			// notify observers that we've changed from null or {} to some content
-			// this.notify_observers();
-			this.notify_structural_change();
-		}
-	}
+	if (this.parent !== null ){
+		this.parent.update_from_child( this );
+	} 
+
+	logger.debug( '---UFC '+this.name+' from '+ child_value.reference+' to '+ pp(this.content) )
 
 	return this;
 };
 
-DynamicValue.prototype.update_attributes = function() {
+function pp( complex ){
+	var result;
+
+	if ( dynamic_utils.is_null( complex ) ){
+		result = '«NIL»'
+	} else {
+		if (dynamic_utils.is_scalar( complex ) ){
+			result = complex.toString();
+		} else {
+			result = '[ ' + Object.keys( complex ).join(', ') +' ]';
+		}
+	}
+			// return JSON.stringify( complex ).replace(/"([^"]+)"/g,'$1');
+	return result;
+}
+
+DynamicValue.prototype.update_from_attributes = function() {
 	var
-		self = this,
-		value_keys = Object.keys(this.content);
+		value_keys = Object.keys(this.content),
+		previous_children = dynamic_utils.list_duplicate( Object.keys( this.children ) )
+	;
 
 	value_keys.forEach(function(value_key) {
 		var
 			attribute_value = this.content[value_key],
 			child_value = values_module.get_or_define(this.name + '.' + value_key);
-
-		child_value.set_value(attribute_value);
+			child_value.set_value( attribute_value, true );
+			this.content[value_key] = attribute_value; // got perhaps cleared by a DEFINE::add_child 
+			this.children[child_value.reference] = child_value;
 	}, this);
 
-	dynamic_utils.array_diff(Object.keys(this.children), value_keys).forEach(function(child_name) {
-		this.children[child_name].clear();
+	dynamic_utils.array_diff(  previous_children, value_keys ).forEach( function( child_name ) {
+		// logger.debug( 'clear name '+child_name);
+		// TODO: clear childs that are no longer there
+		logger.warning('TODO: clear childs that are no longer there, '+ child_name );
 	}, this);
 
-	if (this.type === value_types.list) {
-		this.notify_structural_change();
-	}
 };
 
 DynamicValue.prototype.set_metainfo = function(child_value, newvalue) {
 	var
-		child_reference = child_value.reference.substring(1);
+		child_reference = child_value.meta_reference;
 
-	if (!this.metavalues.hasOwnProperty(child_reference)) {
+	if (!this.metavalues.hasOwnProperty( child_reference )) {
 		this.metavalues[child_reference] = child_value;
 	}
 
 	this.metainfo[child_reference] = newvalue;
 };
 
-// delete this.parent.content[ this.reference ];
+DynamicValue.prototype.do_set_unassigned = function(){
+	this.content = '';
+};
 
-DynamicValue.prototype.do_set_value = function(newvalue) {
-	this.oldvalue = this.content;
+DynamicValue.prototype.do_set_scalar = function( newvalue ){
 	this.content = newvalue;
-	this.type = value_type_from_value(this.content);
-	this.busy = true;
+};	
 
-	var self = this;
-	logger.debug('set content for  ref ' + this.reference, this);
+DynamicValue.prototype.do_set_list = function( newvalue ){
+	var
+		structure_analyser = new StructureAnalyser( this );
 
-	Object.keys(this.metavalues).forEach(function reset_meta_info(meta_value_name) {
-		this.metavalues[meta_value_name].set_value("");
-	}, this);
+	this.content = newvalue;
+	this.update_from_attributes();
 
-	if (this.parent !== null) {
-		this.parent.update_from_child(this);
+	structure_analyser.analyse( true );
+
+};
+
+
+var
+	type_setters = {}
+
+	type_setters[ value_types.unassigned ] = DynamicValue.prototype.do_set_unassigned;
+	type_setters[ value_types.scalar ] 		= DynamicValue.prototype.do_set_scalar;
+	type_setters[ value_types.list ] 		= DynamicValue.prototype.do_set_list;
+
+DynamicValue.prototype.do_set_value = function( newvalue ) {
+
+	this.oldvalue = this.content;
+	this.type = value_type_from_value( newvalue );
+	this.enforce_type();
+
+	var type_setter = type_setters[ this.type ];
+
+	if (typeof type_setter !== "function"){
+		logger.error( 'panic', this.type, pp( newvalue), type_setter, type_setters);
 	}
 
-	if (typeof this.content === "object") {
-		if (this.content !== null) {
-			this.update_attributes();
-		} else {
-			this.type = value_types.unassigned;
-
-			if (Object.keys(this.children).length < 1) {
-				this.content = "";
-			}
-		}
-	}
-
-	delete this.busy;
+	type_setter.call( this, newvalue );
 };
 
 DynamicValue.prototype.notify_observers = function(dynamic_value) {
@@ -519,23 +597,40 @@ DynamicValue.prototype.notify_observers = function(dynamic_value) {
 		dynamic_value = this;
 	}
 
+	logger.info( '+ + + '+ this.name+' notification' );
 	for (var li = 0; li < this.observers.length; li++) {
 		var observer = this.observers[li];
 		observer.callback(dynamic_value);
 	}
+	logger.debug( ' - - -'+this.name+' notification' );
 
 	return this;
 };
 
-DynamicValue.prototype.set_value = function(newvalue) {
+DynamicValue.prototype.set_value = function( newvalue, skip_update_parent ) {
+
+	if (typeof skip_update_parent !== "boolean"){
+		skip_update_parent = this.parent === null;
+	}
+
+
 	var
 		oldvalue = this.get_value();
-	// logger.debug('DV::SetValue', newvalue, oldvalue, (newvalue != oldvalue) );
-	if (newvalue != oldvalue) { // use type coercion if necessary
+	// || only_by_attributes
+	if (newvalue != oldvalue ) { // use type coercion if necessary
 		this.oldvalue = oldvalue;
+		
+		logger.info('> > > > > '+this.name + '::SetValue( '+JSON.stringify(newvalue).replace( /"([^"]+)"/g,'$1' ) +" )" );
 
-		this.do_set_value(newvalue);
+		this.do_set_value( newvalue, skip_update_parent );
+
 		this.notify_observers();
+
+		if ( !skip_update_parent && !this.suppress_parent_notifications ){
+			this.parent.update_from_child( this );
+		} 
+
+		logger.debug(' < < < < <'+this.name + '::SetValue( '+JSON.stringify(newvalue).replace( /"([^"]+)"/g,'$1' ) +" )" );
 	}
 
 	return this;
@@ -575,14 +670,14 @@ function DynamicMetavalue() {}
 DynamicMetavalue.prototype = new DynamicValue();
 
 DynamicMetavalue.prototype.get_value = function() {
-	return this.parent.metainfo[this.reference.substring(1)];
+	return this.parent.metainfo[ this.meta_reference ];
 };
 
 DynamicMetavalue.prototype.do_set_value = function(newvalue) {
 	this.content = newvalue;
-	this.type = value_type_from_value(this.get_value());
+	this.type = value_type_from_value( newvalue );
 
-	this.parent.set_metainfo(this, newvalue);
+	this.parent.set_metainfo( this, newvalue );
 };
 
 DynamicMetavalue.prototype.register_to_parent = function() {
@@ -590,8 +685,12 @@ DynamicMetavalue.prototype.register_to_parent = function() {
 };
 
 DynamicMetavalue.prototype.set_up = function() {
+	
 	DynamicValue.prototype.set_up.call(this);
-	this.type = value_type_from_value(this.get_value());
+
+	this.meta_reference = this.reference.substring(1);
+	this.suppress_parent_notifications = true;
+	this.type = value_types.scalar;
 };
 
 function DynamicByReferenceValue() {}
@@ -609,23 +708,24 @@ DynamicByReferenceValue.prototype.is_deferred = function() {
 	return true;
 };
 
-function by_reference_updater(dynamic_value) {
-	return function(index_value) {
+function by_reference_updater( byref_dynamic_value ) {
+	return function update_reference_through_index( index_value ) {
+		logger.debug( 'By ref index changed', index_value.name, byref_dynamic_value.name, index_value.is_empty() );
 		if (!index_value.is_empty()) {
-			dynamic_value.delegate_value = values_module.get_or_define(dynamic_value.parent_ref + index_value.get_value() + dynamic_value.child_ref);
-			logger.debug('By ref index changed', index_value, dynamic_value);
-			dynamic_value.notify_observers(dynamic_value.delegate_value);
+			byref_dynamic_value.delegate_value = values_module.get_or_define(byref_dynamic_value.parent_ref + index_value.get_value() + byref_dynamic_value.child_ref);
+			byref_dynamic_value.notify_observers( byref_dynamic_value.delegate_value );
 		} else {
-			dynamic_value.delegate_value = null;
-			dynamic_value.notify_observers(null);
+			byref_dynamic_value.delegate_value = null;
+			byref_dynamic_value.notify_observers( null );
 		}
 	};
 }
 
 DynamicByReferenceValue.prototype.set_up = function() {
-	selected_reference_re.exec('dummy'); // reset de RE
+	// TODO: multiple references, like persons.@.companies.@.name
 	var
-		m = selected_reference_re.exec(this.name),
+		selected_reference_re = new RegExp( selected_reference_token, 'g' ),
+		m = selected_reference_re.exec( this.name ),
 		self = this;
 
 	this.delegate_value = null;
@@ -633,33 +733,20 @@ DynamicByReferenceValue.prototype.set_up = function() {
 	if (m) {
 		var
 			left = this.name.substring(0, m.index),
-			index_value = values_module.get_or_define(left + meta_selected_name),
+			// index_value = values_module.get_or_define(left + meta_selected_name),
 			right = this.name.substring(m.index + 1);
 
+	   this.reference_value = values_module.get_or_define( left.slice(0,-1) );
+	   this.index_value = this.reference_value.make_selectable();
 		this.parent_ref = left;
 		this.child_ref = right;
 
-		self.by_reference_observer = index_value.observe('index by ref', by_reference_updater(self), self);
-		if (!index_value.is_empty()) {
-			by_reference_updater(self).call(null, index_value);
+		this.by_reference_observer = this.index_value.observe('index by ref', by_reference_updater( this ), this.name );
+		if (!this.index_value.is_empty()) {
+			by_reference_updater( this ).call( this, this.index_value );
 		}
 	}
 };
-
-// DynamicByReferenceValue.prototype.get_value = function() {
-// 	var result = '';
-
-// 	if (this.delegate_value !== null) {
-// 		result = this.delegate_value.get_value();
-// 	}
-// 	return result;
-// };
-
-// DynamicByReferenceValue.prototype.set_value = function(newvalue) {
-// 	if (this.delegate_value !== null) {
-// 		result = this.delegate_value.set_value(newvalue);
-// 	}
-// };
 
 DynamicByReferenceValue.prototype.is_empty = function() {
 	var

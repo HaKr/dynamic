@@ -28,13 +28,18 @@ test('Class Parser API ', function (t) {
 		{s: "template explain abc when selected search.person-list index is 3", e: 'V=search.person-list.$selected; R=[3,3]; remove when, selected, index, is, 3' },
 		{s: "template explain abc when search.person-list index in <3,5]", 		e: 'V=search.person-list.$selected; R=<3,5]; remove when, index, in, <3,5]' },
 		{s: "template explain abc for selected persons", 						e: 'V=persons.@; R=[]; remove for, selected' },
+		{s: "template explain abc when persons.@.company",                      e: 'V=persons.@.company; R=[]; remove when' },
+		{s: "template explain abc when selected persons has company",           e: 'V=persons.@.company; R=[]; remove when, selected, has, persons, company' },
 		{s: "template explain abc for each persons", 							e: 'V=persons; R=[]; remove for, each' },
-		{s: "template explain abc for each persons sort by city,description", 	e: 'V=persons; R=[]; remove for, each, sort, by, city,description; sort by city,description' }
+		{s: "template explain abc for each persons sort city,description", 		e: 'V=persons; R=[]; remove for, each, sort, city,description; sort by city,description' },
+		{s: "template explain abc for each persons sort by city,description", 	e: 'V=persons; R=[]; remove for, each, sort, by, city,description; sort by city,description' },
+		{s: "template explain abc for each persons order by city,description", 	e: 'V=persons; R=[]; remove for, each, order, by, city,description; sort by city,description' },
+		{s: "template explain abc for each persons sort order city,description",e: 'V=persons; R=[]; remove for, each, sort, order, city,description; sort by city,description' }
 
 	].forEach( function( se ){
 		t.equals( test_parser( se.s ),se.e, se.s + ' ==> ' + se.e );
 	});
 
 
-	// t.end();
+	t.end();
 } );

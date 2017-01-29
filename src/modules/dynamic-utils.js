@@ -1,4 +1,5 @@
 var
+	logger = require('./browser_log').get_logger('Dynamic utilities'),
 	dynamic_utils = {};
 
 // from:https://github.com/jserz/js_piece/blob/master/DOM/ChildNode/remove()/remove().md
@@ -99,30 +100,68 @@ dynamic_utils.array_is_subset = function(a, b) {
 	return result;
 };
 
-dynamic_utils.array_duplicate = function(ar) {
-	var
-		result,
-		source,
-		is_array,
-		actor;
+dynamic_utils.is_null = function(val) {
+	return typeof val === "undefined" || val === null;
+};
 
-	is_array = Array.isArray(ar);
-	if (is_array) {
-		result = [];
-		source = ar;
-		actor = function(item, ix) {
-			result.push(item);
-		};
-	} else {
-		result = {};
-		source = Object.keys(ar);
-		actor = function(item, ix) {
-			result[ix] = ar[ix];
-		};
+dynamic_utils.is_scalar = function(val) {
+	var result = false;
+
+	if (!dynamic_utils.is_null( val )) {
+		if (val instanceof Object) {
+			result = (val instanceof Date) || val instanceof String || val instanceof Number || val instanceof Boolean;
+		} else {
+			result = "number, string, boolean".indexOf(typeof val) >= 0;
+		}
 	}
 
-	for (var ix, ari = 0; ari < source.length; ari++) {
-		actor(ar[ari], source[ari]);
+	return result;
+};
+
+
+dynamic_utils.array_duplicate = function( ar, recurse ) {
+	if (typeof recurse !== "boolean"){
+		recurse = false
+	}
+
+	var
+		result,
+		is_array,
+		source,
+		getter, setter;
+
+	if ( dynamic_utils.is_null( ar ) || dynamic_utils.is_scalar( ar ) ){
+		result = ar;
+	} else {
+
+		is_array = Array.isArray(ar);
+		if (is_array) {
+			result = [];
+			source = ar;
+			getter=function( ix ){
+				return ar[ ix ];
+			};
+			setter = function( ix, item ) {
+				result.push( item );
+			};
+		} else {
+			result = {};
+			source = Object.keys(ar);
+			getter= function( ix ){
+				return ar[ source[ ix ] ];
+			};
+			setter = function( ix, item ) {
+				result[ source[ ix ] ] = item;
+			};
+		}
+
+		for (var ari = 0; ari < source.length; ari++) {
+			var
+				orig_item = getter( ari );
+				var item = !recurse || dynamic_utils.is_null( orig_item ) || dynamic_utils.is_scalar( orig_item ) ? orig_item : dynamic_utils.list_duplicate( orig_item, recurse )
+			;
+			setter( ari, item );
+		}
 	}
 
 	return result;

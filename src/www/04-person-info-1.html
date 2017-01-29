@@ -18,14 +18,11 @@
 			</label>
 		</fieldset>
 
-		<p class="dynamic-template person-data" 
-			data-dynamic-template-for=person
-			data-dynamic-template-options="on-empty=please-enter-value"
-		>
+		<p class="dynamic-template person-data for person">
 				Hello {{.first-name}} {{.last-name}}!
 	
 
-		<p class="dynamic-template please-enter-value">Please enter your name in the input boxes above.
+		<p class="dynamic-template please-enter-value when person empty">Please enter your name in the input boxes above.
 
 	</body>
 </html>

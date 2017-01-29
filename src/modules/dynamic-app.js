@@ -22,6 +22,7 @@ var dynamic_app = {
 };
 
 var
+	api_keywords = require('./dynamic-api_keywords.js'),
 	dynamic_dom = require('./dynamic-dom.js'),
 	dynamic_utils = require('./dynamic-utils'),
 	values_module = require('./dynamic-values.js'),
@@ -56,23 +57,6 @@ var
 	attributelist_re = new RegExp(attributelist_pattern, 'g'),
 	comment_re = new RegExp(comment_pattern);
 
-var
-	keywords = {
-		template_tag: 'template',
-		template_for: 'for',
-		template_for_each: 'for-each',
-		template_include: 'include',
-		template_define: 'define',
-		template_argument: 'argument',
-		template_parameter: 'parameter',
-		template_sort: 'sort',
-
-		range_all: '[]',
-		range_empty: '<>'
-	},
-	template_options_from_class = {
-
-	};
 
 parse_options[template_tag] = template_options;
 
@@ -209,7 +193,7 @@ dynamic_app.define_templates = function(template_element) {
 		only_content = false,
 		with_content = '',
 		template_name = '',
-		range = keywords.range_all,
+		range = api_keywords.template.range.all,
 		is_body = typeof template_element === "undefined";
 
 	if (!is_body) {
@@ -250,11 +234,11 @@ dynamic_app.define_templates = function(template_element) {
 			}
 
 			if (parser.options.hasOwnProperty('for') || parser.options.hasOwnProperty('for_each') || parser.options.hasOwnProperty('with_content')) {
-				range = parser.options.hasOwnProperty('range') ? parser.options.range : keywords.range_all;
+				range = parser.options.hasOwnProperty('range') ? parser.options.range : api_keywords.template.range.all;
 				var
 					dynamic_value_name = parser.options.hasOwnProperty('for') ? parser.options['for'] : parser.options.hasOwnProperty('for_each') ? parser.options.for_each : '',
 					multiple = parser.options.hasOwnProperty('for_each'),
-					sort_order = parser.options.hasOwnProperty('sort') ? parser.options.sort : '',
+					sort_order = parser.options.hasOwnProperty('sort_order') ? parser.options.sort_order : '',
 					comment_node = document.createComment("<" + template_tag + " name=" + template_name + " dynamic-value=" + dynamic_value_name + " range=" + range + " multiple=" + multiple + " with_content=" + with_content + " sort=" + sort_order + ">");
 
 				if (parser.options.hasOwnProperty('for_each') && dynamic_value_name.length < 1) {
@@ -351,15 +335,18 @@ dynamic_placeholder.multiple_instance = function(dynamic_value) {
 	this.empty();
 
 	var
-		index_value;
+		index_value, new_instances=[];
 
 	child_keys.forEach(function(child_key) {
 		// dynamic_value.set_current( child_key );
 		var child_value = dynamic_value.children[child_key];
 		// logger.debug( 'add instance for '+this.definition.name+' - '+child_key );
-		this.add_instance(child_value);
+		var new_instance = this.add_instance(child_value);
+		new_instances.push( new_instance );
 
 	}, this);
+
+	dynamic_value.mark_selected( new_instances ) 
 
 };
 
@@ -503,22 +490,42 @@ dynamic_value_class.can_swap = function(offset) {
 	return result;
 };
 
-dynamic_value_class.mark_selected = function() {
-	if (this.parent !== null && this.parent.metainfo.selected) {
+function select_dynamic_value(){
+	var
+		dynamic_value = values_module.get_by_name( this.dataset.dynamicValue );
+
+	dynamic_value.parent.metavalues.selected.set_value( dynamic_value.reference );
+}
+
+dynamic_value_class.mark_selected = function( specific_instances ) {
+	if ( this.parent !== null ) {
 		var
 			selected_reference = this.parent.metainfo.selected;
 
 		this.parent.get_children().forEach(function(child_value) {
 			var
-				is_selected = child_value.reference === selected_reference;
+				is_selected = child_value.reference === selected_reference,
+				instances   = typeof specific_instances === "object"? specific_instances : child_value.get_instances()
+			;
 
-			child_value.get_instances().forEach(function(child_instance) {
+			instances.forEach(function(child_instance) {
 				var
-					element_node = child_instance.child_nodes[0];
+					element_node = child_instance.child_nodes[0]
+				;
+
+				element_node.removeEventListener( 'click', select_dynamic_value );
+				element_node.dataset.dynamicValue = child_value.name;
+
 				if (is_selected) {
-					dynamic_dom.add_class(element_node, 'selected');
+					dynamic_dom.add_class(element_node, 'is-selected');
+					dynamic_dom.remove_class(element_node, 'can-select');
+
 				} else {
-					dynamic_dom.remove_class(element_node, 'selected');
+					dynamic_dom.remove_class(element_node, 'is-selected');
+					if (dynamic_dom.has_class( element_node,'select-on-click')){
+						dynamic_dom.add_class(element_node, 'can-select');
+						element_node.addEventListener( 'click', select_dynamic_value );
+					}
 				}
 			}, this);
 
@@ -1056,6 +1063,7 @@ AttributeParser.prototype.parse = function(element) {
 		this.options.place_here = class_parser.place_here;
 		this.options.multiple = class_parser.multiple;
 		this.options.range = class_parser.range;
+		this.options.sort_order = class_parser.sort_order;
 
 		if (this.options.place_here){
 			if (this.options.multiple){
@@ -1248,7 +1256,7 @@ AppControl.prototype.remove = function() {
 	// those start always with the dollar sign
 	// this way, when an instance gets removed, any previous selection gets cleared
 	// to prevent confusion upon subsequent instances
-	if ( this.dynamic_value.reference.startsWith('$') &&
+	if ( dynamic_utils.starts_with( this.dynamic_value.reference, '$' ) &&
 		this.element.type !== 'hidden' && !this.element.readOnly && !this.element.disabled && typeof this.element.options === "object") {
 		this.dynamic_value.set_value("");
 	}
@@ -1438,10 +1446,10 @@ range_testers = {
 
 function ValueRange(range) {
 	this.range = range;
-	this.lower_bound_check = this.range === keywords.range_all;
-	this.upper_bound_check = this.range === keywords.range_all;
+	this.lower_bound_check = this.range === api_keywords.template.range.all;
+	this.upper_bound_check = this.range === api_keywords.template.range.all;
 
-	if (range !== keywords.range_all && range !== keywords.range_empty) {
+	if (range !== api_keywords.template.range.all && range !== api_keywords.template.range.empty) {
 		var parts = range.split(',');
 
 		this.lower_bound = parts[0].substring(1);
@@ -1460,7 +1468,7 @@ ValueRange.prototype.includes = function(dynamic_value) {
 		result;
 
 	if (dynamic_value === null || dynamic_value.is_empty()) {
-		result = this.range === keywords.range_empty;
+		result = this.range === api_keywords.template.range.empty;
 	} else {
 		var
 			val = dynamic_value.get_value(),
@@ -1519,7 +1527,7 @@ dynamic_app.types.AppComponent.prototype.locate = function() {
 dynamic_app.types.AppComponent.prototype.notify_when_visible = function(element) {
 
 	if (typeof this.on_visible === "function") {
-		if (this.selector.startsWith('.')) {
+		if (dynamic_utils.starts_with( this.selector, '.' )) {
 			if (dynamic_dom.has_class(element, this.selector.substring(1))) {
 				this.element = element;
 			} else {

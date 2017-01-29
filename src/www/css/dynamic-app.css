@@ -2,6 +2,40 @@
 	display: none !important;
 }
 
+
+.container main h2 {
+	margin: 0;
+}
+
+.remove.dynamic-value,
+.dynamic-value.move-down, .dynamic-value.move-up {
+	font-size: larger;
+	font-weight: bold;
+}
+
+.remove.dynamic-value {
+	transform: rotate(15deg);
+}
+
+.move-down.dynamic-value::before {
+	content: "\21d8";
+}
+.move-up.dynamic-value::before {
+	content: "\21d6";
+}
+
+.remove.dynamic-value::before {
+	content: "\2717";
+}
+
+i.fa.fa-envelope-o {
+	transform: rotate(350deg);
+}
+
+i.fa.fa-envelope-o::before {
+    content: "\2709";
+}
+
 /* Main content */
 .container main {
 	padding: 0 1rem;
@@ -38,7 +72,7 @@
 
 /* Forms */
 .container form.selection,
-.container .selected {
+.container .is-selected {
 	padding: 1rem;
 	margin: 2em auto;
 	max-width: 768px;
@@ -50,7 +84,7 @@
 	margin-right: 2%;
 }
 
-.container form.selected fieldset label.nested {
+.container form.is-selected fieldset label.nested {
 	margin-bottom: 10px;
 }
 
@@ -239,16 +273,21 @@ div.meta label {
 	color: #333;
 }
 
+.container main form fieldset .helpTextContainer > a:before {
+	content: "\2754";
+}
+
 .container main form fieldset .helpTextContainer a:hover {
 	cursor: pointer;
 }
 
-.container main form fieldset .helpTextContainer a:hover,
-.container main form fieldset .helpTextContainer a.purple {
+.container main form fieldset .helpTextContainer > a:hover,
+.container main form fieldset .helpTextContainer > a.purple {
+	transform: scale(1.4);
 	color: #22B6BA;
 }
 
-.container main form fieldset .helpTextContainer a i.fa {
+.container main form fieldset .helpTextContainer > a {
 	font-size: 1.8em;
     vertical-align: middle;
 }
@@ -281,7 +320,11 @@ div.meta label {
 	font-size: 0.9em;
 }
 
-option.selected {
+.container main .can-select:hover {
+	background-color: rgba( 240, 248, 255, 0.4 );
+}
+
+option.is-selected {
 	color: blue !important;
 	font-weight: bold;
 	background-color: inherit !important;
@@ -289,7 +332,7 @@ option.selected {
 	padding: initial !important;
 }
 
-.container main .person-tile.selected, .container main tr.selected {
+.container main .person-tile.is-selected, .container main tr.is-selected {
     background-color: aliceblue;
 }
 
@@ -313,7 +356,7 @@ option.selected {
 	text-align: left;
 }
 
-.person-tile, .person-tile.selected {
+.person-tile, .person-tile.is-selected {
     display: inline-block;
     width: 25em;
     margin-right: 1ex;

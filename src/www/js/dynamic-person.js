@@ -1,13 +1,13 @@
 var
 	dynamic_app = window.$dynamic,
 	logger 		= dynamic_app.get_logger("Dynamic person component"),
+	htmlcomment_logger = dynamic_app.get_logger('Dynamic templates$HTML'),	
 
 	person_list
 ;
 
-logger.module.set_default_level( logger.module.Levels.DEBUG );
-logger.module.get_logger('Data Communication').set_level( logger.module.Levels.INFO );
-
+logger.module.set_default_level( logger.module.Levels.INFO );
+htmlcomment_logger.set_level( logger.module.Levels.DEBUG );
 
 dynamic_app.register_component('.simulator-buttons')
 	.on_initialise(function(component_element) {

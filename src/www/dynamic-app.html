@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang=en>
 	<head>
 		<meta charset=utf-8>
 		<title>Dynamic App</title>
@@ -7,7 +7,6 @@
 		
 		<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Raleway:200,200i,300,300i,400,400i,500,500i" media="all">
 		<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Montserrat:400,700" media="all">
-		<link rel="stylesheet" href="css/font-awesome.min.css" />
 		<link rel="stylesheet" href="css/main.css" />
 		<link rel="stylesheet" href="css/header.css" />
 		<link rel="stylesheet" href="css/footer.css" />
@@ -36,7 +35,7 @@
 
 		<!-- some common templates -->
 		<div class="helpTextContainer define dynamic-template help-text">
-			<a class=""><i class="fa fa-question-circle-o"></i></a>
+			<a></a>
 			<div class="replace argument helpText"></div>
 		</div>
 
@@ -98,9 +97,9 @@
 					<select class="parameter input lj-select  un-set persons.$selected" name=search.leistungsjahr>
 						<option value="" class=placeholder>Choose a list</option>
 						<!-- 6q4u5 -->
-						<option value=6q4u5>List one</option>
-						<option value=1dprcd>List two</option>
-						<option value=qt3ud>List three</option>
+						<option value=6q4u5>  List one   </option>
+						<option value=1dprcd> List two   </option>
+						<option value=qt3ud>  List three </option>
 					</select>
 
 					<p class="parameter helpText">Once a value is selected, the data will get retrieved.
@@ -133,37 +132,42 @@
 			</form>
 
 			<div class="dynamic-template please-select when no persons available">
-			<h2>Proudly presenting the Dynamic App framework</h2>
-			<h3>An HTML template with value binding and automatic instancing</h3>
-			<p>
-				The MVC design pattern is a great one and already implemented in various frameworks. Some, like
-				<a href=http://www.oracle.com/technetwork/articles/javaee/jsp-21-136414.html>JSP</a>,
-				<a href=http://www.thymeleaf.org/>Thymeleaf</a> rely mainly on server-side generated content and a fast-growing number (
-				<a href=https://angularjs.org/>Angular</a>,
-				<a href=http://handlebarsjs.com/>Handlebars</a>,
-				<a href=http://knockoutjs.com/>Knockout</a>,
-				<a href=https://vuejs.org/>Vue</a>, and many more ) emphasize on client-side routing and rendering. Other platforms (e.g. <a href=http://rubyonrails.org/>Ruby on Rails</a>) are a mixture, where the developers are invited to use the approach they understand
-				best.<br> New HTML developments are not compatible with older browsers ( <a href=https://developer.mozilla.org/nl/docs/Web/HTML/Element/template>&lt;template&gt; tag</a>, <a href=https://www.polymer-project.org/1.0/>Polymer</a> ).
+
+				<h2>Proudly presenting the Dynamic App framework</h2>
+				<h3>An HTML template with value binding and automatic instancing</h3>
+				
+				<p>
+					The MVC design pattern is a great one and already implemented in various frameworks. Some, like
+					<a href=http://www.oracle.com/technetwork/articles/javaee/jsp-21-136414.html>JSP</a>,
+					<a href=http://www.thymeleaf.org/>Thymeleaf</a> rely mainly on server-side generated content and a fast-growing number (
+					<a href=https://angularjs.org/>Angular</a>,
+					<a href=http://handlebarsjs.com/>Handlebars</a>,
+					<a href=http://knockoutjs.com/>Knockout</a>,
+					<a href=https://vuejs.org/>Vue</a>, and many more ) emphasize on client-side routing and rendering. Other platforms (e.g. <a href=http://rubyonrails.org/>Ruby on Rails</a>) are a mixture, where the developers are invited to use the approach they understand
+					best.<br> New HTML developments are not compatible with older browsers ( <a href=https://developer.mozilla.org/nl/docs/Web/HTML/Element/template>&lt;template&gt; tag</a>, <a href=https://www.polymer-project.org/1.0/>Polymer</a> ).
 
 				<h3>Serve data and web pages</h3>
 				<p>
 					The framework presented here, assumes that the Models, including business rules reside on a data server and the Controllers (with possibly workflow) on a Web server. Of course these two servers can be one instance, but also on different, load-balanced
 					ones.
 
-					<p>The Controllers should output clean, valid HTML5 with the accompanying CSS. These pages themselves only provide data interaction, client-side, to the user. The data to be shown and/or manipulated is retrieved asynchronously from the data server.
+				<p>
+					The Controllers should output clean, valid HTML5 with the accompanying CSS. These pages themselves only provide data interaction, client-side, to the user. The data to be shown and/or manipulated is retrieved asynchronously from the data server.
 
-						<p>Presenting an IE9+ and other browsers compatible framework. Fully written in ECMA script v5 (the Javascript of those browers). It aims to deliver both HTML templates to ensure a standardised way of rendering commonly used element constructs as well
-							as value binding to automate most of the template instantiation and linking all elements and nodes that logically represent the same data items.
+				<p>
+					Presenting an IE9+ and other browsers compatible framework. Fully written in ECMA script v5 (the Javascript of those browers). It aims to deliver both HTML templates to ensure a standardised way of rendering commonly used element constructs as well
+					as value binding to automate most of the template instantiation and linking all elements and nodes that logically represent the same data items.
 
-							<p>The shown Javascript in the right panel uses the proposed framework. This dedicated code is only necessary since the proposed data server is not available on the Codepen.io website (and also not yet implemented)
+				<p>
+					The shown Javascript in the right panel uses the proposed framework. This dedicated code is only necessary since the proposed data server is not available on the Codepen.io website (and also not yet implemented)
 
-								<p>Try to set other log levels in the Javascript and see what happens on the console, and even in the element inspector.
-		</div>
+				<p>	Try to set other log levels in the Javascript and see what happens on the console, and even in the element inspector.
+			</div>
 
 			<div class="dynamic-template persons-retrieved when persons available">
 
 				<!-- company info; company address will be added later in this HTML -->
-				<div class="dynamic-template company when persons.@.company" title="{{.title}}">
+				<div class="dynamic-template company when selected persons has company" title="{{.title}}">
 					<h2>{{.name}}</h2>
 				</div>
 
@@ -174,7 +178,7 @@
 							<label class="parameter reallabel">First name</label>
 							<input class="parameter input" name=.first-name>
 							<div class="parameter helpText" >
-								<p>Enter <i class="fa fa-pencil"></i> the <b>first name </b> of the {{.last-name}}.
+								<p>Enter &#x270d; the <b>first name </b> of {{.last-name}}.
 								<p>Observe how this name is copied all over this page.
 							</div>
 						</fieldset>
@@ -184,11 +188,11 @@
 							<label class="parameter reallabel">Last name</label>
 							<input class="parameter input" name=.last-name>
 							<div class="parameter helpText" >
-								Enter <i class="fa fa-pencil"></i> the <b>family name </b> of {{.first-name}}.
+								Enter the <b>family name </b> of {{.first-name}}.
 							</div>
 						</fieldset>
 
-						<div class="dynamic-template person-input-has-company when persons.@.company">
+						<div class="dynamic-template person-input-has-company when selected persons has company">
 							<fieldset class="dynamic-template input-with-help monthly-salary" data-dynamic-template-with-content>
 								<label class="parameter reallabel">Salary</label>
 								<select class="parameter input" name=.salary_month>
@@ -243,7 +247,7 @@
 					</label>
 
 					<!-- value based templates -->
-					<div class="dynamic-template labeled-item when persons.@.company" data-dynamic-template-with-content >
+					<div class="dynamic-template labeled-item when selected persons has company" data-dynamic-template-with-content >
 						<span class="parameter reallabel">Annual salary</span> 
 						<span class="parameter data-item">
 							<span class='dynamic-template fte-explain when .fte in [0,1]'>
@@ -280,7 +284,7 @@
 							<th>
 						</tr>
 					<tbody>
-						<tr class="dynamic-template person-grid-row for each persons" data-dynamic-template-options="sort=address.city,description">
+						<tr class="select-on-click dynamic-template person-grid-row for each persons sort by address.city,description">
 							<td class=person-id>{{.id}}
 							<td>{{.last-name}}
 							<td>{{.first-name}}
@@ -308,7 +312,7 @@
 
 
 				<div class=person-tiles>
-					<div  class="dynamic-template person-tile for each persons" >
+					<div  class="select-on-click dynamic-template person-tile for each persons" >
 						{{.id}}	{{.last-name}}, {{first-name}}	{{.address.city}}
 							<button class="fa fa-times             remove    dynamic-value" title="remove {{.first-name}} {{.last-name}}."></button
 							><button class="fa fa-arrow-circle-down move-down dynamic-value"></button
