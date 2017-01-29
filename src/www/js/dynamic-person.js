@@ -30,8 +30,8 @@ dynamic_app.register_component('.simulator-buttons')
 	});
 
 
-person_list = {
-	person_1: {
+person_list = [
+	 {
 		'last-name': "Last 1",
 		id: 1001,
 		description: 'person one',
@@ -52,7 +52,7 @@ person_list = {
 			}
 		},
 	},
-	person_2: {
+	{
 		description: 'person two',
 		'last-name': "Last 2",
 		id: 1002,
@@ -73,7 +73,7 @@ person_list = {
 			}
 		}
 	},
-	person_3: {
+	{
 		'last-name': "Last 3",
 		id: 1003,
 		address: {
@@ -87,7 +87,7 @@ person_list = {
 			title: 'Account manager',
 		},
 	},
-	person_4: {
+	{
 		'last-name': "Last 4",
 		id: 1004,
 		'first-name': "First 4",
@@ -96,7 +96,7 @@ person_list = {
 			city: 'Mountain View'
 		}
 	},
-	person_5: {
+	{
 		'last-name': "Last 5",
 		id: 1005,
 		address: {
@@ -113,7 +113,7 @@ person_list = {
 		description: 'person five'
 
 	},
-	person_6: {
+	{
 		'last-name': "Last 6",
 		address: {
 			city: 'London',
@@ -123,5 +123,16 @@ person_list = {
 		'first-name': "First 6",
 		description: 'person six',
 		id: 1006
+	},
+	{
+		'last-name': "Last 7",
+		address: {
+			city: 'Paris',
+			number: 7,
+			street: 'Avenu sept'
+		},
+		'first-name': "First 7",
+		description: 'person seven',
+		id: 1007
 	}
-};
+];
