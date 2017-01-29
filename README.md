@@ -26,7 +26,8 @@ For that, templates are used.These are valid HTML parts, that can be conditional
 	<input name=addressee>
 </label>
 
-<p class="dynamic-template please-enter-value when addressee not available">Please enter your name in the input box above.
+<p class="dynamic-template please-enter-value when addressee not available">
+	Please enter your name in the input box above.
 
 <p class="dynamic-template salutation when addressee not empty">
 	Hello {﻿{addressee}﻿}!

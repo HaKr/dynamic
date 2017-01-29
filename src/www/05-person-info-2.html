@@ -22,14 +22,13 @@
 					<input name=person.last-name required>
 				</label>
 
-				<input type=hidden name="person.full-name= person.first-name | person.middle-name | person.last-name">
 				<input type=hidden name="person.required-name= person.first-name & person.last-name">
 			</fieldset>
 		</form>
 		<p class="assistance">Please enter at least your first and last name in the input boxes above.
 
 		<p class="dynamic-template person-data when person.required-name">
-				Hello {{.full-name}}!
+				Hello {{.full-name= person.first-name | person.middle-name | person.last-name}}!
 
 	</body>
 </html>
