@@ -11,7 +11,7 @@ The framework is intended to manipulate data structures and thus is every input 
 	<input name=addressee value=world>
 </label>
 		
-<p class=salutation>Hello \{{addressee}}!.
+<p class=salutation>Hello &#123;{addressee}}!.
 ```
 Here we define an input element with the default value "world" and the given name. In the paragraph below it, the same data element is refered to by using the double curly braces \{{}}
 
