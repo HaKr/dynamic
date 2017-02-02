@@ -11,9 +11,9 @@ The framework is intended to manipulate data structures and thus is every input 
 	<input name=addressee value=world>
 </label>
 		
-<p class=salutation>Hello {﻿{addressee} }!.
+<p class=salutation>Hello {﻿{addressee}﻿}!.
 ```
-Here we define an input element with the default value "world" and the given name. In the paragraph below it, the same data element is refered to by using the double curly braces { {} }
+Here we define an input element with the default value "world" and the given name. In the paragraph below it, the same data element is refered to by using the double curly braces {﻿{}﻿}
 
 ### Hello world revised
 
@@ -29,7 +29,7 @@ For that, templates are used.These are valid HTML parts, that can be conditional
 <p class="dynamic-template please-enter-value when addressee not available">Please enter your name in the input box above.
 
 <p class="dynamic-template salutation when addressee not empty">
-	Hello { {addressee} }!
+	Hello {﻿{addressee}﻿}!
 ```
 
 These examples can be viewed live on [CodePen](http://codepen.io/HaKr/pen/zNYgMR)
