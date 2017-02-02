@@ -17,19 +17,22 @@ Here we define an input element with the default value "world" and the given nam
 
 ### Hello world revised
 
+The first example always displays the text "Hello ... !", also when no input is given. It is more helpful to the user when some instructions are given in case the _addressee_ is not yet assigned.
+
+For that, templates are used.These are valid HTML parts, that can be conditionally displayed.
+
 ```html
 <label>Please enter your name:
 	<input name=addressee>
 </label>
 
-<p class="dynamic-template please-enter-value">Please enter your name in the input box above.
+<p class="dynamic-template please-enter-value when addressee not available">Please enter your name in the input box above.
 
-<p class="dynamic-template salutation" 
-	data-dynamic-template-for=addressee
-	data-dynamic-template-options="on-empty=please-enter-value"
->
-		Hello {{addressee}}!
+<p class="dynamic-template salutation when addressee not empty">
+	Hello {{addressee}}!
 ```
+
+These examples can be viewed live on [CodePen](http://codepen.io/HaKr/pen/zNYgMR)
 
 ### Installation
 
