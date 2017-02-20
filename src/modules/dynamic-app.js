@@ -733,7 +733,7 @@ dynamic_instance_class.get_templates = function(node) {
 
 			var delegated_value = template_placeholder.dynamic_value.get_final();
 
-			if (!template_placeholder.is_multiple && template_placeholder.range.includes(delegated_value)) {
+			if ( template_placeholder.range.includes(delegated_value) ) {
 				logger.debug('Instance(s) of ' + template_placeholder.definition.name + ' for ' + template_placeholder.dynamic_value.name + '[' + template_placeholder.dynamic_value.get_final().name + ']');
 				template_placeholder.on_value_changed(template_placeholder.dynamic_value);
 			}
@@ -1203,6 +1203,15 @@ FormControl.prototype.set_up = function() {
 		try {
 			var payload = JSON.parse(event.target.responseText);
 			xhrlogger.info('Data retrieved', payload);
+
+			if (payload.hasOwnProperty('payload')){
+				payload = payload.payload;
+
+				if (payload.hasOwnProperty( self.dynamic_value.reference )){
+					payload = payload[ self.dynamic_value.reference ]
+				}
+			}
+
 			self.dynamic_value.set_value(payload);
 		} catch (err) {
 			xhrlogger.error("Data parse error", err, self.xhr);

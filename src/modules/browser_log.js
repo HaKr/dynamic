@@ -11,7 +11,7 @@ function Log() {
 		INFO: 1,
 		DEBUG: -1
 	};
-	this.default_level = this.Levels.OFF;
+	this.default_level = this.Levels.DEBUG;
 
 	this.Targets = this.hasConsole ? {
 		ERROR: {
@@ -38,7 +38,7 @@ function Log() {
 
 function LogInstance(name) {
 	this.name = name;
-	this.log_level = LogModule.Levels.default_level;
+	this.log_level = LogModule.default_level;
 
 	Object.defineProperty(this, 'module', {
 		get: function() {

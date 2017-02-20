@@ -197,7 +197,7 @@ FormulaValue.prototype.push_operand = function(operand) {
 				return !dv.is_empty();
 			},
 			get_value: function() {
-				return dv.get_value();
+				return dv.get_final().get_value();
 			}
 		});
 		var self = this;

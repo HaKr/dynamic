@@ -534,7 +534,8 @@ DynamicValue.prototype.update_from_attributes = function() {
 	dynamic_utils.array_diff(  previous_children, value_keys ).forEach( function( child_name ) {
 		// logger.debug( 'clear name '+child_name);
 		// TODO: clear childs that are no longer there
-		logger.warning('TODO: clear childs that are no longer there, '+ child_name );
+		// logger.warning('TODO: clear childs that are no longer there, '+ child_name );
+		this.children[ child_name ].remove();
 	}, this);
 
 };
@@ -597,9 +598,11 @@ DynamicValue.prototype.notify_observers = function(dynamic_value) {
 		dynamic_value = this;
 	}
 
+	var current_observers = dynamic_utils.list_duplicate( this.observers );
+
 	logger.info( '+ + + '+ this.name+' notification' );
-	for (var li = 0; li < this.observers.length; li++) {
-		var observer = this.observers[li];
+	for (var li = 0; li < current_observers.length; li++) {
+		var observer = current_observers[li];
 		observer.callback(dynamic_value);
 	}
 	logger.debug( ' - - -'+this.name+' notification' );
@@ -712,8 +715,19 @@ function by_reference_updater( byref_dynamic_value ) {
 	return function update_reference_through_index( index_value ) {
 		logger.debug( 'By ref index changed', index_value.name, byref_dynamic_value.name, index_value.is_empty() );
 		if (!index_value.is_empty()) {
-			byref_dynamic_value.delegate_value = values_module.get_or_define(byref_dynamic_value.parent_ref + index_value.get_value() + byref_dynamic_value.child_ref);
-			byref_dynamic_value.notify_observers( byref_dynamic_value.delegate_value );
+			var value_name = byref_dynamic_value.parent_ref + index_value.get_value() + byref_dynamic_value.child_ref;
+
+			if (value_name.indexOf(selected_reference_token) > 0) {
+				var intermediate = new values_module.types.DynamicByReferenceValue(value_name);
+				intermediate.set_up();
+				intermediate.observe( "Double ref", function( delegated_value ){
+					byref_dynamic_value.delegate_value = delegated_value.get_final();
+					byref_dynamic_value.notify_observers( byref_dynamic_value.delegate_value );
+				})
+			} else { 
+				byref_dynamic_value.delegate_value = values_module.get_or_define(byref_dynamic_value.parent_ref + index_value.get_value() + byref_dynamic_value.child_ref);
+				byref_dynamic_value.notify_observers( byref_dynamic_value.delegate_value );
+			}
 		} else {
 			byref_dynamic_value.delegate_value = null;
 			byref_dynamic_value.notify_observers( null );
