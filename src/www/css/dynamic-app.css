@@ -2,6 +2,10 @@
 	display: none !important;
 }
 
+.to-be-replaced {
+    background-color: rgba( 10,10,10, 0.03);
+    color: rgba( 100,100,100,0.2);
+}
 
 .container main h2 {
 	margin: 0;
@@ -255,13 +259,13 @@ div.meta label {
 /* Help text */
 .container main form fieldset .helpTextContainer {
 	display: inline-block;
-    position: initial;
-    top: 0px;
-    right: 0%;
-    padding: 0;
-    margin: 0;
-    border: none;
-    height: 0.5ex;
+	position: absolute;
+	top: 5px;
+	right: 20%;
+	padding: 0;
+	margin: 0;
+	border: none;
+
 }
 
 form + p.assistance {
@@ -316,8 +320,9 @@ input:optional {
 .container main form fieldset .helpTextContainer .helpText {
 	display: none;
 	vertical-align: top;
-	position: relative;
-	left: 250px;
+	position: absolute;
+	top: 0;
+	left: 25px;
 	width: 240px;
 	padding: 10px;
 	border: 1px solid #CCC;

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang=en>
+	<head>
+		<meta charset=utf-8>
+		<title>Dynamic App</title>
+
+		
+		<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Raleway:200,200i,300,300i,400,400i,500,500i" media="all">
+		<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Montserrat:400,700" media="all">
+		<link rel="stylesheet" href="css/main.css" />
+		<link rel="stylesheet" href="css/header.css" />
+		<link rel="stylesheet" href="css/footer.css" />
+		<link rel="stylesheet" href="css/forms.css" />
+		<link rel="stylesheet" href="css/tables.css" />
+		<link rel="stylesheet" href="css/mobile.css" />
+
+		<link rel=stylesheet media=all href=css/dynamic-app.css>
+
+		<script src=js/dynamic-app.js></script>
+	</head>
+
+	<body class="dynamic-person container">
+		<header id="header">
+			<nav id="menu" class="menu">
+				<div id="logo" class="logo">
+					<a href="/"><img src="images/logo.png" alt="Ciber logo" /></a>
+					<h1>Dynamic App</h1>
+				</div>
+			</nav>
+		</header>
+
+
+		<form data-action=https://api.myjson.com/bins/{{parameters.list-source}} name=persons method=get></form>
+
+		<!-- some common templates -->
+		<div class="helpTextContainer define dynamic-template help-text">
+			<a class=""><i class="fa fa-question-circle-o"></i></a>
+			<div class="replace argument helpText"></div>
+		</div>
+
+		<label class="nested define dynamic-template labeled-item">
+			<span class="argument reallabel"></span> 
+			<span class="replace argument data-item"></span>
+		</label>
+
+		<fieldset class="define dynamic-template input-with-help">
+			<label class="nested">
+				<span class="argument reallabel"></span> 
+				<input class="replace argument input">
+			</label>
+			<div class="dynamic-template help-text" data-dynamic-template-with-content></div>
+		</fieldset>
+
+		<!-- end common templates -->
+
+		<main>
+		
+			<form class=selection action="javascript:;">
+
+				<fieldset class="dynamic-template input-with-help simulator-select" data-dynamic-template-with-content>
+					<label class="parameter reallabel">Person list</label>
+					<select class="parameter input lj-select" name=parameters.list-source>
+						<option value="" class=placeholder>Choose a list</option>
+						<option value=6q4u5>List one</option>
+						<option value=1dprcd>List two</option>
+						<option value=qt3ud>List three</option>
+					</select>
+
+					<p class="parameter helpText">Once a value is selected, the data will get retrieved.
+
+				</fieldset>
+
+				
+			</form>
+
+			<div class="dynamic-template please-select when no persons available">
+				<p>
+				   Please select which data source must be displayed
+			</div>
+
+			<ul class="dynamic-template person-list when persons">
+				<li  class="dynamic-template person-item for each persons" >
+					{{.id}}	{{.last-name}}, {{first-name}}	{{.address.city}}
+		</main>
+
+	</body>
+</html>

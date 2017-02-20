@@ -1128,6 +1128,12 @@ FormControl.prototype.submit = function() {
 
 	xhrlogger.info('Data retrieval:', this.form_data, this.xhr);
 
+	this.dynamic_value.instances.forEach( function( dv_instance ){
+		dv_instance.child_nodes.forEach( function(node ){
+			dynamic_dom.add_class( node, 'to-be-replaced');
+		}, this )
+	}, this );
+
 	this.xhr.send(this.form_data);
 };
 
