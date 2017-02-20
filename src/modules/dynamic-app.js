@@ -1127,12 +1127,16 @@ FormControl.prototype.submit = function() {
 	this.form_data.append('authorization_token', 'jjdk');
 
 	xhrlogger.info('Data retrieval:', this.form_data, this.xhr);
+	var self = this;
 
-	this.dynamic_value.instances.forEach( function( dv_instance ){
-		dv_instance.child_nodes.forEach( function(node ){
-			dynamic_dom.add_class( node, 'to-be-replaced');
-		}, this )
-	}, this );
+	this.visual_feedback_id = window.setTimeout( function(){
+		self.visual_feedback_id = 0;
+		self.dynamic_value.instances.forEach( function( dv_instance ){
+			dv_instance.child_nodes.forEach( function(node ){
+				dynamic_dom.add_class( node, 'to-be-replaced');
+			}, self )
+		}, self )
+	}, 217 );
 
 	this.xhr.send(this.form_data);
 };
@@ -1207,6 +1211,8 @@ FormControl.prototype.set_up = function() {
 
 	this.xhr.addEventListener("load", function(event) {
 		try {
+
+
 			var payload = JSON.parse(event.target.responseText);
 			xhrlogger.info('Data retrieved', payload);
 
@@ -1219,6 +1225,17 @@ FormControl.prototype.set_up = function() {
 			}
 
 			self.dynamic_value.set_value(payload);
+
+			if (self.visual_feedback_id > 0 ){
+				window.clearTimeout( self.visual_feedback_id );
+				self.visual_feedback_id = 0;
+			}
+
+			self.dynamic_value.instances.forEach( function( dv_instance ){
+				dv_instance.child_nodes.forEach( function(node ){
+					dynamic_dom.remove_class( node, 'to-be-replaced');
+				}, self )
+			}, self );
 		} catch (err) {
 			xhrlogger.error("Data parse error", err, self.xhr);
 		}
