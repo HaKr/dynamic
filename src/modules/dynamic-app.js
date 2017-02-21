@@ -1136,7 +1136,7 @@ FormControl.prototype.submit = function() {
 				dynamic_dom.add_class( node, 'to-be-replaced');
 			}, self )
 		}, self )
-	}, 217 );
+	}, 521 );
 
 	this.xhr.send(this.form_data);
 };
