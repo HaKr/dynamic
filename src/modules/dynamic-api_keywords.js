@@ -2,6 +2,7 @@ var
 	keywords = {
 		template: {
 			tag: 			'template',
+			extends: 		'extends',
 			for: 			'for',
 			for_each: 		'each',
 			include: 		'include',

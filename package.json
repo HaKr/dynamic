@@ -5,7 +5,7 @@
   "main": "dynamic-server.js",
   "scripts": {
     "test": "tape -r ./src/modules/dynamic-values.js test/*.js",
-    "watch:all": "parallelshell 'npm run watch:modules' 'npm run watch:components' 'npm run watch:www' 'npm run watch:dist'",
+    "watch:all": "parallelshell 'npm run watch:modules' 'npm run watch:components' 'npm run watch:www'",
     "livereload": "live-reload --port 9091 dist/",
     "watch:modules": "watch 'npm run browserify' src/modules",
     "watch:components": "watch 'npm run browserify' src/components",

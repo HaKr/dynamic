@@ -16,25 +16,27 @@ function test_parser( s ){
 }
 
 test('Class Parser API ', function (t) {
+	t.plan(17);
 
 	[ 
-		{s: "template explain when no persons available", 						e: 'V=persons; R=<>; remove when, no, available'},
-		{s: "template explain abc for search.person-list not selected", 		e: 'V=search.person-list.$selected; R=<>; remove for, not, selected' },
-		{s: "template explain abc for search.person-list.$selected empty", 		e: 'V=search.person-list.$selected; R=<>; remove for, empty' },
-		{s: "template explain abc when no search.person-list selected", 		e: 'V=search.person-list.$selected; R=<>; remove when, no, selected' },
-		{s: "template explain abc for persons", 								e: 'V=persons; R=[]; remove for' },
-		{s: "template explain abc when persons empty", 							e: 'V=persons; R=<>; remove when, empty' },
-		{s: "template explain abc when persons not empty", 						e: 'V=persons; R=[]; remove when, not, empty' },
-		{s: "template explain abc when selected search.person-list index is 3", e: 'V=search.person-list.$selected; R=[3,3]; remove when, selected, index, is, 3' },
-		{s: "template explain abc when search.person-list index in <3,5]", 		e: 'V=search.person-list.$selected; R=<3,5]; remove when, index, in, <3,5]' },
-		{s: "template explain abc for selected persons", 						e: 'V=persons.@; R=[]; remove for, selected' },
-		{s: "template explain abc when persons.@.company",                      e: 'V=persons.@.company; R=[]; remove when' },
-		{s: "template explain abc when selected persons has company",           e: 'V=persons.@.company; R=[]; remove when, selected, has, persons, company' },
-		{s: "template explain abc for each persons", 							e: 'V=persons; R=[]; remove for, each' },
-		{s: "template explain abc for each persons sort city,description", 		e: 'V=persons; R=[]; remove for, each, sort, city,description; sort by city,description' },
-		{s: "template explain abc for each persons sort by city,description", 	e: 'V=persons; R=[]; remove for, each, sort, by, city,description; sort by city,description' },
-		{s: "template explain abc for each persons order by city,description", 	e: 'V=persons; R=[]; remove for, each, order, by, city,description; sort by city,description' },
-		{s: "template explain abc for each persons sort order city,description",e: 'V=persons; R=[]; remove for, each, sort, order, city,description; sort by city,description' }
+		{s: "template explain when no persons available", 						e: 'T=explain; V=persons; remaining: explain persons'},
+		{s: "template explain abc for search.person-list not selected", 		e: 'T=explain; V=search.person-list.$selected; remaining: explain abc search.person-list' },
+		{s: "template explain abc for search.person-list.$selected empty", 		e: 'T=explain; V=search.person-list.$selected; remaining: explain abc search.person-list.$selected' },
+		{s: "template explain abc when no search.person-list selected", 		e: 'T=explain; V=search.person-list.$selected; remaining: explain abc search.person-list' },
+		{s: "template explain abc for persons", 								e: 'T=explain; V=persons; remaining: explain abc persons' },
+		{s: "template explain abc when persons empty", 							e: 'T=explain; V=persons; remaining: explain abc persons' },
+		{s: "template explain abc when persons not empty", 						e: 'T=explain; V=persons; remaining: explain abc persons' },
+		{s: "template explain abc when search.person-list index in <3,5]", 		e: 'T=explain; V=search.person-list.$selected; R=<3,5]; remaining: explain abc search.person-list' },
+		{s: "template explain abc for selected persons", 						e: 'T=explain; V=persons.@; remaining: explain abc persons' },
+		{s: "template explain abc when persons.@.company",                      e: 'T=explain; V=persons.@.company; remaining: explain abc persons.@.company' },
+		{s: "template explain abc when selected persons has company",           e: 'T=explain; V=persons.@.company; remaining: explain abc' },
+		{s: "template explain abc for each persons", 							e: 'T=explain; V=persons; remaining: explain abc persons' },
+		{s: "template explain abc for each persons sort city,description", 		e: 'T=explain; V=persons; remaining: explain abc persons; sort-by: city,description' },
+		{s: "template explain abc for each persons sort by city,description", 	e: 'T=explain; V=persons; remaining: explain abc persons; sort-by: city,description' },
+		{s: "template explain abc for each persons order by city,description", 	e: 'T=explain; V=persons; remaining: explain abc persons; sort-by: city,description' },
+		{s: "template explain extends default-explain",							e: 'T=explain; E=default-explain; remaining: explain default-explain' },
+		{s: "template explain extends default-explain abc for each persons " +
+		"sort order city,description",											e: 'T=explain; E=default-explain; V=persons; remaining: explain default-explain abc persons; sort-by: city,description' }
 
 	].forEach( function( se ){
 		t.equals( test_parser( se.s ),se.e, se.s + ' ==> ' + se.e );
