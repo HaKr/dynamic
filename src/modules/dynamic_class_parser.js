@@ -13,6 +13,7 @@ function ClassNameParser(class_name_string) {
     this.remove_names = [];
     this.class_name_index = 0;
     this.class_name = '';
+    this.options = [];
 
     this.dynamic_value_name_raw = '';
     this.dynamic_value_child_reference = '';
@@ -72,7 +73,7 @@ ClassNameParser.prototype.parse = function () {
         this.advance();
         this.perform_keyword_method();
     }
-
+    this.options = this.array_diff(this.class_names, this.remove_names);
     return this;
 };
 
@@ -227,7 +228,7 @@ ClassNameParser.prototype.to_string = function () {
     result += (this.template_name !== '' ? "T=" + this.template_name + "; " : "");
     result += (this.extend_template_name !== '' ? "E=" + this.extend_template_name + "; " : "");
     result += (this.dynamic_value_name !== '' ? "V=" + this.dynamic_value_name + "; " : "");
-    result += (this.range != api_keywords.template.range.empty && this.range != api_keywords.template.range.all ? "R=" + this.range + '; ' : "");
+    result += "R=" + this.range + '; ';
 
     result += "remaining: " + this.array_diff(this.class_names, this.remove_names).join(" ") +
         (this.sort_order.length > 0 ? '; sort-by: ' + this.sort_order : '')
