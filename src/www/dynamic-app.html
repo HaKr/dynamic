@@ -228,15 +228,27 @@
 						Note that when postal is missing, no blanks are left of city
 				-->
 
+				<!--<address class="template address">-->
+				<!--<i class="fa fa-envelope-o"></i>-->
+				<!--<label class="template labeled-item when .street">-->
+				<!--<span class="parameter reallabel">Address</span>-->
+				<!--<span class="parameter data-item">{{.street}} {{.number}}</span>-->
+				<!--</label>-->
+				<!--<label class="template labeled-item when .city">-->
+				<!--<span class="parameter reallabel">City</span>-->
+				<!--<span class="parameter data-item">{{.postal}}  {{.city}}</span>-->
+				<!--</label>-->
+				<!--</address>-->
+
 				<address class="template address">
 				<i class="fa fa-envelope-o"></i>
 				<label class="template labeled-item when .street">
-				<span class="parameter reallabel">Address</span>
-				<span class="parameter data-item">{{.street}} {{.number}}</span>
+				<span class="">Address</span>
+				<span class="">{{.street}} {{.number}}</span>
 				</label>
 				<label class="template labeled-item when .city">
-				<span class="parameter reallabel">City</span>
-				<span class="parameter data-item">{{.postal}}  {{.city}}</span>
+				<span class="">City</span>
+				<span class="">{{.postal}}  {{.city}}</span>
 				</label>
 				</address>
 
@@ -252,22 +264,22 @@
 					</label>
 
 					<!-- value based templates -->
-					<div class="template person-annual-salary extends labeled-item when selected persons has company">
+					<div class="template labeled-item when selected persons has company">
 						<span class="parameter reallabel">Annual salary</span>
 						<span class="parameter data-item">
 							<span class='template fte-explain when .fte in [0,1]'>
 							(
-							<span class='template fte-fulltime-text-full  when .fte in [0.9,1]'>fulltime,</span>
-							<span class='template fte-fulltime-text-part  when .fte in [0.25,0.9>'>parttime,</span>
+							<span class='template fte-fulltime-text-full when .fte in [0.9,1]'>fulltime,</span>
+							<span class='template fte-fulltime-text-part when .fte in [0.25,0.9>'>parttime,</span>
 							<span class='template fte-fulltime-text-other when .fte in [0,0.25>'>freelance,</span>
 							<span class='fte-fulltime-percentage' ><input readonly class=percentage name=".fte"></span>
 							)
-							€ <input readonly class=currency-int type=number name=.per_annum>							
+							€ <input readonly class=currency-int type=number name=.per_annum>
 							</span>
 						</span>
 					</div>
 
-					<address class="template person-address extends address for persons.@.address"></address>
+					<address class="template address for persons.@.address"></address>
 				</div>
 
 				<!-- addition to the company template above, only the children of this DIV are added -->

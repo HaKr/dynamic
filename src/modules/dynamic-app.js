@@ -185,6 +185,19 @@ module.exports = dynamic_app;
 var
     dynamic_instance_class = {};
 
+/**
+ *
+ * This function registers all unknown templates.
+ * After the registration (template_module.define()) is completed,
+ * it is going to decide if the template should be shown or not
+ *
+ * @param template_element
+ * @returns boolean
+ *
+ */
+
+
+
 dynamic_app.define_templates = function (template_element) {
     var
         result = null,
@@ -195,31 +208,31 @@ dynamic_app.define_templates = function (template_element) {
         template_name = '',
         range = api_keywords.template.range.all,
         is_body = typeof template_element === "undefined",
-        template_children_with_parameter = dynamic_app.get_children(template_element, ".parameter");
+        template_children_with_parameter = dynamic_app.get_children(template_element, ".parameter")
+        ;
+
     if (!is_body) {
         parser = new ClassNameParser(template_element.className);
+        // Parses the class name string to single arguments and values
         parser.parse();
         template_name = parser.template_name;
 
-         if (typeof template_name === "string" && template_name.length > 0) {
-
+        if (typeof template_name === "string" && template_name.length > 0) {
+            // The if statement below checks if there is already a registered declaration / instance of the template.
             existing = templates_module.get_template_by_name(template_name);
             if (existing !== null) {
-                // if (template_children_with_parameter.length == 0) {
-                    var additional_name = dynamic_dom.option_from_class(template_element, template_name, {
-                        default: uuid_generator(),
-                        remove: false,
-                        get_value: true,
-                        remove_value: false
-                    });
-                    template_name += "_" + additional_name;
-
-                    result = templates_module.define(template_name);
-                    result.get_clone_from(existing);
-                // } else {
-                //     result = existing;
-                // }
+                var additional_name = dynamic_dom.option_from_class(template_element, template_name, {
+                    default: uuid_generator(),
+                    remove: false,
+                    get_value: true,
+                    remove_value: false
+                });
+                template_name += "_" + additional_name;
+                // Registration of the instance
+                result = templates_module.define(template_name);
+                result.get_clone_from(existing);
             } else {
+                // Registration of the declaration
                 result = templates_module.define(template_name);
             }
 
@@ -230,7 +243,9 @@ dynamic_app.define_templates = function (template_element) {
                     dynamic_value_name = parser.dynamic_value_name,
                     multiple = parser.multiple,
                     sort_order = parser.sort_order,
-                    comment_node = document.createComment("<" + template_tag + " name=" + template_name + " dynamic-value=" + dynamic_value_name + " range=" + range + " multiple=" + multiple + " sort=" + sort_order + ">");
+                    // Creates comment in the DOM.
+                    comment_node = document.createComment("<" + template_tag + " name=" + template_name + " dynamic-value=" + dynamic_value_name + " range=" + range + " multiple=" + multiple + " sort=" + sort_order + ">")
+                    ;
                 if (parser.multiple == true && parser.dynamic_value_name.length < 1) {
                     logger.warning('For-each value is empty', template_element);
                 }

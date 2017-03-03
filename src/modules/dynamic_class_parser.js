@@ -5,6 +5,20 @@ var
     logger = require('./browser_log').get_logger(logger_name)
     ;
 
+/**
+ *
+ * @class ClassNameParser
+ * @param class_name_string
+ * @constructor ClassNameParser.prototype.parse
+ * @author Harry de Kroon
+ * @return Unknown No return values. ( you can access all the values of this class,
+ * after you've parsed a class name string )
+ *
+ * This class has the ability to parse class name strings with a certain structure,
+ * existing out of simple and logical text only. The parser will search for known keywords,
+ * depending on the key it'll perform some actions and set the value that belongs to it.
+ *
+ */
 
 function ClassNameParser(class_name_string) {
     this.template_name = '';
