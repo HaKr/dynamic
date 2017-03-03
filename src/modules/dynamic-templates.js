@@ -131,10 +131,10 @@ DynamicTemplateDefinition.prototype.absorb = function (element, only_content) {
         parent.appendChild(element_node);
     });
 
-    // if (only_content) {
-    //     dynamic_dom.move_attributes(element, parent);
-    //     element.parentNode.removeChild(element);
-    // }
+    if (only_content) {
+        dynamic_dom.move_attributes(element, parent.children[0]);
+        element.parentNode.removeChild(element);
+    }
 
     return this;
 };

@@ -220,30 +220,32 @@ dynamic_app.define_templates = function (template_element) {
         if (typeof template_name === "string" && template_name.length > 0) {
             // The if statement below checks if there is already a registered declaration / instance of the template.
             existing = templates_module.get_template_by_name(template_name);
-            existing_extending_template = templates_module.get_template_by_name(parser.extend_template_name);
-
-            if (existing_extending_template !== null) {
-                logger.warning("Unknown extending template: " + parser.extend_template_name + ".");
-            }
 
             if (existing !== null) {
-                var additional_name = dynamic_dom.option_from_class(template_element, template_name, {
-                    default: uuid_generator(),
-                    remove: false,
-                    get_value: true,
-                    remove_value: false
-                });
-                template_name += "_" + additional_name;
-                // Registration of the instance
-                result = templates_module.define(template_name);
-                result.get_clone_from(existing);
+            	result = existing;
+            	only_content = true;
             } else {
-                // Registration of the declaration
-                result = templates_module.define(template_name);
+            	if (parser.extend_template_name.length>0){
+	            	existing_extending_template = templates_module.get_template_by_name(parser.extend_template_name);
+
+	            	if (existing_extending_template !== null) {
+	            	    logger.warning("Unknown extending template: " + parser.extend_template_name + ".");
+	            	}
+
+	            	template_name += "_" + parser.extend_template_name;
+	            	// Registration of the instance
+	            	result = templates_module.define(template_name);
+	            	result.get_clone_from(existing_extending_template);
+	            	only_content = true;
+	            } else {
+
+                	// Registration of the declaration
+                	result = templates_module.define(template_name);
+                }
             }
 
             if ((typeof parser.dynamic_value_name !== "undefined" && parser.dynamic_value_name.length > 0) || template_children_with_parameter.length > 0
-                || (typeof parser.extend_template_name !== "undefined" && parser.extend_template_name > 0 )) {
+                || (typeof parser.extend_template_name !== "undefined" && parser.extend_template_name.length > 0 )) {
                 range = parser.range;
                 var
                     dynamic_value_name = parser.dynamic_value_name,
@@ -255,8 +257,6 @@ dynamic_app.define_templates = function (template_element) {
                 if (parser.multiple == true && parser.dynamic_value_name.length < 1) {
                     logger.warning('For-each value is empty', template_element);
                 }
-
-                only_content = existing !== null;
 
                 template_element.parentNode.insertBefore(comment_node, template_element);
             }
