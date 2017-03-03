@@ -220,6 +220,12 @@ dynamic_app.define_templates = function (template_element) {
         if (typeof template_name === "string" && template_name.length > 0) {
             // The if statement below checks if there is already a registered declaration / instance of the template.
             existing = templates_module.get_template_by_name(template_name);
+            existing_extending_template = templates_module.get_template_by_name(parser.extend_template_name);
+
+            if (existing_extending_template !== null) {
+                logger.warning("Unknown extending template: " + parser.extend_template_name + ".");
+            }
+
             if (existing !== null) {
                 var additional_name = dynamic_dom.option_from_class(template_element, template_name, {
                     default: uuid_generator(),
