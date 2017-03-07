@@ -16,7 +16,7 @@ function test_parser( s ){
 }
 
 test('Class Parser API ', function (t) {
-	t.plan(19);
+	t.plan(20);
 
 	[ 
 		{s: "template please-select when no persons available", 				e: 'T=please-select; V=persons; R=<>; remaining: please-select persons'},
@@ -38,8 +38,8 @@ test('Class Parser API ', function (t) {
 		{s: "template explain abc for each persons order by city,description", 	e: 'T=explain; V=persons; R=[]; remaining: explain abc persons; sort-by: city,description' },
 		{s: "template explain extends default-explain",							e: 'T=explain; E=default-explain; R=[]; remaining: explain default-explain' },
 		{s: "template explain extends default-explain abc for each persons " +
-		"sort order city,description",											e: 'T=explain; E=default-explain; V=persons; R=[]; remaining: explain default-explain abc persons; sort-by: city,description' }
-
+		"sort order city,description",											e: 'T=explain; E=default-explain; V=persons; R=[]; remaining: explain default-explain abc persons; sort-by: city,description' },
+        {s: "template place default-explain",									e: 'T=default-explain; R=[]; remaining: default-explain' },
 	].forEach( function( se ){
 		t.equals( test_parser( se.s ),se.e, se.s + ' ==> ' + se.e );
 	});

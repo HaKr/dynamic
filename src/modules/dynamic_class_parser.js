@@ -28,6 +28,7 @@ function ClassNameParser(class_name_string) {
     this.class_name_index = 0;
     this.class_name = '';
     this.options = [];
+    this.place_template = false;
 
     this.dynamic_value_name_raw = '';
     this.dynamic_value_child_reference = '';
@@ -67,6 +68,7 @@ function ClassNameParser(class_name_string) {
     this.class_keyword_methods[api_keywords.template.available] = ClassNameParser.prototype.set_range_all;
     this.class_keyword_methods[api_keywords.template.selected] = ClassNameParser.prototype.set_range_selected;
     this.class_keyword_methods[api_keywords.template.index] = ClassNameParser.prototype.set_range_selected_index;
+    this.class_keyword_methods[api_keywords.template.place] = ClassNameParser.prototype.set_place_template;
     this.class_keyword_methods[api_keywords.template.range.tag] = ClassNameParser.prototype.set_range;
     this.class_keyword_methods[api_keywords.template.range.in] = ClassNameParser.prototype.set_range;
     this.class_keyword_methods[api_keywords.template.range.is] = ClassNameParser.prototype.set_range_from_literal;
@@ -116,8 +118,12 @@ ClassNameParser.prototype.perform_keyword_method = function () {
 ClassNameParser.prototype.set_template_name = function () {
     this.remove_class();
     this.advance();
-    this.template_name = this.class_name;
-    this.unknown_keyword_method = this.unknown_keyword_methods.set_dynamic_value;
+    if (this.class_name == api_keywords.template.place) {
+        this.set_place_template();
+    }else{
+        this.template_name = this.class_name;
+        this.unknown_keyword_method = this.unknown_keyword_methods.set_dynamic_value;
+    }
 };
 
 ClassNameParser.prototype.set_extend_template_name = function () {
@@ -162,7 +168,6 @@ ClassNameParser.prototype.method_from_keyword = function () {
     var
         result = null
         ;
-
     if (this.class_keyword_methods.hasOwnProperty(this.class_name)) {
         result = this.class_keyword_methods[this.class_name];
         this.remove_class();
@@ -198,6 +203,12 @@ ClassNameParser.prototype.set_range_selected_index = function () {
     this.set_range_all();
 };
 
+ClassNameParser.prototype.set_place_template = function () {
+    this.remove_class();
+    this.place_template = true;
+    this.template_name = this.advance();
+};
+
 ClassNameParser.prototype.set_range_selected = function () {
     this.selected = this.negated ? '.$selected' : '.@';
     this.set_range_all();
@@ -205,10 +216,10 @@ ClassNameParser.prototype.set_range_selected = function () {
 };
 
 ClassNameParser.prototype.remove_class = function (class_name) {
-    var
-        class_name_to_remove = typeof class_name === "string" ? class_name : this.class_name;
-
-    this.remove_names.push(class_name_to_remove);
+    var class_name_to_remove = typeof class_name === "string" ? class_name : this.class_name;
+    if (class_name_to_remove != undefined) {
+        this.remove_names.push(class_name_to_remove)
+    }
 };
 
 ClassNameParser.prototype.set_sort = function () {
@@ -222,7 +233,7 @@ ClassNameParser.prototype.set_sort_order = function () {
 };
 
 ClassNameParser.prototype.set_range_from_literal = function () {
-    var literal = this.advance()
+    var literal = this.advance();
     this.remove_class();
     this.range = api_keywords.template.range.all.slice(0, 1) + literal + "," + literal + api_keywords.template.range.all.slice(-1);
 };
@@ -234,7 +245,7 @@ ClassNameParser.prototype.advance = function () {
 };
 
 ClassNameParser.prototype.has_next = function () {
-    return result = this.class_name_index < this.class_names.length;
+    return this.class_name_index < this.class_names.length;
 };
 
 ClassNameParser.prototype.to_string = function () {

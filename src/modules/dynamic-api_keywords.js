@@ -18,6 +18,7 @@ var
 			available: 		'available',
 			selected: 		'selected',
 			index: 			'index',
+			place: 			'place',
 
 			sort: {
 				tag: 		'sort',

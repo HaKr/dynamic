@@ -222,30 +222,29 @@ dynamic_app.define_templates = function (template_element) {
             existing = templates_module.get_template_by_name(template_name);
 
             if (existing !== null) {
-            	result = existing;
-            	only_content = true;
+                result = existing;
+                only_content = true;
             } else {
-            	if (parser.extend_template_name.length>0){
-	            	existing_extending_template = templates_module.get_template_by_name(parser.extend_template_name);
+                if (parser.extend_template_name.length > 0) {
+                    existing_extending_template = templates_module.get_template_by_name(parser.extend_template_name);
 
-	            	if (existing_extending_template !== null) {
-	            	    logger.warning("Unknown extending template: " + parser.extend_template_name + ".");
-	            	}
+                    if (existing_extending_template !== null) {
+                        logger.warning("Unknown extending template: " + parser.extend_template_name + ".");
+                    }
 
-	            	template_name += "_" + parser.extend_template_name;
-	            	// Registration of the instance
-	            	result = templates_module.define(template_name);
-	            	result.get_clone_from(existing_extending_template);
-	            	only_content = true;
-	            } else {
-
-                	// Registration of the declaration
-                	result = templates_module.define(template_name);
+                    template_name += "_" + parser.extend_template_name;
+                    // Registration of the instance
+                    result = templates_module.define(template_name);
+                    result.get_clone_from(existing_extending_template);
+                    only_content = true;
+                } else {
+                    // Registration of the declaration
+                    result = templates_module.define(template_name);
                 }
             }
 
             if ((typeof parser.dynamic_value_name !== "undefined" && parser.dynamic_value_name.length > 0) || template_children_with_parameter.length > 0
-                || (typeof parser.extend_template_name !== "undefined" && parser.extend_template_name.length > 0 )) {
+                || (typeof parser.extend_template_name !== "undefined" && parser.extend_template_name.length > 0 ) || parser.place_template) {
                 range = parser.range;
                 var
                     dynamic_value_name = parser.dynamic_value_name,
