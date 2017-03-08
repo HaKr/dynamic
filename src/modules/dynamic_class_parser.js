@@ -42,6 +42,9 @@ function ClassNameParser(class_name_string) {
 
     this.negated = false;
 
+    this.parameter = false;
+    this.argument = false;
+
     this.unknown_keyword_methods = {
         default: ClassNameParser.prototype.skip,
         set_dynamic_value: ClassNameParser.prototype.set_dynamic_value,
@@ -69,6 +72,8 @@ function ClassNameParser(class_name_string) {
     this.class_keyword_methods[api_keywords.template.selected] = ClassNameParser.prototype.set_range_selected;
     this.class_keyword_methods[api_keywords.template.index] = ClassNameParser.prototype.set_range_selected_index;
     this.class_keyword_methods[api_keywords.template.place] = ClassNameParser.prototype.set_place_template;
+    this.class_keyword_methods[api_keywords.template.argument] = ClassNameParser.prototype.set_argument;
+    this.class_keyword_methods[api_keywords.template.parameter] = ClassNameParser.prototype.set_parameter;
     this.class_keyword_methods[api_keywords.template.range.tag] = ClassNameParser.prototype.set_range;
     this.class_keyword_methods[api_keywords.template.range.in] = ClassNameParser.prototype.set_range;
     this.class_keyword_methods[api_keywords.template.range.is] = ClassNameParser.prototype.set_range_from_literal;
@@ -120,7 +125,7 @@ ClassNameParser.prototype.set_template_name = function () {
     this.advance();
     if (this.class_name == api_keywords.template.place) {
         this.set_place_template();
-    }else{
+    } else {
         this.template_name = this.class_name;
         this.unknown_keyword_method = this.unknown_keyword_methods.set_dynamic_value;
     }
@@ -207,6 +212,16 @@ ClassNameParser.prototype.set_place_template = function () {
     this.remove_class();
     this.place_template = true;
     this.template_name = this.advance();
+};
+
+ClassNameParser.prototype.set_argument = function () {
+    this.advance();
+    this.argument = this.class_name;
+};
+
+ClassNameParser.prototype.set_parameter = function () {
+    this.advance();
+    this.parameter = this.class_name;
 };
 
 ClassNameParser.prototype.set_range_selected = function () {

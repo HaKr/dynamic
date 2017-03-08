@@ -22,7 +22,7 @@
 
 	<body class="dynamic-person container">
 
-	<div class="template place abcdx">
+	<div class="template abcdx">
 		<p>Test text
 	</div>
 
@@ -40,18 +40,18 @@
 		<!-- some common templates -->
 		<div class="helpTextContainer template help-text">
 			<a class=""><i class="fa fa-question-circle-o"></i></a>
-			<div class="replace argument helpText"></div>
+			<div class="replace parameter helpText"></div>
 		</div>
 
 		<label class="nested template labeled-item">
-			<span class="argument reallabel"></span>
-			<span class="replace argument data-item"></span>
+			<span class="parameter reallabel"></span>
+			<span class="replace parameter data-item"></span>
 		</label>
 
 		<fieldset class="template input-with-help">
 			<label class="nested">
-				<span class="argument reallabel"></span>
-				<input class="replace argument input">
+				<span class="parameter reallabel"></span>
+				<input class="replace parameter input">
 			</label>
 			<div class="template help-text"></div>
 		</fieldset>
@@ -77,13 +77,13 @@
 			<form class=selection action="javascript:;">
 
 				<fieldset class="template simulator-level-select extends input-with-help">
-					<label class="parameter reallabel">Simulation type</label>
-					<select class="parameter input simulator-level-selector unset persons" name=simulator.level>
+					<label class="argument reallabel">Simulation type</label>
+					<select class="argument input simulator-level-selector unset persons" name=simulator.level>
 						<option value="" class="placeholder">Choose the simulation type.</option>
 						<option value=1>With buttons</option>
 						<option value=2 title="Internet connection is required">With data server</option>
 					</select>
-					<p class="parameter helpText">First, it is required to select what simulation type you want to perform</p>
+					<p class="argument helpText">First, it is required to select what simulation type you want to perform</p>
 				</fieldset>
 
 				<!-- Simulator buttons, one simulates the GET of person data, the second logs that data to the console -->
@@ -94,16 +94,16 @@
 						<button id=reset-button title='Set the "Person List" back to unassigned'>Reset</button>
 				</fieldset>
 
-				<fieldset class="template simulator-select extends input-with-help when simulator.level is 2">
-					<label class="parameter reallabel">Person list</label>
-					<select class="parameter input lj-select  un-set persons.$selected" name=search.leistungsjahr>
+				<fieldset class="template place simulator-select extends input-with-help when simulator.level is 2">
+					<label class="argument reallabel">Person list</label>
+					<select class="argument input lj-select  un-set persons.$selected" name=search.leistungsjahr>
 						<option value="" class=placeholder>Choose a list</option>
 						<option value=6q4u5>List one</option>
 						<option value=1dprcd>List two</option>
 						<option value=qt3ud>List three</option>
 					</select>
 					<div class="template help-text">
-						<p class="parameter helpText">Once a value is selected, the data will get retrieved.</p>
+						<p class="argument helpText">Once a value is selected, the data will get retrieved.</p>
 					</div>
 				</fieldset>
 
@@ -117,9 +117,9 @@
 						Please select which "Person list" you want to retrieve from the data server.
 				</fieldset>
 
-				<fieldset class="template person-select extends input-with-help when persons available">
-					<label class="parameter reallabel">Show info for</label>
-					<select class="person-select parameter input" name=.$selected>
+				<fieldset class="template place person-select extends input-with-help when persons available">
+					<label class="argument reallabel">Show info for</label>
+					<select class="person-select argument input" name=.$selected>
 						<option class="placeholder" value="">Choose a person</option>
 
 						<option value={{.$reference}} class="template person-select-option for each persons">
@@ -128,7 +128,7 @@
 
 					</select>
 					<div class="template help-text">
-						<p class="parameter helpText">Select a name from this list and its details will appear below</p>
+						<p class="argument helpText">Select a name from this list and its details will appear below</p>
 					</div>
 				</fieldset>
 
@@ -172,11 +172,11 @@
 				<form id="build_input" method="post" action="/api/build-input" class="template person-record-input for selected persons" >
 					<fieldset>
 
-						<fieldset class="template input-with-help">
-						    <label class="parameter reallabel">First name</label>
-						    <input class="parameter input" name=.first-name>
+						<fieldset class="template place input-with-help">
+						    <label class="argument reallabel">First name</label>
+						    <input class="argument input" name=.first-name>
 							<div class="template firstname-help-text extends help-text">
-								<div class="parameter helpText">
+								<div class="argument helpText">
 									<p>Enter <i class="fa fa-pencil"></i> the <b>first name </b> of the {{.last-name}}.
 									<p>Observe how this name is copied all over this page.
 								</div>
@@ -184,20 +184,20 @@
 						</fieldset>
 
 
-						<fieldset class="template input-with-help">
-							<label class="parameter reallabel">Last name</label>
-							<input class="parameter input" name=.last-name>
+						<fieldset class="template place input-with-help">
+							<label class="argument reallabel">Last name</label>
+							<input class="argument input" name=.last-name>
 							<div class="template help-text">
-								<div class="parameter helpText" >
+								<div class="argument helpText" >
 									Enter <i class="fa fa-pencil"></i> the <b>family name </b> of {{.first-name}}.
 								</div>
 							</div>
 						</fieldset>
 
-						<div class="template person-input-has-company when selected persons has company">
+						<div class="template place person-input-has-company when selected persons has company">
 							<fieldset class="template input-with-help">
-								<label class="parameter reallabel">Salary</label>
-								<select class="parameter input" name=.salary_month>
+								<label class="argument reallabel">Salary</label>
+								<select class="argument input" name=.salary_month>
 									<option value="" class=placeholder>Choose a monthly reimbursement for a FTE</option>
 									<option value=0>None</option>
 									<option value=1631>Minimum</option>
@@ -207,16 +207,16 @@
 									<option value=5000>Principal</option>
 								</select>
 								<div class="template help-text">
-									<p class="parameter helpText">Select what reimbursement {{..last-name}} gets for this job.</p>
+									<p class="argument helpText">Select what reimbursement {{..last-name}} gets for this job.</p>
 								</div>
 							</fieldset>
 
-							<fieldset class="template input-with-help">
-								<label class="parameter reallabel">FTE</label>
+							<fieldset class="template place input-with-help">
+								<label class="argument reallabel">FTE</label>
 								<!-- data-dynamic-template-for='..id' -->
-								<select name=.fte class="template fte-select parameter input"></select>
+								<select name=.fte class="template place fte-select argument input"></select>
 								<div class="template help-text">
-									<p class="parameter helpText">Select what percentage of 40 hours {{..last-name}} is working.</p>
+									<p class="argument helpText">Select what percentage of 40 hours {{..last-name}} is working.</p>
 								</div>
 							</fieldset>
 						<!--</div>-->
@@ -244,11 +244,11 @@
 
 				<address class="template address">
 				<i class="fa fa-envelope-o"></i>
-				<label class="template labeled-item when .street">
+				<label class="template place labeled-item when .street">
 				<span class="">Address</span>
 				<span class="">{{.street}} {{.number}}</span>
 				</label>
-				<label class="template labeled-item when .city">
+				<label class="template place labeled-item when .city">
 				<span class="">City</span>
 				<span class="">{{.postal}}  {{.city}}</span>
 				</label>
@@ -256,19 +256,19 @@
 
 				<div title="{{.last-name}}, {{.first-name}}" class="template person-record for selected persons">
 					<input type=hidden name=.id>
-					<label class="template labeled-item">
-						<span class="parameter reallabel">First name</span>
-						<span class="parameter data-item">{{.first-name}}</span>
+					<label class="template place labeled-item">
+						<span class="argument reallabel">First name</span>
+						<span class="argument data-item">{{.first-name}}</span>
 					</label>
-					<label class="template labeled-item">
-						<span class="parameter reallabel">Last name</span>
-						<span class="parameter data-item">{{.last-name}}</span>
+					<label class="template place labeled-item">
+						<span class="argument reallabel">Last name</span>
+						<span class="argument data-item">{{.last-name}}</span>
 					</label>
 
 					<!-- value based templates -->
-					<div class="template labeled-item when selected persons has company">
-						<span class="parameter reallabel">Annual salary</span>
-						<span class="parameter data-item">
+					<div class="template place labeled-item when selected persons has company">
+						<span class="argument reallabel">Annual salary</span>
+						<span class="argument data-item">
 							<span class='template fte-explain when .fte in [0,1]'>
 							(
 							<span class='template fte-fulltime-text-full when .fte in [0.9,1]'>fulltime,</span>
@@ -311,7 +311,7 @@
 							<td>
 								<span class="template person-has-company for .company">
 									<input name=".salary_month" step=25 class="salary" type=number min=0>
-									<select name=.fte class="template fte-select"></select>
+									<select name=.fte class="template place fte-select"></select>
 								</span>
 								<td><input readonly class="currency template person-has-company-salary for .company" type=number name=".salary= .salary_month * .fte">
 								<td><input readonly class="currency template person-has-company-annual for .company" type=number name=".per_annum= .salary * 12 * 1.08">
