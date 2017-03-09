@@ -101,8 +101,6 @@ function DynamicTemplateDefinition() {
 
 DynamicTemplateDefinition.prototype.construct = function () {
     this.content = document.createDocumentFragment();
-    console.log("Construct:");
-    // console.log(this.content);
 };
 
 DynamicTemplateDefinition.prototype.add_placeholder = function (placeholder) {
@@ -130,19 +128,15 @@ DynamicTemplateDefinition.prototype.absorb = function (element, only_content) {
         node_list = only_content ? dynamic_dom.get_nodes(element) : [element];
 
     node_list.forEach(function (element_node) {
-        console.log("element node: ");
-        console.log(element_node);
-        console.log("Parent: ");
-        console.log(parent);
-        if(typeof parent.children !== "undefined" && parent.children.length > 0){
+
+        if (typeof parent.children !== "undefined" && parent.children.length > 0) {
             parent.children[0].appendChild(element_node);
-        }else{
+        } else {
             parent.appendChild(element_node);
         }
     });
 
     if (only_content) {
-        console.log("Only content in absorb");
         dynamic_dom.move_attributes(element, parent.children[0]);
         element.parentNode.removeChild(element);
     }

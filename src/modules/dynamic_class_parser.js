@@ -121,6 +121,7 @@ ClassNameParser.prototype.perform_keyword_method = function () {
 };
 
 ClassNameParser.prototype.set_template_name = function () {
+    // console.log(this.class_name);
     this.remove_class();
     this.advance();
     if (this.class_name == api_keywords.template.place) {

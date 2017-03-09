@@ -172,12 +172,7 @@ dynamic_app.show_instance_info = function () {
         tree_count += info.child_instances;
         observer_count += info.observers;
         placeholder_count += info.placeholders;
-
-        //console.log('Instance', info);
     });
-
-    //console.log(instance_count + ' instances, cross-reference count: ' + tree_count + '; placeholders: ' + placeholder_count + '; observers: ' + observer_count);
-
 };
 
 module.exports = dynamic_app;
@@ -243,12 +238,6 @@ dynamic_app.define_templates = function (template_element) {
                     result = templates_module.define(template_name);
                 }
             }
-            console.log("Template name: " + template_name);
-            console.log("Only content: " + only_content);
-            // console.log("Dynamic value: " + parser.dynamic_value_name);
-            // console.log("Children with arg array: " + template_children_with_arguments.length);
-            // console.log("Exctending template: " + parser.extend_template_name);
-            // console.log("Keyword place: " + parser.place_template);
 
            if ((typeof parser.dynamic_value_name !== "undefined" && parser.dynamic_value_name.length > 0) // Has dynamic value
                 || template_children_with_arguments.length > 0 // Has children with class '.argument'
@@ -269,11 +258,6 @@ dynamic_app.define_templates = function (template_element) {
                     logger.warning('For-each value is empty', template_element);
                 }
 
-                console.log("Comment node:");
-                console.log(comment_node);
-                console.log("Template element: ");
-                console.log(template_element);
-
                 template_element.parentNode.insertBefore(comment_node, template_element);
             }
         } else {
@@ -293,8 +277,6 @@ dynamic_app.define_templates = function (template_element) {
     if (!is_body && result !== null) {
         result.absorb(template_element, only_content);
     }
-
-    console.log("-------------------------------------------------------------------------------------------")
 
     return result;
 }
