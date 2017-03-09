@@ -216,7 +216,7 @@ dom_utils.get_elements = function(outer_element, css_selector) {
 			}
 		} else {
 			if (typeof css_selector !== "undefined" &&tag_name_re.test(css_selector)) {
-				match = typeof css_selector.match(tag_name_re);
+				match = css_selector.match(tag_name_re);
 				element_list = outer_element.getElementsByTagName(match[0]);
 			} else {
 				element_list = outer_element.querySelectorAll(css_selector);
