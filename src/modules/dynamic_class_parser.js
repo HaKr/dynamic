@@ -94,6 +94,8 @@ ClassNameParser.prototype.parse = function () {
         this.advance();
         this.perform_keyword_method();
     }
+    console.log(this.class_names);
+    console.log(this.remove_names);
     this.options = this.array_diff(this.class_names, this.remove_names);
     return this;
 };
@@ -121,7 +123,7 @@ ClassNameParser.prototype.perform_keyword_method = function () {
 };
 
 ClassNameParser.prototype.set_template_name = function () {
-    // console.log(this.class_name);
+    console.log(this.class_name);
     this.remove_class();
     this.advance();
     if (this.class_name == api_keywords.template.place) {

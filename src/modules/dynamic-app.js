@@ -212,6 +212,11 @@ dynamic_app.define_templates = function (template_element) {
         parser = new ClassNameParser(template_element.className);
         // Parses the class name string to single arguments and values
         parser.parse();
+
+        parser.remove_names.forEach(function (class_to_remove) {
+            dynamic_dom.remove_class(template_element, class_to_remove);
+        });
+
         template_name = parser.template_name;
 
         if (typeof template_name === "string" && template_name.length > 0) {
@@ -239,7 +244,7 @@ dynamic_app.define_templates = function (template_element) {
                 }
             }
 
-           if ((typeof parser.dynamic_value_name !== "undefined" && parser.dynamic_value_name.length > 0) // Has dynamic value
+            if ((typeof parser.dynamic_value_name !== "undefined" && parser.dynamic_value_name.length > 0) // Has dynamic value
                 || template_children_with_arguments.length > 0 // Has children with class '.argument'
                 || (typeof parser.extend_template_name !== "undefined" && parser.extend_template_name.length > 0 ) // Has a extending template
                 || parser.place_template // Has keyword 'place'
@@ -1066,7 +1071,6 @@ AttributeParser.prototype.parse = function (element) {
     var class_parser = new ClassNameParser(class_names.join(' '));
     class_parser.parse();
     var remove_classes = class_parser.remove_names;
-
     if (remove_classes.length > 0) {
         remove_classes.forEach(function remove_one_class(class_name) {
             dynamic_dom.remove_class(element, class_name);
