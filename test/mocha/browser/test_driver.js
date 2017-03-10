@@ -8,6 +8,15 @@ chai.should();
 
 require('./modules/webdriver-mocha');
 
+before( function(){
+  this.timeout( 5000 );
+} );
+
+// after(function(done) {
+//   driver.quit();
+//   done();
+// });
+
 
 function ignore(){
 describe('Selenium webdriver and PhantomJS', function() {
@@ -33,8 +42,12 @@ describe('Selenium webdriver and PhantomJS', function() {
 });
 }
 
+// function ignore2(){
+
 describe('my blog', () => {
-  it('should navigate to post', () => {
+  it('should navigate to post', function() {
+    this.timeout( 5000 );
+      
     return driver.get('http://markbirbeck.com/')
     .then(
       driver.getTitle()
@@ -52,3 +65,37 @@ describe('my blog', () => {
     ;
   });
 });
+// }
+
+function ignore3(){
+describe('Test mark Birbeck\'s Blog', function(){
+    beforeEach(function(done) {
+        this.timeout( 5000 );
+        driver.get('http://markbirbeck.com')
+        .then( () => done() );
+    });
+
+    describe('Check homepage', function(){
+        it('should see the correct title', function(done) {
+          driver.getTitle()
+          .should.eventually.equal('Mark Birbeck\'s Blog');
+          done();
+        });
+    });
+
+    describe('Title changes after link', function(){
+        it('should see the correct title', function(done) {
+          this.timeout( 15000 );
+
+          return driver.findElement( By.linkText('A Mixin Approach to Material Design Lite Using Sass' ) )
+            .click()
+            .then( 
+                driver.getTitle().should.eventually.equal('A Mixin Approach to Material Design Lite Using Sass')
+            )
+            
+          ;
+        });
+    });
+
+});
+}

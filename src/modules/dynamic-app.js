@@ -1527,18 +1527,12 @@ ValueRange.prototype.includes = function (dynamic_value) {
     return result;
 };
 
-dynamic_app.types.AppComponent.prototype.on_initialise = function (callback) {
-    this.on_initialise = callback;
-
-    return this;
-};
-
 dynamic_app.types.AppComponent.prototype.get_element = function (css_selector) {
     return dynamic_dom.get_element(this.element, css_selector);
 };
 
 dynamic_app.types.AppComponent.prototype.get_elements = function (css_selector) {
-    return dynamic_dom.get_element(this.elements, css_selector);
+    return dynamic_dom.get_element(this.element, css_selector);
 };
 
 dynamic_app.types.AppComponent.prototype.safe_element_listener = function (css_selector, event_name, callback) {
@@ -1552,14 +1546,20 @@ dynamic_app.types.AppComponent.prototype.safe_element_listener = function (css_s
     return element;
 };
 
+dynamic_app.types.AppComponent.prototype.on_initialise = function (callback) {
+    this.on_initialise_callback = callback;
+
+    return this;
+};
+
 dynamic_app.types.AppComponent.prototype.on_started = function (callback) {
-    this.on_started = callback;
+    this.on_start_callback = callback;
 
     return this;
 };
 
 dynamic_app.types.AppComponent.prototype.on_visible = function (callback) {
-    this.on_visible = callback;
+    this.on_visible_callback = callback;
 
     return this;
 };
@@ -1572,18 +1572,16 @@ dynamic_app.types.AppComponent.prototype.locate = function () {
 
 dynamic_app.types.AppComponent.prototype.notify_when_visible = function (element) {
 
-    if (typeof this.on_visible === "function") {
+    if (typeof this.on_visible === "function" && this.element === null) {
         if (dynamic_utils.starts_with(this.selector, '.')) {
             if (dynamic_dom.has_class(element, this.selector.substring(1))) {
                 this.element = element;
-            } else {
-                this.element = null;
             }
         } else {
             this.element = dynamic_dom.get_element(element, this.selector);
         }
         if (this.element !== null) {
-            this.on_visible(this.element);
+            this.on_visible_callback(this.element);
         }
 
     }
@@ -1592,13 +1590,13 @@ dynamic_app.types.AppComponent.prototype.notify_when_visible = function (element
 };
 
 dynamic_app.types.AppComponent.prototype.initialise = function (callback) {
-    if (this.element !== null && typeof this.on_initialise == "function") {
-        this.on_initialise(this.element);
+    if (this.element !== null && typeof this.on_initialise_callback == "function") {
+        this.on_initialise_callback(this.element);
     }
 };
 
 dynamic_app.types.AppComponent.prototype.started = function (callback) {
-    if (this.element !== null && typeof this.on_started == "function") {
-        this.on_started(this.element);
+    if (this.element !== null && typeof this.on_start_callback == "function") {
+        this.on_start_callback(this.element);
     }
 };

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Many Tests</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../../../../node_modules/mocha/mocha.css" />
+    <link rel="stylesheet" media="all" href="../../../../src/www/css/dynamic-app.css">
+    <script src="../../../../dist/js/dynamic-app.js"></script>
+
+  </head>
+  <body>
+  
+    <div class=TOE>
+      <label>Please enter your name:
+        <input name=addressee value=world>
+      </label>
+      
+      <p class=salutation>Hello {{addressee}}!
+    </div>
+
+
+
+    <div id="mocha"></div>
+    <script src="../../../../node_modules/mocha/mocha.js"></script>
+    <script src="../../../../node_modules/chai/chai.js"></script>
+    <script>
+      mocha.ui('bdd'); 
+      mocha.reporter('html');
+      expect = chai.expect;
+    </script>
+    <script src="js/screenshot.js"></script>
+    <script>
+      mocha.run();
+    </script>
+  </body>
+</html>

@@ -4,5 +4,5 @@ mv
 dist
 .idea
 npm-debug.log
-
+screenshots
 npm-debug.log.*
