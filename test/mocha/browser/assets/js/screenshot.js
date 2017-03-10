@@ -34,8 +34,8 @@ function setInput( element, text ){
 	element.value = text;
 	fireEvent( element,"change" );	
 }
-// dynamic_app.register_component('.TOE')
-// 	.on_started( function(component_element) {
+dynamic_app.register_component('.TOE')
+	.on_started( function(component_element) {
 
 
 		describe( 'Hello world template', function(){
@@ -75,5 +75,5 @@ function setInput( element, text ){
 			});
 		} );
 
-	// 	mocha.run();
-	// } );
+		mocha.run();
+	} );
