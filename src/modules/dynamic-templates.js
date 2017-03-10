@@ -43,7 +43,7 @@ var templates_module = {
             this.on_empty = null;
             this.dynamic_values = [];
             this.empty_instance = null;
-            logger.warning("Test deeneition -----" + this.definition);
+            logger.warning("Test defneition -----" + this.definition);
             logger.warning(template_definition);
             var self = this;
             logger.debug(function () {

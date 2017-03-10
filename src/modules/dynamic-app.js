@@ -78,7 +78,7 @@ dynamic_app.run = function () {
         dynamic_app.before_run();
     }
 
-    logger.info(dynamic_app.info);
+    // logger.info(dynamic_app.info);
 
     dynamic_app.vars.components.forEach(function register_components(component) {
         component.locate();
@@ -708,9 +708,6 @@ dynamic_instance_class.get_templates = function (node) {
         htmlcomment_logger.info(function () {
             this.placeholder_start = dynamic_dom.insert_comment_before(comment_node, comment_node.textContent);
         }, this);
-
-        logger.warning(this.get_template_by_name(attributes.name));
-        logger.warning(attributes.name);
 
         var
             anchor_first = dynamic_dom.insert_text_before(comment_node, "\n"),
