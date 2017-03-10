@@ -43,7 +43,7 @@ var templates_module = {
             this.on_empty = null;
             this.dynamic_values = [];
             this.empty_instance = null;
-            logger.warning("Test deeneition -----" + this.definition);
+            logger.warning("Test defneition -----" + this.definition);
             logger.warning(template_definition);
             var self = this;
             logger.debug(function () {
@@ -128,7 +128,12 @@ DynamicTemplateDefinition.prototype.absorb = function (element, only_content) {
         node_list = only_content ? dynamic_dom.get_nodes(element) : [element];
 
     node_list.forEach(function (element_node) {
-        parent.appendChild(element_node);
+
+        if (typeof parent.children !== "undefined" && parent.children.length > 0) {
+            parent.children[0].appendChild(element_node);
+        } else {
+            parent.appendChild(element_node);
+        }
     });
 
     if (only_content) {

@@ -78,7 +78,7 @@ dynamic_app.run = function () {
         dynamic_app.before_run();
     }
 
-    logger.info(dynamic_app.info);
+    // logger.info(dynamic_app.info);
 
     dynamic_app.vars.components.forEach(function register_components(component) {
         component.locate();
@@ -172,12 +172,7 @@ dynamic_app.show_instance_info = function () {
         tree_count += info.child_instances;
         observer_count += info.observers;
         placeholder_count += info.placeholders;
-
-        console.log('Instance', info);
     });
-
-    console.log(instance_count + ' instances, cross-reference count: ' + tree_count + '; placeholders: ' + placeholder_count + '; observers: ' + observer_count);
-
 };
 
 module.exports = dynamic_app;
@@ -208,43 +203,54 @@ dynamic_app.define_templates = function (template_element) {
         template_name = '',
         range = api_keywords.template.range.all,
         is_body = typeof template_element === "undefined",
-        template_children_with_parameter = dynamic_app.get_children(template_element, ".parameter")
+        template_children_with_arguments = dynamic_app.get_children(template_element, ".argument"),
+        template_children = dynamic_app.get_children(template_element, "*"),
+        template_children_without_arguments = dynamic_app.get_children(template_element, ":not(.argument)")
         ;
 
     if (!is_body) {
         parser = new ClassNameParser(template_element.className);
         // Parses the class name string to single arguments and values
         parser.parse();
+
+        parser.remove_names.forEach(function (class_to_remove) {
+            dynamic_dom.remove_class(template_element, class_to_remove);
+        });
+
         template_name = parser.template_name;
 
         if (typeof template_name === "string" && template_name.length > 0) {
             // The if statement below checks if there is already a registered declaration / instance of the template.
             existing = templates_module.get_template_by_name(template_name);
-
             if (existing !== null) {
                 result = existing;
                 only_content = true;
             } else {
                 if (parser.extend_template_name.length > 0) {
-                    existing_extending_template = templates_module.get_template_by_name(parser.extend_template_name);
 
-                    if (existing_extending_template !== null) {
+                    var existing_extending_template = templates_module.get_template_by_name(parser.extend_template_name);
+                    if (existing_extending_template === null) {
+                        // Registration of the declaration
                         logger.warning("Unknown extending template: " + parser.extend_template_name + ".");
                     }
-
                     template_name += "_" + parser.extend_template_name;
                     // Registration of the instance
                     result = templates_module.define(template_name);
                     result.get_clone_from(existing_extending_template);
                     only_content = true;
+
                 } else {
-                    // Registration of the declaration
                     result = templates_module.define(template_name);
                 }
             }
 
-            if ((typeof parser.dynamic_value_name !== "undefined" && parser.dynamic_value_name.length > 0) || template_children_with_parameter.length > 0
-                || (typeof parser.extend_template_name !== "undefined" && parser.extend_template_name.length > 0 ) || parser.place_template) {
+            if ((typeof parser.dynamic_value_name !== "undefined" && parser.dynamic_value_name.length > 0) // Has dynamic value
+                || template_children_with_arguments.length > 0 // Has children with class '.argument'
+                || (typeof parser.extend_template_name !== "undefined" && parser.extend_template_name.length > 0 ) // Has a extending template
+                || parser.place_template // Has keyword 'place'
+                || (template_children.length == 0 && !parser.argument)) // Has no children and does not contain keyword 'argument'
+            {
+
                 range = parser.range;
                 var
                     dynamic_value_name = parser.dynamic_value_name,
@@ -607,7 +613,7 @@ dynamic_instance_class.get_values_and_templates = function () {
             this.bind_attributes(node);
             this.get_values(node);
         }
-        this.resolve_parameters(node);
+        this.resolve_arguments(node);
         this.trigger_component(node);
     }, this);
 };
@@ -703,9 +709,6 @@ dynamic_instance_class.get_templates = function (node) {
             this.placeholder_start = dynamic_dom.insert_comment_before(comment_node, comment_node.textContent);
         }, this);
 
-        logger.warning(this.get_template_by_name(attributes.name));
-        logger.warning(attributes.name);
-
         var
             anchor_first = dynamic_dom.insert_text_before(comment_node, "\n"),
             anchor = dynamic_dom.insert_text_before(comment_node, "\n"),
@@ -738,7 +741,6 @@ dynamic_instance_class.get_templates = function (node) {
             this.add_observer(
                 template_placeholder.dynamic_value.observe('placeholder_' + template_placeholder.definition.name, function change_placeholder(trigger_value) {
                     // if (template_placeholder.dynamic_value !== trigger_value ||  template_placeholder.dynamic_value.get_value() !== trigger_value.get_value() ){
-                    // logger.debug( template_placeholder.dynamic_value.name+'['+trigger_value.name+']'+'('+(typeof template_placeholder.dynamic_value === "undefined"?'NIL':template_placeholder.dynamic_value.name)+') ==> instance(s) of ' + template_placeholder.definition.name );
                     // template_placeholder.dynamic_value = trigger_value;
                     template_placeholder.on_value_changed(trigger_value);
                     // }
@@ -916,28 +918,28 @@ dynamic_instance_class.get_dynamic_value = function get_dynamic_value_for_instan
     return result;
 };
 
-dynamic_instance_class.resolve_parameters = function (element) {
-    agument_elements = dynamic_dom.get_elements(element, '.argument');
+dynamic_instance_class.resolve_arguments = function (element) {
+    agument_elements = dynamic_dom.get_elements(element, '.parameter');
 
-    agument_elements.forEach(function parameter_to_argument(argument_element) {
+    agument_elements.forEach(function argument_to_parameter(parameter_element) {
         var
-            class_list = dynamic_dom.get_classes(argument_element),
-            argument_index = class_list.indexOf('argument');
+            class_list = dynamic_dom.get_classes(parameter_element),
+            parameter_index = class_list.indexOf('parameter');
 
-        if (argument_index + 1 < class_list.length) {
+        if (parameter_index + 1 < class_list.length) {
 
             var
-                argument_name = class_list[argument_index + 1],
-                param_element = dynamic_dom.get_element(element, '.parameter.' + argument_name),
-                do_replace = dynamic_dom.has_class(argument_element, 'replace');
+                parameter_name = class_list[parameter_index + 1],
+                arg_element = dynamic_dom.get_element(element, '.argument.' + parameter_name),
+                do_replace = dynamic_dom.has_class(parameter_element, 'replace');
 
-            if (param_element === null) {
-                logger.warning('No actual parameter found for argument ' + argument_name + ' on instance ' + this.placeholder.definition.name);
+            if (arg_element === null) {
+                logger.warning('No actual argument found for parameter ' + parameter_name + ' on instance ' + this.placeholder.definition.name);
             } else {
-                dynamic_dom.remove_class(param_element, 'parameter');
-                dynamic_dom.remove_class(argument_element, 'argument');
-                dynamic_dom.remove_class(argument_element, 'replace');
-                dynamic_dom.move_element(param_element, argument_element, do_replace);
+                dynamic_dom.remove_class(arg_element, 'argument');
+                dynamic_dom.remove_class(parameter_element, 'parameter');
+                dynamic_dom.remove_class(parameter_element, 'replace');
+                dynamic_dom.move_element(arg_element, parameter_element, do_replace);
                 // actual.push( param_element );
             }
         }
@@ -1066,7 +1068,6 @@ AttributeParser.prototype.parse = function (element) {
     var class_parser = new ClassNameParser(class_names.join(' '));
     class_parser.parse();
     var remove_classes = class_parser.remove_names;
-
     if (remove_classes.length > 0) {
         remove_classes.forEach(function remove_one_class(class_name) {
             dynamic_dom.remove_class(element, class_name);

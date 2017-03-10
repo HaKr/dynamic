@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <meta charset=utf-8>
+    <title>Dynamic App</title>
+
+
+    <link rel="stylesheet" type="text/css"
+          href="https://fonts.googleapis.com/css?family=Raleway:200,200i,300,300i,400,400i,500,500i" media="all">
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Montserrat:400,700"
+          media="all">
+    <link rel="stylesheet" href="css/main.css"/>
+    <link rel="stylesheet" href="css/header.css"/>
+    <link rel="stylesheet" href="css/footer.css"/>
+    <link rel="stylesheet" href="css/forms.css"/>
+    <link rel="stylesheet" href="css/tables.css"/>
+    <link rel="stylesheet" href="css/mobile.css"/>
+
+    <link rel=stylesheet media=all href=css/dynamic-app.css>
+
+    <script src=js/dynamic-app.js></script>
+</head>
+
+<body class="container">
+
+<!--<div class="template peren">-->
+<!--<p>Dit is een peer</p>-->
+<!--</div>-->
+
+<!--<div class="template muilpeer">-->
+<!--<p>Muilpeer 1</p>-->
+<!--<div class="template peren"></div>-->
+<!--<p>Muilpeer 2</p>-->
+<!--</div>-->
+
+<div class="template appelboom">
+    <p>apple template</p>
+    <div>Test apple tree template</div>
+</div>
+
+<div class="template aapje">
+    <div>
+        <p>Test text</p>
+        <p class="parameter text1"></p>
+    </div>
+</div>
+
+<div class="helpTextContainer template help-text">
+    <a class=""><i class="fa fa-question-circle-o"></i></a>
+    <div class="replace parameter helpText"></div>
+</div>
+
+<fieldset class="template input-with-help">
+    <label class="nested">
+        <span class="parameter reallabel"></span>
+        <input class="replace parameter input">
+    </label>
+    <div class="template help-text"></div>
+</fieldset>
+
+<main>
+
+
+    <hr>
+    <div class="template aap extends aapje">
+        <div class="argument text1">arg txt 1</div>
+        <p>test12334556546
+        <div class="template appelboom"></div>
+    </div>
+
+    <hr>
+    <div class="template monkey extends aapje">
+        <div class="argument text1">arg txt monkey 2</div>
+    </div>
+
+    <hr>
+    <form action="javascript:;" name="dummy">
+        <fieldset class="template simulator-level-select extends input-with-help">
+            <label class="argument reallabel">Simulation type</label>
+            <select class="argument input simulator-level-selector" name=simulator.level>
+                <option value="" class="placeholder">Choose the simulation type.</option>
+                <option value=1>With buttons</option>
+                <option value=2 title="Internet connection is required">With data server</option>
+            </select>
+            <p class="argument helpText">First, it is required to select what simulation type you want to perform</p>
+        </fieldset>
+
+        <fieldset class="template tweede-iwh extends input-with-help">
+            <label class="argument reallabel">Zomaar</label>
+            <input class="argument input simulator-level-selector unset persons" name=simulator.zomaar type=text>
+            <p class="argument helpText">Dit zou de tweede helptekst moeten zijn.</p>
+        </fieldset>
+        <fieldset class="template derde-iwh extends input-with-help">
+            <label class="argument reallabel">Random</label>
+            <input class="argument input simulator-level-selector unset persons" name=simulator.random type=number>
+            <p class="argument helpText">Dit zou de <em>derde</em> helptekst moeten zijn.</p>
+        </fieldset>
+
+       <fieldset class="template simulator-period extends input-with-help when simulator.level is 2">
+            <label class="argument reallabel">Person list</label>
+            <select class="argument input lj-select  un-set persons.$selected" name=search.leistungsjahr>
+                <option value="" class=placeholder>Choose a list</option>
+                <option value=6q4u5>List one</option>
+                <option value=1dprcd>List two</option>
+                <option value=qt3ud>List three</option>
+            </select>
+            <p class="argument helpText">Once a value is selected, the data will get retrieved.</p>
+
+        </fieldset>
+    </form>
+</main>
+
+<!--<h2>Nu de peren</h2>-->
+<!--<div class="template peren"></div>-->
+<!--<div class="template muilpeer"></div>-->
+
+
+</body>
+</html>
