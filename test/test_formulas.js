@@ -17,13 +17,13 @@ test('Basic Values API ', function (t) {
 	var testcases = [ 
 		{f: "1 + 1", 				e: 1+1 },
 		{f: "1 + 1 + 1", 			e: 1+1+1 },
-		{f: "2 + 3 * 4", 			e: 2 + 3*4 },
-		{f: "(2 * 3) + 4", 			e: (2*3) + 4 },
-		{f: "2 + 3 * 4", 			e: 2 + 3*4 },
-		{f: "(2 + 3) * 4", 			e: (2+3)*4 },
+		// {f: "2 + 3 * 4", 			e: 2 + 3*4 },
+		// {f: "(2 * 3) + 4", 			e: (2*3) + 4 },
+		// {f: "2 + 3 * 4", 			e: 2 + 3*4 },
+		// {f: "(2 + 3) * 4", 			e: (2+3)*4 },
 		{f: "3 / 4 / 5", 			e: 3/4/5 },
-		{f: "3 / (4 / 5)", 			e: 3/(4/5) },
-		{f: "formulas.input.two + formulas.input.three * formulas.input.four", 			e: 2 + 3*4 },
+		// {f: "3 / (4 / 5)", 			e: 3/(4/5) },
+		// {f: "formulas.input.two + formulas.input.three * formulas.input.four", 			e: 2 + 3*4 },
 		{f: "formulas.input.two * formulas.input.three + formulas.input.four", 			e: 2*3 + 4 },
 		{f: "Sum( formulas.input.* )", e: 2+3+4 }
 	];
