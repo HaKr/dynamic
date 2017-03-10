@@ -95,6 +95,16 @@ templates_module.get_template_by_name = function (template_name) {
     return result;
 };
 
+templates_module.get_template_instance_by_name = function (template_name) {
+    var result = null;
+
+    // if (templates_module.vars.Instances.hasOwnProperty(template_name)) {
+        result = templates_module.vars.Instances;
+    // }
+
+    return result;
+};
+
 function DynamicTemplateDefinition() {
 }
 

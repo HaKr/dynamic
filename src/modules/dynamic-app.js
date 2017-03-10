@@ -221,9 +221,9 @@ dynamic_app.define_templates = function (template_element) {
 
         if (typeof template_name === "string" && template_name.length > 0) {
             // The if statement below checks if there is already a registered declaration / instance of the template.
-            existing = templates_module.get_template_by_name(template_name);
-            if (existing !== null) {
-                result = existing;
+            this.existing = templates_module.get_template_by_name(template_name);
+            if (this.existing !== null) {
+                result = this.existing;
                 only_content = true;
             } else {
                 if (parser.extend_template_name.length > 0) {
@@ -919,33 +919,90 @@ dynamic_instance_class.get_dynamic_value = function get_dynamic_value_for_instan
 };
 
 dynamic_instance_class.resolve_arguments = function (element) {
-    agument_elements = dynamic_dom.get_elements(element, '.parameter');
+    var agument_elements = dynamic_dom.get_elements(element, '.parameter');
+    var declaration = true;
 
     agument_elements.forEach(function argument_to_parameter(parameter_element) {
-        var
-            class_list = dynamic_dom.get_classes(parameter_element),
-            parameter_index = class_list.indexOf('parameter');
+            var template_name = this.placeholder.definition.name,
+                class_list = dynamic_dom.get_classes(parameter_element),
+                parameter_index = class_list.indexOf('parameter');
 
-        if (parameter_index + 1 < class_list.length) {
+            if (parameter_index + 1 < class_list.length) {
 
-            var
-                parameter_name = class_list[parameter_index + 1],
-                arg_element = dynamic_dom.get_element(element, '.argument.' + parameter_name),
-                do_replace = dynamic_dom.has_class(parameter_element, 'replace');
+                var
+                    parameter_name = class_list[parameter_index + 1],
+                    arg_element = dynamic_dom.get_element(element, '.argument.' + parameter_name),
+                    do_replace = dynamic_dom.has_class(parameter_element, 'replace');
 
-            if (arg_element === null) {
-                logger.warning('No actual argument found for parameter ' + parameter_name + ' on instance ' + this.placeholder.definition.name);
-            } else {
-                dynamic_dom.remove_class(arg_element, 'argument');
-                dynamic_dom.remove_class(parameter_element, 'parameter');
-                dynamic_dom.remove_class(parameter_element, 'replace');
-                dynamic_dom.move_element(arg_element, parameter_element, do_replace);
-                // actual.push( param_element );
+                // TODO Fix the invalid warning when template is used in another definition
+                template_instance = templates_module.get_template_instance_by_name(this.placeholder.definition.name);
+
+
+                for (var i = 0; i < template_instance.length; i++) {
+                    var single_instance = template_instance[i];
+                    if (single_instance.placeholder) {
+                        if (single_instance.placeholder) {
+                            if (single_instance.placeholder.origin) {
+                                var origin = single_instance.placeholder.origin;
+                            } else {
+                                continue;
+                            }
+                        } else if (single_instance.placeholder[0]) {
+                            if (single_instance.placeholder[0].origin) {
+                                var origin = single_instance.placeholder[0].origin;
+                            } else {
+                                continue;
+                            }
+                        } else {
+                            continue;
+                        }
+                    } else if (single_instance.placeholders) {
+                        if (single_instance.placeholders[0]) {
+                            if (single_instance.placeholders[0].origin) {
+                                var origin = single_instance.placeholders[0].origin;
+                            } else {
+                                continue;
+                            }
+                        } else {
+                            continue;
+                        }
+                    }
+
+
+                    var attributes = origin.split(" ");
+                    for (var x = 0; x < attributes.length; x++) {
+                        var attribute = attributes[x];
+                        var key_value_attribute = attribute.split("=");
+                        if (key_value_attribute[0] == "name") {
+                            if (key_value_attribute[1].includes("_") && key_value_attribute[1].includes(template_name + "_")) {
+                                declaration = false;
+                                break;
+                            } else if (key_value_attribute[1] == (template_name)) {
+                                declaration = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (declaration) {
+                    if (arg_element == null) {
+                        logger.warning('No actual argument found for parameter ' + parameter_name + ' on instance ' + this.placeholder.definition.name);
+                    } else {
+                        dynamic_dom.remove_class(arg_element, 'argument');
+                        dynamic_dom.remove_class(parameter_element, 'parameter');
+                        dynamic_dom.remove_class(parameter_element, 'replace');
+                        dynamic_dom.move_element(arg_element, parameter_element, do_replace);
+                        // actual.push( param_element );
+                    }
+                }
             }
-        }
 
-    }, this);
-};
+        }, this
+    )
+    ;
+}
+;
 
 dynamic_instance_class.trigger_component = function (element) {
     dynamic_app.vars.components.forEach(function trigger_components(component) {
