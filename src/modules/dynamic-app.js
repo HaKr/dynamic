@@ -212,7 +212,6 @@ dynamic_app.define_templates = function (template_element) {
         parser = new ClassNameParser(template_element.className);
         // Parses the class name string to single arguments and values
         parser.parse();
-
         parser.remove_names.forEach(function (class_to_remove) {
             dynamic_dom.remove_class(template_element, class_to_remove);
         });
@@ -243,7 +242,7 @@ dynamic_app.define_templates = function (template_element) {
                     result = templates_module.define(template_name);
                 }
             }
-
+            console.log("Template: " + template_element);
             if ((typeof parser.dynamic_value_name !== "undefined" && parser.dynamic_value_name.length > 0) // Has dynamic value
                 || template_children_with_arguments.length > 0 // Has children with class '.argument'
                 || (typeof parser.extend_template_name !== "undefined" && parser.extend_template_name.length > 0 ) // Has a extending template
@@ -917,90 +916,102 @@ dynamic_instance_class.get_dynamic_value = function get_dynamic_value_for_instan
 
     return result;
 };
-
+// TODO Add documentation
 dynamic_instance_class.resolve_arguments = function (element) {
     var agument_elements = dynamic_dom.get_elements(element, '.parameter');
     var declaration = true;
 
-    agument_elements.forEach(function argument_to_parameter(parameter_element) {
-            var template_name = this.placeholder.definition.name,
-                class_list = dynamic_dom.get_classes(parameter_element),
-                parameter_index = class_list.indexOf('parameter');
+    for (var y = 0; y < agument_elements.length; y++) {
+        var parameter_element = agument_elements[y];
+        if (this.placeholder) {
+            if (this.placeholder.definition) {
+                if (this.placeholder.definition.name) {
+                    var template_name = this.placeholder.definition.name;
+                } else {
+                    // console.log("Defenition:");
+                    // console.log(this.placeholder.definition);
+                }
+            } else {
+                // console.log("Placeholder:");
+                // console.log(this.placeholder);
+            }
+        } else {
+            continue;
+        }
+        var class_list = dynamic_dom.get_classes(parameter_element),
+            parameter_index = class_list.indexOf('parameter');
 
-            if (parameter_index + 1 < class_list.length) {
+        if (parameter_index + 1 < class_list.length) {
 
-                var
-                    parameter_name = class_list[parameter_index + 1],
-                    arg_element = dynamic_dom.get_element(element, '.argument.' + parameter_name),
-                    do_replace = dynamic_dom.has_class(parameter_element, 'replace');
+            var
+                parameter_name = class_list[parameter_index + 1],
+                arg_element = dynamic_dom.get_element(element, '.argument.' + parameter_name),
+                do_replace = dynamic_dom.has_class(parameter_element, 'replace');
 
-                // TODO Fix the invalid warning when template is used in another definition
-                template_instance = templates_module.get_template_instance_by_name(this.placeholder.definition.name);
+            // TODO Fix the invalid warning when template is used in another definition
+            template_instance = templates_module.get_template_instance_by_name(this.placeholder.definition.name);
 
 
-                for (var i = 0; i < template_instance.length; i++) {
-                    var single_instance = template_instance[i];
+            for (var i = 0; i < template_instance.length; i++) {
+                var single_instance = template_instance[i];
+                if (single_instance.placeholder) {
                     if (single_instance.placeholder) {
-                        if (single_instance.placeholder) {
-                            if (single_instance.placeholder.origin) {
-                                var origin = single_instance.placeholder.origin;
-                            } else {
-                                continue;
-                            }
-                        } else if (single_instance.placeholder[0]) {
-                            if (single_instance.placeholder[0].origin) {
-                                var origin = single_instance.placeholder[0].origin;
-                            } else {
-                                continue;
-                            }
+                        if (single_instance.placeholder.origin) {
+                            var origin = single_instance.placeholder.origin;
                         } else {
                             continue;
                         }
-                    } else if (single_instance.placeholders) {
-                        if (single_instance.placeholders[0]) {
-                            if (single_instance.placeholders[0].origin) {
-                                var origin = single_instance.placeholders[0].origin;
-                            } else {
-                                continue;
-                            }
+                    } else if (single_instance.placeholder[0]) {
+                        if (single_instance.placeholder[0].origin) {
+                            var origin = single_instance.placeholder[0].origin;
                         } else {
                             continue;
                         }
+                    } else {
+                        continue;
                     }
-
-
-                    var attributes = origin.split(" ");
-                    for (var x = 0; x < attributes.length; x++) {
-                        var attribute = attributes[x];
-                        var key_value_attribute = attribute.split("=");
-                        if (key_value_attribute[0] == "name") {
-                            if (key_value_attribute[1].includes("_") && key_value_attribute[1].includes(template_name + "_")) {
-                                declaration = false;
-                                break;
-                            } else if (key_value_attribute[1] == (template_name)) {
-                                declaration = false;
-                                break;
-                            }
+                } else if (single_instance.placeholders) {
+                    if (single_instance.placeholders[0]) {
+                        if (single_instance.placeholders[0].origin) {
+                            var origin = single_instance.placeholders[0].origin;
+                        } else {
+                            continue;
                         }
+                    } else {
+                        continue;
                     }
                 }
 
-                if (declaration) {
-                    if (arg_element == null) {
-                        logger.warning('No actual argument found for parameter ' + parameter_name + ' on instance ' + this.placeholder.definition.name);
-                    } else {
-                        dynamic_dom.remove_class(arg_element, 'argument');
-                        dynamic_dom.remove_class(parameter_element, 'parameter');
-                        dynamic_dom.remove_class(parameter_element, 'replace');
-                        dynamic_dom.move_element(arg_element, parameter_element, do_replace);
-                        // actual.push( param_element );
+
+                var attributes = origin.split(" ");
+                for (var x = 0; x < attributes.length; x++) {
+                    var attribute = attributes[x];
+                    var key_value_attribute = attribute.split("=");
+                    if (key_value_attribute[0] == "name") {
+                        if (key_value_attribute[1].includes("_") && key_value_attribute[1].includes(template_name + "_")) {
+                            declaration = false;
+                            break;
+                        } else if (key_value_attribute[1] == (template_name)) {
+                            declaration = false;
+                            break;
+                        }
                     }
                 }
             }
 
-        }, this
-    )
-    ;
+            if (declaration) {
+                if (arg_element == null) {
+                    logger.warning('No actual argument found for parameter ' + parameter_name + ' on instance ' + this.placeholder.definition.name);
+                } else {
+                    dynamic_dom.remove_class(arg_element, 'argument');
+                    dynamic_dom.remove_class(parameter_element, 'parameter');
+                    dynamic_dom.remove_class(parameter_element, 'replace');
+                    dynamic_dom.move_element(arg_element, parameter_element, do_replace);
+                    // actual.push( param_element );
+                }
+            }
+        }
+    }
 }
 ;
 

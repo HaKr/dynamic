@@ -12,8 +12,11 @@
 		<label>Please enter your name:
 			<input name=addressee value=world>
 		</label>
-		
-		<p class=salutation>Hello {{addressee}}!
-	
+
+		<p class=salutation>Hello {{addressee}}!</p>
+
+	    <input type="hidden" name="obj.test" value="test" />
+		<h2>{{obj.test}}</h2>
+
 	</body>
 </html>
