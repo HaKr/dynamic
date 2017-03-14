@@ -917,8 +917,20 @@ dynamic_instance_class.get_dynamic_value = function get_dynamic_value_for_instan
 
     return result;
 };
-// TODO Add documentation
+
+/**
+ *
+ * This function loops trough all the argument elements that are inside of 'element' ( see parameter ).
+ * While looping trough all the elements it'll loop trough all parameter elements that are in the same element.
+ * If a parameter and argument have the same name then 'move_element()' will be executed. So the parameter argument element 'll be deleted
+ * and the parameter element'll have the right value and position.
+ *
+ * @param element
+ * @throws [log error] No actual parameter found for argument
+ */
+
 dynamic_instance_class.resolve_arguments = function (element) {
+    // Find all argument and parameter elements inside element.
     var argument_elements = dynamic_dom.get_elements(element, '.argument');
     var parameter_elements = dynamic_dom.get_elements(element, '.parameter');
 
@@ -928,26 +940,33 @@ dynamic_instance_class.resolve_arguments = function (element) {
     var argument_element;
     var parameter_element;
 
+    // For each argument there'll be checked if there is a parameter with the same name in element.
     for (var i = 0; i < argument_elements.length; i++) {
         argument_element = argument_elements[i];
+        // Parse the element so we can get the template name ( argument_name ).
         var parser_argument = new ClassNameParser(argument_element.className);
         parser_argument.parse();
         argument_name = parser_argument.argument;
         if (argument_name) {
             for (var x = 0; x < parameter_elements.length; x++) {
                 parameter_element = parameter_elements[x];
+                // Parse the element so we can get the template name ( parameter_element ).
                 var parser_parameter = new ClassNameParser(parameter_element.className);
                 parser_parameter.parse();
                 parameter_name = parser_parameter.parameter;
 
+                // Check if a parameter name was found.
                 if (parameter_name) {
+                    // Check if we have a match
                     if (argument_name == parameter_name) {
+                        // Match, the argument and parameter will now be passed to 'move_element()'.
                         var do_replace = dynamic_dom.has_class(parameter_element, 'replace');
                         break;
                     }
                 }
             }
 
+            // Log a error if there was no parameter found for the current argument.
             if (!parameter_element) {
                 logger.error("No actual parameter found with the name: " + argument_name + " for template instance: " + parser_argument.class_name);
             } else {
