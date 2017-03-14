@@ -14,7 +14,7 @@ dynamic_app.register_component('.simulator-buttons')
 
     })
     .on_visible(function (component_element) {
-        console.log("Click no");
+        console.log("On visable person!!");
         this.safe_element_listener('#set-button', 'click', function () {
             console.log("Click!");
             dynamic_app.get_dynamic_value('persons').set_value(person_list);

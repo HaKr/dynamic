@@ -155,12 +155,14 @@ ClassNameParser.prototype.set_instance_single = function () {
     this.place_here = true;
     this.multiple = false;
     this.unknown_keyword_method = this.unknown_keyword_methods.set_dynamic_value;
+    this.remove_class();
 };
 
 ClassNameParser.prototype.set_instance_multiple = function () {
     this.place_here = true;
     this.multiple = true;
     this.unknown_keyword_method = this.unknown_keyword_methods.set_dynamic_value;
+    this.remove_class();
 };
 
 ClassNameParser.prototype.set_child_reference = function () {
@@ -175,7 +177,6 @@ ClassNameParser.prototype.method_from_keyword = function () {
         ;
     if (this.class_keyword_methods.hasOwnProperty(this.class_name)) {
         result = this.class_keyword_methods[this.class_name];
-        this.remove_class();
     }
 
     return result;
@@ -189,6 +190,7 @@ ClassNameParser.prototype.set_range_value = function () {
 
 ClassNameParser.prototype.set_range = function () {
     this.unknown_keyword_method = this.unknown_keyword_methods.set_range;
+    this.remove_class();
 };
 
 ClassNameParser.prototype.set_range_empty = function () {
@@ -196,6 +198,7 @@ ClassNameParser.prototype.set_range_empty = function () {
     this.range = this.negated ? api_keywords.template.range.all : api_keywords.template.range.empty;
     this.negated = true;
     this.unknown_keyword_method = this.unknown_keyword_methods.set_dynamic_value;
+    this.remove_class();
 };
 
 ClassNameParser.prototype.set_range_all = function () {
@@ -206,6 +209,7 @@ ClassNameParser.prototype.set_range_all = function () {
 ClassNameParser.prototype.set_range_selected_index = function () {
     this.selected = '.$selected';
     this.set_range_all();
+    this.remove_class();
 };
 
 ClassNameParser.prototype.set_place_template = function () {
@@ -228,6 +232,7 @@ ClassNameParser.prototype.set_range_selected = function () {
     this.selected = this.negated ? '.$selected' : '.@';
     this.set_range_all();
     this.unknown_keyword_method = this.unknown_keyword_methods.set_dynamic_value;
+    this.remove_class();
 };
 
 ClassNameParser.prototype.remove_class = function (class_name) {
@@ -239,6 +244,7 @@ ClassNameParser.prototype.remove_class = function (class_name) {
 
 ClassNameParser.prototype.set_sort = function () {
     this.unknown_keyword_method = this.unknown_keyword_methods.set_sort_order;
+    this.remove_class();
 };
 
 ClassNameParser.prototype.set_sort_order = function () {

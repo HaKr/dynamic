@@ -14,7 +14,9 @@
     "watch:dist": "watch 'npm run copy-shared' dist",
     "browserify": "browserify src/modules/*.js src/components/*.js --outfile dist/js/dynamic-app.js",
     "copy-static": "cp -r src/www/* dist/",
-    "copy-shared": "cp -r dist/* /media/sf_eeg/dynamic/"
+    "copy-shared": "cp -r dist/* /media/sf_eeg/dynamic/",
+    "deploy-static": "parallelshell 'sudo npm run browserify' 'sudo npm run copy-static'",
+    "deploy-shared": "parallelshell 'sudo npm run browserify' 'sudo npm run copy-shared'"
   },
   "repository": {
     "type": "git",

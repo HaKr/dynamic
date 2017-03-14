@@ -80,11 +80,6 @@ dynamic_app.run = function () {
 
     // logger.info(dynamic_app.info);
 
-    dynamic_app.vars.components.forEach(function register_components(component) {
-        component.locate();
-        component.initialise();
-    });
-
     metalogger.debug(function () {
         var
             old_instances_info = {};
@@ -146,6 +141,12 @@ dynamic_app.run = function () {
     });
 
     dynamic_app.define_templates();
+
+    dynamic_app.vars.components.forEach(function register_components(component) {
+        component.locate();
+        component.initialise();
+    });
+
     values_module.enhance(dynamic_value_class);
 
     dynamic_app.vars.main_instance = templates_module.create_instance(document.body);
@@ -215,8 +216,8 @@ dynamic_app.define_templates = function (template_element) {
         parser.remove_names.forEach(function (class_to_remove) {
             dynamic_dom.remove_class(template_element, class_to_remove);
         });
-
         template_name = parser.template_name;
+
 
         if (typeof template_name === "string" && template_name.length > 0) {
             // The if statement below checks if there is already a registered declaration / instance of the template.
@@ -226,8 +227,8 @@ dynamic_app.define_templates = function (template_element) {
                 only_content = true;
             } else {
                 if (parser.extend_template_name.length > 0) {
-
                     var existing_extending_template = templates_module.get_template_by_name(parser.extend_template_name);
+
                     if (existing_extending_template === null) {
                         // Registration of the declaration
                         logger.warning("Unknown extending template: " + parser.extend_template_name + ".");
@@ -242,7 +243,7 @@ dynamic_app.define_templates = function (template_element) {
                     result = templates_module.define(template_name);
                 }
             }
-            console.log("Template: " + template_element);
+
             if ((typeof parser.dynamic_value_name !== "undefined" && parser.dynamic_value_name.length > 0) // Has dynamic value
                 || template_children_with_arguments.length > 0 // Has children with class '.argument'
                 || (typeof parser.extend_template_name !== "undefined" && parser.extend_template_name.length > 0 ) // Has a extending template
@@ -918,11 +919,11 @@ dynamic_instance_class.get_dynamic_value = function get_dynamic_value_for_instan
 };
 // TODO Add documentation
 dynamic_instance_class.resolve_arguments = function (element) {
-    var agument_elements = dynamic_dom.get_elements(element, '.parameter');
+    var parameter_elements = dynamic_dom.get_elements(element, '.parameter');
     var declaration = true;
 
-    for (var y = 0; y < agument_elements.length; y++) {
-        var parameter_element = agument_elements[y];
+    for (var y = 0; y < parameter_elements.length; y++) {
+        var parameter_element = parameter_elements[y];
         if (this.placeholder) {
             if (this.placeholder.definition) {
                 if (this.placeholder.definition.name) {
@@ -1615,6 +1616,8 @@ dynamic_app.types.AppComponent.prototype.safe_element_listener = function (css_s
     return element;
 };
 
+// TODO Fix Callbacks
+
 dynamic_app.types.AppComponent.prototype.on_initialise = function (callback) {
     this.on_initialise_callback = callback;
 
@@ -1640,7 +1643,6 @@ dynamic_app.types.AppComponent.prototype.locate = function () {
 };
 
 dynamic_app.types.AppComponent.prototype.notify_when_visible = function (element) {
-
     if (typeof this.on_visible === "function" && this.element === null) {
         if (dynamic_utils.starts_with(this.selector, '.')) {
             if (dynamic_dom.has_class(element, this.selector.substring(1))) {
@@ -1654,7 +1656,6 @@ dynamic_app.types.AppComponent.prototype.notify_when_visible = function (element
         }
 
     }
-
     return this;
 };
 
