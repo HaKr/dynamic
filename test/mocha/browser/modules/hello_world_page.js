@@ -23,12 +23,8 @@ class HelloWorldPage extends BasePage {
 		const self = this;
 
 		return this.get( this.url, this.inputLocator )
-				.then( () => {
-					return Promise.all([
-						self.addresseeElement = self.browser.findElement( this.inputLocator ),
-						self.salutationElement = self.browser.findElement( this.salutationLocator )
-					]);
-				})
+				.then( ()=> {return self.addresseeElement = self.browser.findElement( this.inputLocator ) });
+				
 		;
 	}
 
@@ -41,7 +37,30 @@ class HelloWorldPage extends BasePage {
 	}
 
 	get salutation(){
-		return this.salutationElement.getText();
+		const self = this;
+
+		return this.hasSalutation()
+			.then( (has_salutation) => {
+				return has_salutation ? self.salutationElement.getText() : Promise.resolve('');
+			}) 
+	}
+
+	hasSalutation(){
+		const self = this;
+		return this.PromiseManager.createPromise( (resolve,reject) => {
+			self.browser.findElements( self.salutationLocator )
+				.then( (element_list) => {
+					let result = false;
+
+					if (element_list.length>0){
+						self.salutationElement = element_list[0];
+						result = true;
+					}
+
+					resolve( result );
+
+				});
+		});
 	}
 }
 

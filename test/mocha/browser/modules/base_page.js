@@ -19,6 +19,7 @@ class BasePage {
         this.By = driver_config.By;
         this.until = driver_config.until;
         this.Key = driver_config.Key;
+        this.PromiseManager = driver_config.PromiseManager;
     }
 
     get ( url, locator ) {

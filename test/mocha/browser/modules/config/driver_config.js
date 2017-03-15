@@ -12,7 +12,7 @@ const
                     .withCapabilities({'phantomjs.binary.path': phantomjs.path})
                     .forBrowser('phantomjs')
                     .build(),
-    result = { browser: null, By: null, Until: null, Key: null }
+    result = { browser: null, By: null, Until: null, Key: null, PromiseManager: null }
 ;
 
 ['click', 'get', 'getTitle', 'quit', 'wait', 'takseScreenshot'].forEach(name => {
@@ -52,6 +52,7 @@ result.browser = browser;
 result.By = webdriver.By,
 result.Until = webdriver.until;
 result.Key = webdriver.Key;
+result.PromiseManager = webdriver.promise;
 
 module.exports = result;
 

@@ -22,8 +22,10 @@ describe('Hello world basic', function(){
 		blank   = ''
 	;
 
+    this.timeout( 2500 );
+    this.slow( 750 );
+
 	before(function(done) {
-	    this.timeout( 2500 );
 	    toe.load()
 		    .then( () => done() );
 	});
@@ -64,9 +66,11 @@ describe('Hello world wwith template', function(){
 		laMonde = 'la Monde',
 		blank   = ''
 	;
+    
+    this.timeout( 2500 );
+    this.slow( 750 );
 
 	before(function(done) {
-	    this.timeout( 2500 );
 	    toe.load()
 		    .then( () => done() );
 	});
@@ -78,23 +82,27 @@ describe('Hello world wwith template', function(){
         }
     });
 
-	it('should initialy greet with "'+theWorld+'"', function(){
-		return expect( toe.salutation ).eventually.to.be.equal( hello( theWorld ) );
+	it('should initialy have no salutation', function(){
+		return expect( toe.hasSalutation() ).eventually.to.be.equal( false );
 	});
 
-	it('should respond to change to "'+dieWelt+'"', function(){
+	it('should have salutation after  change to "'+dieWelt+'"', function(){
 		toe.addressee = dieWelt;
+		expect( toe.hasSalutation() ).eventually.to.be.equal( true );
 		return expect( toe.salutation ).eventually.to.be.equal( hello( dieWelt ) );
 	});
 
-	it('should respond to change to "'+laMonde+'"', function(){
+	it('should remove salutation when  blank again', function(){
+		toe.addressee = blank;
+		expect( toe.hasSalutation() ).eventually.to.be.equal( false );
+		return expect( toe.salutation ).eventually.to.be.equal(  blank  );
+	});
+
+	it('should reappear after change to "'+laMonde+'"', function(){
 		toe.addressee = laMonde;
+		expect( toe.hasSalutation() ).eventually.to.be.equal( true );
 		return expect( toe.salutation ).eventually.to.be.equal( hello( laMonde ) );
 	});
 
-	it('should have a blank ', function(){
-		toe.addressee = blank;
-		return expect( toe.salutation ).eventually.to.be.equal( hello( blank ) );
-	});
 });
 
