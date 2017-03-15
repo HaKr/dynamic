@@ -39,6 +39,7 @@
     "live-reload": "latest",
     "mocha": "^3.2.0",
     "mocha-phantomjs": "^4.1.0",
+    "node-inspector": "^0.12.10",
     "npm": "^4.0.5",
     "parallelshell": "latest",
     "phantomjs": "^2.1.7",

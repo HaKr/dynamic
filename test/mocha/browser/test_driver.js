@@ -42,7 +42,7 @@ describe('Selenium webdriver and PhantomJS', function() {
 });
 }
 
-// function ignore2(){
+function ignore2(){
 
 describe('my blog', () => {
   it('should navigate to post', function() {
@@ -65,9 +65,9 @@ describe('my blog', () => {
     ;
   });
 });
-// }
+}
 
-function ignore3(){
+// function ignore3(){
 describe('Test mark Birbeck\'s Blog', function(){
     beforeEach(function(done) {
         this.timeout( 5000 );
@@ -85,7 +85,7 @@ describe('Test mark Birbeck\'s Blog', function(){
 
     describe('Title changes after link', function(){
         it('should see the correct title', function(done) {
-          this.timeout( 15000 );
+          this.timeout( 2500 );
 
           return driver.findElement( By.linkText('A Mixin Approach to Material Design Lite Using Sass' ) )
             .click()
@@ -98,4 +98,4 @@ describe('Test mark Birbeck\'s Blog', function(){
     });
 
 });
-}
+// }
