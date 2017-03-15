@@ -4,9 +4,9 @@
   "description": "Dynamic templates that appear on value changes",
   "main": "dynamic-server.js",
   "scripts": {
-    "test": "tape test/*.js",
-    "test:browser": "mocha-phantomjs test/mocha/browser/assets/test_screenshot.html",
-    "test:integration": "mocha test/mocha/browser/test_hello_world.js",
+    "test": "./node_modules/tape/bin/tape test/*.js",
+    "test:browser": "./node_modules/mocha-phantomjs/bin/mocha-phantomjs -p ./node_modules/phantomjs ./test/mocha/browser/assets/test_screenshot.html",
+    "test:integration": "./node_modules/mocha/bin/mocha test/mocha/browser/test_hello_world.js",
     "watch:all": "parallelshell 'npm run watch:modules' 'npm run watch:components' 'npm run watch:www'",
     "livereload": "live-reload --port 9091 dist/",
     "watch:modules": "watch 'npm run browserify' src/modules",
