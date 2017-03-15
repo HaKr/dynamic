@@ -49,7 +49,7 @@
 				<span class="parameter reallabel"></span>
 				<input class="replace parameter input">
 			</label>
-			<div class="template place help-text"></div>
+			<div class="template help-text"></div>
 		</fieldset>
 
 			<!-- Template that will be used in the table -->
@@ -111,7 +111,7 @@
 						Please select which "Person list" you want to retrieve from the data server.
 				</fieldset>
 
-				<fieldset class="template place person-select extends input-with-help when persons available">
+				<fieldset class="template person-select extends input-with-help when persons available">
 					<label class="argument reallabel">Show info for</label>
 					<select class="person-select argument input" name=.$selected>
 						<option class="placeholder" value="">Choose a person</option>
@@ -174,7 +174,7 @@
 						</fieldset>
 
 
-						<fieldset class="template place input-with-help">
+						<fieldset class="template person-last-name extends input-with-help">
 							<label class="argument reallabel">Last name</label>
 							<input class="argument input" name=.last-name>
 							<div class="argument helpText" >
@@ -182,8 +182,8 @@
 							</div>
 						</fieldset>
 
-						<div class="template place person-input-has-company when selected persons has company">
-							<fieldset class="template input-with-help">
+						<div class="template person-input-has-company when selected persons has company">
+							<fieldset class="template person-salary extends input-with-help">
 								<label class="argument reallabel">Salary</label>
 								<select class="argument input" name=.salary_month>
 									<option value="" class=placeholder>Choose a monthly reimbursement for a FTE</option>
@@ -197,10 +197,10 @@
 								<p class="argument helpText">Select what reimbursement {{..last-name}} gets for this job.</p>
 							</fieldset>
 
-							<fieldset class="template place input-with-help">
+							<fieldset class="template person-fte extends input-with-help">
 								<label class="argument reallabel">FTE</label>
 								<!-- data-dynamic-template-for='..id' -->
-								<select name=.fte class="template place fte-select argument input"></select>
+								<select name=.fte class="argument input template fte-selection extends fte-select"></select>
 								<p class="argument helpText">Select what percentage of 40 hours {{..last-name}} is working.</p>
 							</fieldset>
 						<!--</div>-->
@@ -227,30 +227,30 @@
 				<!--</address>-->
 
 				<address class="template address">
-				<i class="fa fa-envelope-o"></i>
-				<label class="template place labeled-item when .street">
-				<span class="">Address</span>
-				<span class="">{{.street}} {{.number}}</span>
-				</label>
-				<label class="template place labeled-item when .city">
-				<span class="">City</span>
-				<span class="">{{.postal}}  {{.city}}</span>
-				</label>
+					<i class="fa fa-envelope-o"></i>
+						<label class="template address-first-line extends labeled-item when .street">
+							<span class="argument reallabel">Address</span>
+							<span class="argument data-item">{{.street}} {{.number}}</span>
+						</label>
+						<label class="template address-second-line extends labeled-item when .city">
+							<span class="argument reallabel">City</span>
+							<span class="argument data-item">{{.postal}}  {{.city}}</span>
+						</label>
 				</address>
 
 				<div title="{{.last-name}}, {{.first-name}}" class="template person-record for selected persons">
 					<input type=hidden name=.id>
-					<label class="template place labeled-item">
+					<label class="template person-first-name extends labeled-item">
 						<span class="argument reallabel">First name</span>
 						<span class="argument data-item">{{.first-name}}</span>
 					</label>
-					<label class="template place labeled-item">
+					<label class="template person-last-name extends labeled-item">
 						<span class="argument reallabel">Last name</span>
 						<span class="argument data-item">{{.last-name}}</span>
 					</label>
 
 					<!-- value based templates -->
-					<div class="template place labeled-item when selected persons has company">
+					<div class="template annual-salary extends labeled-item when selected persons has company">
 						<span class="argument reallabel">Annual salary</span>
 						<span class="argument data-item">
 							<span class='template fte-explain when .fte in [0,1]'>
@@ -269,7 +269,7 @@
 				</div>
 
 				<!-- addition to the company template above, only the children of this DIV are added -->
-				<div class="template company" data-dynamic-template-options="only-content">
+				<div class="template company">
 					<address class="template address for .address"></address>
 				</div>
 

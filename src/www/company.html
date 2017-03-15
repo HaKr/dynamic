@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <meta charset=utf-8>
+    <title>Dynamic App</title>
+
+
+    <link rel="stylesheet" type="text/css"
+          href="https://fonts.googleapis.com/css?family=Raleway:200,200i,300,300i,400,400i,500,500i" media="all">
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Montserrat:400,700"
+          media="all">
+    <link rel="stylesheet" href="css/main.css"/>
+    <link rel="stylesheet" href="css/header.css"/>
+    <link rel="stylesheet" href="css/footer.css"/>
+    <link rel="stylesheet" href="css/forms.css"/>
+    <link rel="stylesheet" href="css/tables.css"/>
+    <link rel="stylesheet" href="css/mobile.css"/>
+
+    <link rel=stylesheet media=all href=css/dynamic-app.css>
+
+    <script src=js/dynamic-app.js></script>
+    <script src=js/dynamic-person.js></script>
+</head>
+
+<body class="dynamic-person container">
+
+<header id="header">
+    <nav id="menu" class="menu">
+        <div id="logo" class="logo">
+            <a href="/"><img src="images/logo.png" alt="Ciber logo"/></a>
+            <h1>Dynamic App</h1>
+        </div>
+    </nav>
+</header>
+
+<!-- some common templates -->
+<div class="helpTextContainer template help-text">
+    <a class=""><i class="fa fa-question-circle-o"></i></a>
+    <div class="replace parameter helpText"></div>
+</div>
+
+<label class="nested template labeled-item">
+    <span class="parameter reallabel"></span>
+    <span class="replace parameter data-item"></span>
+</label>
+
+<fieldset class="template input-with-help">
+    <label class="nested">
+        <span class="parameter reallabel"></span>
+        <input class="replace parameter input">
+    </label>
+    <div class="template place help-text"></div>
+</fieldset>
+
+<form class=selection action="javascript:;">
+
+    <fieldset class="template simulator-level-select extends input-with-help">
+        <label class="argument reallabel">Simulation type</label>
+        <select class="argument input simulator-level-selector unset persons" name=simulator.level>
+            <option value="" class="placeholder">Choose the simulation type.</option>
+            <option value=1>With buttons</option>
+            <option value=2 title="Internet connection is required">With data server</option>
+        </select>
+        <p class="argument helpText">First, it is required to select what simulation type you want to perform</p>
+    </fieldset>
+
+    <!-- Simulator buttons, one simulates the GET of person data, the second logs that data to the console -->
+    <fieldset  class="template simulator-buttons when simulator.level is 1">
+        <label>Actions</label
+        ><button id=set-button title='Simulate a "Get Person List" call'>Simulate</button
+    ><button id=show-button title="log content of 'Person List' to the browser's console (open with F12), so you can see how this is updated live through the controls on this page">Show person</button>
+        <button id=reset-button title='Set the "Person List" back to unassigned'>Reset</button>
+    </fieldset>
+
+    <fieldset class="template simulator-period extends input-with-help when simulator.level is 2">
+        <label class="argument reallabel">Person list</label>
+        <select class="argument input lj-select  un-set persons.$selected" name=search.leistungsjahr>
+            <option value="" class=placeholder>Choose a list</option>
+            <option value=6q4u5>List one</option>
+            <option value=1dprcd>List two</option>
+            <option value=qt3ud>List three</option>
+        </select>
+        <p class="argument helpText">Once a value is selected, the data will get retrieved.</p>
+    </fieldset>
+
+    <fieldset class="template explain when no persons available">
+        <p class="template explain-no-level when simulator.level not available">
+            Please select the simulation type first.
+        <p class="template explain-level-1 when simulator.level is 1">
+            The "Simulate" button sets the person list data to some sample value, the "Show" button logs the list data to the browser's console, and the "Reset" buttons
+            clears the simulated Person List data.
+        <p class="template explain-level-2 when simulator.level is 2">
+            Please select which "Person list" you want to retrieve from the data server.
+    </fieldset>
+
+    <fieldset class="template person-select extends input-with-help when persons available">
+        <label class="argument reallabel">Show info for</label>
+        <select class="person-select argument input" name=.$selected>
+            <option class="placeholder" value="">Choose a person</option>
+
+            <option value={{.$reference}} class="template person-select-option for each persons">
+                {{.first-name}} {{.last-name}}
+            </option>
+
+        </select>
+        <p class="argument helpText">Select a name from this list and its details will appear below</p>
+    </fieldset>
+
+</form>
+
+</main>
+
+<footer>
+    <p>This framework is developed by Ciber CMS ADM Java Services. Issues and improvements can be sent to <a
+            href="mailto:nl.cms.adm.js@ciber.nl">nl.cms.adm.js@ciber.nl</a>.</p>
+    <ul>
+
+        <li><a target=_blank href="https://github.com/HaKr/dynamic">GIT</a></li>
+        <li><a href="http://www.ciber.nl">COPYRIGHT © 2017 EXPERIS CIBER B.V.</a></li>
+    </ul>
+</footer>
+</body>
+</html>

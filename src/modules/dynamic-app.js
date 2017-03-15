@@ -80,11 +80,6 @@ dynamic_app.run = function () {
 
     // logger.info(dynamic_app.info);
 
-    dynamic_app.vars.components.forEach(function register_components(component) {
-        component.locate();
-        component.initialise();
-    });
-
     metalogger.debug(function () {
         var
             old_instances_info = {};
@@ -146,6 +141,12 @@ dynamic_app.run = function () {
     });
 
     dynamic_app.define_templates();
+
+    dynamic_app.vars.components.forEach(function register_components(component) {
+        component.locate();
+        component.initialise();
+    });
+
     values_module.enhance(dynamic_value_class);
 
     dynamic_app.vars.main_instance = templates_module.create_instance(document.body);
@@ -212,12 +213,11 @@ dynamic_app.define_templates = function (template_element) {
         parser = new ClassNameParser(template_element.className);
         // Parses the class name string to single arguments and values
         parser.parse();
-
         parser.remove_names.forEach(function (class_to_remove) {
             dynamic_dom.remove_class(template_element, class_to_remove);
         });
-
         template_name = parser.template_name;
+
 
         if (typeof template_name === "string" && template_name.length > 0) {
             // The if statement below checks if there is already a registered declaration / instance of the template.
@@ -227,8 +227,8 @@ dynamic_app.define_templates = function (template_element) {
                 only_content = true;
             } else {
                 if (parser.extend_template_name.length > 0) {
-
                     var existing_extending_template = templates_module.get_template_by_name(parser.extend_template_name);
+
                     if (existing_extending_template === null) {
                         // Registration of the declaration
                         logger.warning("Unknown extending template: " + parser.extend_template_name + ".");
@@ -918,91 +918,68 @@ dynamic_instance_class.get_dynamic_value = function get_dynamic_value_for_instan
     return result;
 };
 
+/**
+ *
+ * This function loops trough all the argument elements that are inside of 'element' ( see parameter ).
+ * While looping trough all the elements it'll loop trough all parameter elements that are in the same element.
+ * If a parameter and argument have the same name then 'move_element()' will be executed. So the parameter argument element 'll be deleted
+ * and the parameter element'll have the right value and position.
+ *
+ * @param element
+ * @throws [log error] No actual parameter found for argument
+ */
+
 dynamic_instance_class.resolve_arguments = function (element) {
-    var agument_elements = dynamic_dom.get_elements(element, '.parameter');
-    var declaration = true;
+    // Find all argument and parameter elements inside element.
+    var argument_elements = dynamic_dom.get_elements(element, '.argument');
+    var parameter_elements = dynamic_dom.get_elements(element, '.parameter');
 
-    agument_elements.forEach(function argument_to_parameter(parameter_element) {
-            var template_name = this.placeholder.definition.name,
-                class_list = dynamic_dom.get_classes(parameter_element),
-                parameter_index = class_list.indexOf('parameter');
+    var argument_name;
+    var parameter_name;
 
-            if (parameter_index + 1 < class_list.length) {
+    var argument_element;
+    var parameter_element;
 
-                var
-                    parameter_name = class_list[parameter_index + 1],
-                    arg_element = dynamic_dom.get_element(element, '.argument.' + parameter_name),
-                    do_replace = dynamic_dom.has_class(parameter_element, 'replace');
+    // For each argument there'll be checked if there is a parameter with the same name in element.
+    for (var i = 0; i < argument_elements.length; i++) {
+        argument_element = argument_elements[i];
+        // Parse the element so we can get the template name ( argument_name ).
+        var parser_argument = new ClassNameParser(argument_element.className);
+        parser_argument.parse();
+        argument_name = parser_argument.argument;
+        if (argument_name) {
+            for (var x = 0; x < parameter_elements.length; x++) {
+                parameter_element = parameter_elements[x];
+                // Parse the element so we can get the template name ( parameter_element ).
+                var parser_parameter = new ClassNameParser(parameter_element.className);
+                parser_parameter.parse();
+                parameter_name = parser_parameter.parameter;
 
-                // TODO Fix the invalid warning when template is used in another definition
-                template_instance = templates_module.get_template_instance_by_name(this.placeholder.definition.name);
-
-
-                for (var i = 0; i < template_instance.length; i++) {
-                    var single_instance = template_instance[i];
-                    if (single_instance.placeholder) {
-                        if (single_instance.placeholder) {
-                            if (single_instance.placeholder.origin) {
-                                var origin = single_instance.placeholder.origin;
-                            } else {
-                                continue;
-                            }
-                        } else if (single_instance.placeholder[0]) {
-                            if (single_instance.placeholder[0].origin) {
-                                var origin = single_instance.placeholder[0].origin;
-                            } else {
-                                continue;
-                            }
-                        } else {
-                            continue;
-                        }
-                    } else if (single_instance.placeholders) {
-                        if (single_instance.placeholders[0]) {
-                            if (single_instance.placeholders[0].origin) {
-                                var origin = single_instance.placeholders[0].origin;
-                            } else {
-                                continue;
-                            }
-                        } else {
-                            continue;
-                        }
-                    }
-
-
-                    var attributes = origin.split(" ");
-                    for (var x = 0; x < attributes.length; x++) {
-                        var attribute = attributes[x];
-                        var key_value_attribute = attribute.split("=");
-                        if (key_value_attribute[0] == "name") {
-                            if (key_value_attribute[1].includes("_") && key_value_attribute[1].includes(template_name + "_")) {
-                                declaration = false;
-                                break;
-                            } else if (key_value_attribute[1] == (template_name)) {
-                                declaration = false;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if (declaration) {
-                    if (arg_element == null) {
-                        logger.warning('No actual argument found for parameter ' + parameter_name + ' on instance ' + this.placeholder.definition.name);
-                    } else {
-                        dynamic_dom.remove_class(arg_element, 'argument');
-                        dynamic_dom.remove_class(parameter_element, 'parameter');
-                        dynamic_dom.remove_class(parameter_element, 'replace');
-                        dynamic_dom.move_element(arg_element, parameter_element, do_replace);
-                        // actual.push( param_element );
+                // Check if a parameter name was found.
+                if (parameter_name) {
+                    // Check if we have a match
+                    if (argument_name == parameter_name) {
+                        // Match, the argument and parameter will now be passed to 'move_element()'.
+                        var do_replace = dynamic_dom.has_class(parameter_element, 'replace');
+                        break;
                     }
                 }
             }
 
-        }, this
-    )
-    ;
-}
-;
+            // Log a error if there was no parameter found for the current argument.
+            if (!parameter_element) {
+                logger.error("No actual parameter found with the name: " + argument_name + " for template instance: " + parser_argument.class_name);
+            } else {
+                dynamic_dom.remove_class(argument_element, 'argument');
+                dynamic_dom.remove_class(parameter_element, 'parameter');
+                dynamic_dom.remove_class(parameter_element, 'replace');
+                dynamic_dom.move_element(argument_element, parameter_element, do_replace);
+                // actual.push( param_element );
+            }
+        }
+    }
+};
+
 
 dynamic_instance_class.trigger_component = function (element) {
     dynamic_app.vars.components.forEach(function trigger_components(component) {
@@ -1604,6 +1581,8 @@ dynamic_app.types.AppComponent.prototype.safe_element_listener = function (css_s
     return element;
 };
 
+// TODO Fix Callbacks
+
 dynamic_app.types.AppComponent.prototype.on_initialise = function (callback) {
     this.on_initialise_callback = callback;
 
@@ -1629,7 +1608,6 @@ dynamic_app.types.AppComponent.prototype.locate = function () {
 };
 
 dynamic_app.types.AppComponent.prototype.notify_when_visible = function (element) {
-
     if (typeof this.on_visible === "function" && this.element === null) {
         if (dynamic_utils.starts_with(this.selector, '.')) {
             if (dynamic_dom.has_class(element, this.selector.substring(1))) {
@@ -1643,7 +1621,6 @@ dynamic_app.types.AppComponent.prototype.notify_when_visible = function (element
         }
 
     }
-
     return this;
 };
 
