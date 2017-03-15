@@ -14,7 +14,7 @@ test('Utils API ', function (t) {
 	logger.module.configure(log_config);
 
 
-	var 
+	var
 		obj_a = { a:1, b:2, c:3 },
 		obj_b = { e:5, d:4, b:2 },
 		ar_a  = [ 'a', 'b', 'c' ],
@@ -63,6 +63,6 @@ test('Utils API ', function (t) {
 	t.deepEqual( ar_empty, [], "Difference between array itself = []");
 	t.deepEqual( obj_empty, {}, "Difference between object itself = {}");
 
-
 	t.end();
+
 });

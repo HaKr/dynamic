@@ -166,8 +166,9 @@ ClassNameParser.prototype.set_instance_multiple = function () {
 };
 
 ClassNameParser.prototype.set_child_reference = function () {
-    this.unknown_keyword_method = this.unknown_keyword_methods.set_dynamic_child_value;
     this.remove_class(this.dynamic_value_name_raw);
+    this.remove_class();
+    this.unknown_keyword_method = this.unknown_keyword_methods.set_dynamic_child_value;
 };
 
 
@@ -204,6 +205,7 @@ ClassNameParser.prototype.set_range_empty = function () {
 ClassNameParser.prototype.set_range_all = function () {
     this.range = this.negated ? api_keywords.template.range.empty : api_keywords.template.range.all;
     this.unknown_keyword_method = this.unknown_keyword_methods.default;
+    this.remove_class();
 };
 
 ClassNameParser.prototype.set_range_selected_index = function () {
@@ -254,6 +256,7 @@ ClassNameParser.prototype.set_sort_order = function () {
 };
 
 ClassNameParser.prototype.set_range_from_literal = function () {
+    this.remove_class();
     var literal = this.advance();
     this.remove_class();
     this.range = api_keywords.template.range.all.slice(0, 1) + literal + "," + literal + api_keywords.template.range.all.slice(-1);

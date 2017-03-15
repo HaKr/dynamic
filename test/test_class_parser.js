@@ -1,12 +1,12 @@
 
-var 
+var
 	logger_name = 'Dynamic Class Parser',
  	logger = require('../src/modules/browser_log').get_logger( logger_name ),
 	test = require('tape'),
 	ClassNameParser = require('../src/modules/dynamic_class_parser.js')
 ;
 
-logger.set_level( logger.module.Levels.DEBUG ); 
+logger.set_level( logger.module.Levels.DEBUG );
 
 function test_parser( s ){
 	var
@@ -18,7 +18,7 @@ function test_parser( s ){
 test('Class Parser API ', function (t) {
 	t.plan(20);
 
-	[ 
+	[
 		{s: "template please-select when no persons available", 				e: 'T=please-select; V=persons; R=<>; remaining: please-select persons'},
 		{s: "template explain when no persons available", 						e: 'T=explain; V=persons; R=<>; remaining: explain persons'},
 		{s: "template explain abc for search.person-list not selected", 		e: 'T=explain; V=search.person-list.$selected; R=<>; remaining: explain abc search.person-list' },
@@ -44,6 +44,6 @@ test('Class Parser API ', function (t) {
 		t.equals( test_parser( se.s ),se.e, se.s + ' ==> ' + se.e );
 	});
 
-
 	t.end();
+
 } );
