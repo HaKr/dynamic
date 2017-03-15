@@ -58,7 +58,7 @@ describe('Hello world basic', function(){
 });
 
 
-describe('Hello world wwith template', function(){
+describe('Hello world with template', function(){
 	const 
 		toe = new HelloWorldPage( 'file://'+__dirname+'/assets/html/hello_world_template.html' ),
 		theWorld = 'world',
