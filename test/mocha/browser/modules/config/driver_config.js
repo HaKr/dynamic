@@ -9,8 +9,8 @@ const
     webdriver = require('selenium-webdriver'),
     phantomjs = require('phantomjs'),
     browser = new webdriver.Builder()
-                    // .withCapabilities({'phantomjs.binary.path': phantomjs.path})
-                    .forBrowser('firefox')
+                    .withCapabilities({'phantomjs.binary.path': phantomjs.path})
+                    .forBrowser('phantomjs')
                     .build(),
     result = { browser: null, By: null, Until: null, Key: null, PromiseManager: null }
 ;
