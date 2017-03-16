@@ -5,7 +5,8 @@
   "main": "dynamic-server.js",
   "scripts": {
     "test": "./node_modules/tape/bin/tape test/*.js",
-    "test:browser": "./node_modules/mocha-phantomjs/bin/mocha-phantomjs -p ./node_modules/phantomjs/bin/phantomjs ./test/mocha/browser/assets/test_screenshot.html",
+//    "test:browser": "./node_modules/mocha-phantomjs/bin/mocha-phantomjs -p ./node_modules/phantomjs ./test/mocha/browser/assets/test_screenshot.html", //harry
+    "test:browser": "./node_modules/mocha-phantomjs/bin/mocha-phantomjs -p ./node_modules/phantomjs/bin/phantomjs ./test/mocha/browser/assets/test_screenshot.html", // casper
     "test:integration": "./node_modules/mocha/bin/mocha test/mocha/browser/test_hello_world.js",
     "watch:all": "parallelshell 'npm run watch:modules' 'npm run watch:components' 'npm run watch:www'",
     "livereload": "live-reload --port 9091 dist/",
