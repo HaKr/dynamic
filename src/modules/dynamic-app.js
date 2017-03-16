@@ -940,6 +940,8 @@ dynamic_instance_class.resolve_arguments = function (element) {
     var argument_element;
     var parameter_element;
 
+    var do_replace;
+
     // For each argument there'll be checked if there is a parameter with the same name in element.
     for (var i = 0; i < argument_elements.length; i++) {
         argument_element = argument_elements[i];
@@ -960,7 +962,7 @@ dynamic_instance_class.resolve_arguments = function (element) {
                     // Check if we have a match
                     if (argument_name == parameter_name) {
                         // Match, the argument and parameter will now be passed to 'move_element()'.
-                        var do_replace = dynamic_dom.has_class(parameter_element, 'replace');
+                        do_replace = dynamic_dom.has_class(parameter_element, 'replace');
                         break;
                     }
                 }

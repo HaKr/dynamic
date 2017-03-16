@@ -19,7 +19,7 @@
     "copy-shared": "cp -r dist/* /media/sf_eeg/dynamic/",
     "deploy-static": "npm run generate-bundle && npm run copy-static",
     "deploy-shared": "npm run generate-bundle && npm run copy-shared",
-    "ensure-folders": "mkdir -p dist/js && mkdir -p screenshots"
+    "ensure-folders": "mkdir -p screenshots && mkdir -p dist/js"
   },
   "repository": {
     "type": "git",
