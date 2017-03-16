@@ -244,11 +244,11 @@ dynamic_app.define_templates = function (template_element) {
                 }
             }
 
-            if ((typeof parser.dynamic_value_name !== "undefined" && parser.dynamic_value_name.length > 0) // Has dynamic value
-                || template_children_with_arguments.length > 0 // Has children with class '.argument'
-                || (typeof parser.extend_template_name !== "undefined" && parser.extend_template_name.length > 0 ) // Has a extending template
-                || parser.place_template // Has keyword 'place'
-                || (template_children.length == 0 && !parser.argument)) // Has no children and does not contain keyword 'argument'
+            if ((typeof parser.dynamic_value_name !== "undefined" && parser.dynamic_value_name.length > 0)  ||// Has dynamic value
+                template_children_with_arguments.length > 0 || // Has children with class '.argument'
+                (typeof parser.extend_template_name !== "undefined" && parser.extend_template_name.length > 0 ) || // Has a extending template
+                parser.place_template || // Has keyword 'place'
+                (template_children.length === 0 && !parser.argument)) // Has no children and does not contain keyword 'argument'
             {
 
                 range = parser.range;
@@ -259,7 +259,7 @@ dynamic_app.define_templates = function (template_element) {
                     // Creates comment in the DOM.
                     comment_node = document.createComment("<" + template_tag + " name=" + template_name + " dynamic-value=" + dynamic_value_name + " range=" + range + " multiple=" + multiple + " sort=" + sort_order + ">")
                     ;
-                if (parser.multiple == true && parser.dynamic_value_name.length < 1) {
+                if (parser.multiple === true && parser.dynamic_value_name.length < 1) {
                     logger.warning('For-each value is empty', template_element);
                 }
 
@@ -363,7 +363,7 @@ dynamic_placeholder.multiple_instance = function (dynamic_value) {
 
     }, this);
 
-    dynamic_value.mark_selected(new_instances)
+    dynamic_value.mark_selected(new_instances);
 
 };
 
@@ -1183,8 +1183,8 @@ FormControl.prototype.submit = function () {
         self.dynamic_value.instances.forEach(function (dv_instance) {
             dv_instance.child_nodes.forEach(function (node) {
                 dynamic_dom.add_class(node, 'to-be-replaced');
-            }, self)
-        }, self)
+            }, self);
+        }, self);
     }, 521);
 
     this.xhr.send(this.form_data);
@@ -1269,7 +1269,7 @@ FormControl.prototype.set_up = function () {
                 payload = payload.payload;
 
                 if (payload.hasOwnProperty(self.dynamic_value.reference)) {
-                    payload = payload[self.dynamic_value.reference]
+                    payload = payload[self.dynamic_value.reference];
                 }
             }
 
@@ -1283,7 +1283,7 @@ FormControl.prototype.set_up = function () {
             self.dynamic_value.instances.forEach(function (dv_instance) {
                 dv_instance.child_nodes.forEach(function (node) {
                     dynamic_dom.remove_class(node, 'to-be-replaced');
-                }, self)
+                }, self);
             }, self);
         } catch (err) {
             xhrlogger.error("Data parse error", err, self.xhr);
