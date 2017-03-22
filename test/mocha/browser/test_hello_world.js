@@ -1,4 +1,3 @@
-
 let 
 	chai = require('chai'),
 	expect = chai.expect,
@@ -12,9 +11,8 @@ function hello( who ){
 	return 'Hello '+who+'!';
 }
 
-
 describe('Hello world basic', function(){
-	const 
+	const
 		toe = new HelloWorldPage( 'file://'+__dirname+'/assets/html/hello_world_basic.html' ),
 		theWorld = 'world',
 		dieWelt = 'die Welt',
@@ -59,14 +57,13 @@ describe('Hello world basic', function(){
 
 
 describe('Hello world with template', function(){
-	const 
+	const
 		toe = new HelloWorldPage( 'file://'+__dirname+'/assets/html/hello_world_template.html' ),
-		theWorld = 'world',
 		dieWelt = 'die Welt',
 		laMonde = 'la Monde',
 		blank   = ''
 	;
-    
+
     this.timeout( 2500 );
     this.slow( 750 );
 
@@ -105,4 +102,3 @@ describe('Hello world with template', function(){
 	});
 
 });
-
