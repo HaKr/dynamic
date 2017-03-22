@@ -28,7 +28,6 @@ var
 	logger = require('./browser_log').get_logger(values_module.info.Name),
 	// selected_re=/(.+)\.@selected/g,
 	meta_indicator = '$',
-	formula_indicator = '=',
 	meta_selected_name = meta_indicator + 'selected',
 	meta_count_name = meta_indicator + 'count',
 	selected_reference_token = '@'
@@ -493,9 +492,9 @@ DynamicValue.prototype.update_from_child = function(child_value) {
 
 	if (this.parent !== null ){
 		this.parent.update_from_child( this );
-	} 
+	}
 
-	logger.debug( '---UFC '+this.name+' from '+ child_value.reference+' to '+ pp(this.content) )
+	logger.debug( '---UFC '+this.name+' from '+ child_value.reference+' to '+ pp(this.content) );
 
 	return this;
 };
@@ -504,7 +503,7 @@ function pp( complex ){
 	var result;
 
 	if ( dynamic_utils.is_null( complex ) ){
-		result = '«NIL»'
+		result = '«NIL»';
 	} else {
 		if (dynamic_utils.is_scalar( complex ) ){
 			result = complex.toString();
@@ -527,7 +526,7 @@ DynamicValue.prototype.update_from_attributes = function() {
 			attribute_value = this.content[value_key],
 			child_value = values_module.get_or_define(this.name + '.' + value_key);
 			child_value.set_value( attribute_value, true );
-			this.content[value_key] = attribute_value; // got perhaps cleared by a DEFINE::add_child 
+			this.content[value_key] = attribute_value; // got perhaps cleared by a DEFINE::add_child
 			this.children[child_value.reference] = child_value;
 	}, this);
 
@@ -557,7 +556,7 @@ DynamicValue.prototype.do_set_unassigned = function(){
 
 DynamicValue.prototype.do_set_scalar = function( newvalue ){
 	this.content = newvalue;
-};	
+};
 
 DynamicValue.prototype.do_set_list = function( newvalue ){
 	var
@@ -572,7 +571,7 @@ DynamicValue.prototype.do_set_list = function( newvalue ){
 
 
 var
-	type_setters = {}
+	type_setters = {};
 
 	type_setters[ value_types.unassigned ] = DynamicValue.prototype.do_set_unassigned;
 	type_setters[ value_types.scalar ] 		= DynamicValue.prototype.do_set_scalar;
@@ -622,7 +621,7 @@ DynamicValue.prototype.set_value = function( newvalue, skip_update_parent ) {
 	// || only_by_attributes
 	if (newvalue != oldvalue ) { // use type coercion if necessary
 		this.oldvalue = oldvalue;
-		
+
 		logger.info('> > > > > '+this.name + '::SetValue( '+JSON.stringify(newvalue).replace( /"([^"]+)"/g,'$1' ) +" )" );
 
 		this.do_set_value( newvalue, skip_update_parent );
@@ -631,7 +630,7 @@ DynamicValue.prototype.set_value = function( newvalue, skip_update_parent ) {
 
 		if ( !skip_update_parent && !this.suppress_parent_notifications ){
 			this.parent.update_from_child( this );
-		} 
+		}
 
 		logger.debug(' < < < < <'+this.name + '::SetValue( '+JSON.stringify(newvalue).replace( /"([^"]+)"/g,'$1' ) +" )" );
 	}
@@ -688,7 +687,7 @@ DynamicMetavalue.prototype.register_to_parent = function() {
 };
 
 DynamicMetavalue.prototype.set_up = function() {
-	
+
 	DynamicValue.prototype.set_up.call(this);
 
 	this.meta_reference = this.reference.substring(1);
@@ -723,8 +722,8 @@ function by_reference_updater( byref_dynamic_value ) {
 				intermediate.observe( "Double ref", function( delegated_value ){
 					byref_dynamic_value.delegate_value = delegated_value.get_final();
 					byref_dynamic_value.notify_observers( byref_dynamic_value.delegate_value );
-				})
-			} else { 
+				});
+			} else {
 				byref_dynamic_value.delegate_value = values_module.get_or_define(byref_dynamic_value.parent_ref + index_value.get_value() + byref_dynamic_value.child_ref);
 				byref_dynamic_value.notify_observers( byref_dynamic_value.delegate_value );
 			}
@@ -739,8 +738,8 @@ DynamicByReferenceValue.prototype.set_up = function() {
 	// TODO: multiple references, like persons.@.companies.@.name
 	var
 		selected_reference_re = new RegExp( selected_reference_token, 'g' ),
-		m = selected_reference_re.exec( this.name ),
-		self = this;
+		m = selected_reference_re.exec( this.name )
+	;
 
 	this.delegate_value = null;
 
