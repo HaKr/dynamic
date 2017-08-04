@@ -239,9 +239,9 @@ ClassNameParser.prototype.set_range_selected = function () {
 
 ClassNameParser.prototype.remove_class = function (class_name) {
     var class_name_to_remove = typeof class_name === "string" ? class_name : this.class_name;
-    if (class_name_to_remove != undefined) {
-        this.remove_names.push(class_name_to_remove)
-    }
+   //  if (class_name_to_remove != undefined) {
+        this.remove_names.push(class_name_to_remove);
+   //  }
 };
 
 ClassNameParser.prototype.set_sort = function () {
