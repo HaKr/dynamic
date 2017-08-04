@@ -16,10 +16,12 @@
     "watch:dist": "watch 'npm run copy-shared' dist",
     "generate-bundle": "npm run ensure-folders && browserify src/modules/*.js src/components/*.js --outfile dist/js/dynamic-app.js",
     "copy-static": "cp -r src/www/* dist/",
-    "copy-shared": "cp -r dist/* /media/sf_eeg/dynamic/",
+	 "copy-shared": "cp -r dist/* /media/sf_eeg/dynamic/",
+	 "copy-to-mct": "cp  dist/js/dynamic-app.js ${HOME}/work/eeg-mct/eeg-docker/static/js/",
     "deploy-static": "npm run generate-bundle && npm run copy-static",
     "deploy-shared": "npm run generate-bundle && npm run copy-shared",
-    "ensure-folders": "mkdir -p screenshots && mkdir -p dist/js"
+    "ensure-folders": "mkdir -p screenshots && mkdir -p dist/js",
+	 "deploy-to-mct": "npm run generate-bundle && npm run copy-to-mct"
   },
   "repository": {
     "type": "git",

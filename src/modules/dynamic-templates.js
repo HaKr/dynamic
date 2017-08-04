@@ -36,6 +36,7 @@ var templates_module = {
         DynamicTemplatePlaceholder: function (template_definition, anchor, origin) {
             this.definition = template_definition;
             this.instances = [];
+				this.observers = {};
             this.parent_instance = null;
             this.anchor = anchor;
             this.first = null;
@@ -172,7 +173,13 @@ function DynamicTemplatePlaceholder() {
 }
 
 DynamicTemplatePlaceholder.prototype.remove = function () {
+	logger.debug("Placeholder::remove " + this.definition.name +', '+Object.keys(this.observers).length);
     templates_module.vars.Placeholders.splice(templates_module.vars.Placeholders.indexOf(this), 1);
+	 Object.keys(this.observers).forEach(function unobserve_placeholder(observer_ref) {
+		  var observer = this.observers[observer_ref];
+		  observer.remove();
+	 }, this);
+	 this.observers = {};
 };
 
 DynamicTemplatePlaceholder.prototype.set_up = function () {
@@ -182,6 +189,15 @@ DynamicTemplatePlaceholder.prototype.set_up = function () {
     }
 
     this.empty();
+};
+
+DynamicTemplatePlaceholder.prototype.add_observer = function (observer) {
+	logger.debug( "Placeholder::AddObserver for "+this.definition.name+' to '+ this.dynamic_value.name );
+	if (this.observers.hasOwnProperty(observer.reference)) {
+		 logger.error('Instance redefines observer ' + observer.reference, this);
+	} else {
+		 this.observers[observer.reference] = observer;
+	}
 };
 
 DynamicTemplatePlaceholder.prototype.add_value = function (dynamic_value) {
@@ -456,18 +472,22 @@ DynamicTemplateInstance.prototype.build = function () {
 
     if (this.placeholder !== null) {
 
-        var value_name;
+        var
+		  	value_name = (typeof this.dynamic_value === "object" && this.dynamic_value !== null) ? this.dynamic_value.name.replace(/\./g, '-') : '',
+			value_for = value_name.length <1 ? '' : (' for ' + value_name);
+
+
+		  logger.debug('> DynamicTemplateInstance::build '+  this.placeholder.definition.name + value_for + ' - '+this.child_nodes[0].tagName );
 
         this.first = dynamic_dom.insert_text_before(this.anchor, '\n');
 
         htmlcomment_logger.debug(function () {
-            value_name = (typeof this.dynamic_value === "object" && this.dynamic_value !== null) ? (' for ' + this.dynamic_value.name) : '';
-            this.instance_first = dynamic_dom.insert_comment_before(this.anchor, 'Start instance ' + this.placeholder.definition.name + value_name);
+            this.instance_first = dynamic_dom.insert_comment_before(this.anchor, 'Start instance ' + this.placeholder.definition.name + value_for);
         }, this);
 
         this.child_nodes.forEach(function (child_node) {
             if (typeof this.dynamic_value === "object" && this.dynamic_value !== null) {
-                dynamic_dom.add_class(child_node, this.dynamic_value.name.replace('.', '-'));
+                dynamic_dom.add_class(child_node, value_name);
             }
             this.anchor.parentNode.insertBefore(child_node, this.anchor);
         }, this);
@@ -477,10 +497,14 @@ DynamicTemplateInstance.prototype.build = function () {
         }, this);
 
         this.last = dynamic_dom.insert_text_before(this.anchor, '\n');
+
+		  logger.debug('< DynamicTemplateInstance::build '+  this.placeholder.definition.name + value_for );
     }
 };
 
 DynamicTemplateInstance.prototype.remove = function () {
+
+	logger.debug('> DynamicTemplateInstance::remove '+  this.placeholder.definition.name + ' - '+this.child_nodes[0].tagName  );
 
     var children = dynamic_utils.list_duplicate(this.child_instances.reverse());
 
@@ -527,6 +551,7 @@ DynamicTemplateInstance.prototype.remove = function () {
         this.parent_instance.remove_child_instance(this);
     }
 
+	 logger.debug('< DynamicTemplateInstance::remove '+  this.placeholder.definition.name  );
 };
 
 DynamicTemplateInstance.prototype.get_nodes = function () {

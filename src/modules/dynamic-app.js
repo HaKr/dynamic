@@ -25,7 +25,8 @@ var
     api_keywords = require('./dynamic-api_keywords.js'),
     dynamic_dom = require('./dynamic-dom.js'),
     dynamic_utils = require('./dynamic-utils'),
-    values_module = require('./dynamic-values.js'),
+    dynamic_values = require('./dynamic-values.js'),
+	 dynamic_websocket = require('./dynamic-websocket'),
     templates_module = require('./dynamic-templates.js'),
     observer_module = require('./dynamic-observers.js'),
     formula_module = require('./dynamic-formulas.js'),
@@ -83,10 +84,10 @@ dynamic_app.run = function () {
     metalogger.debug(function () {
         var
             old_instances_info = {};
-        dynamic_app.debug_templates = values_module.get_or_define('debug.template_count');
-        dynamic_app.debug_placeholders = values_module.get_or_define('debug.placeholder_count');
-        dynamic_app.debug_instances = values_module.get_or_define('debug.instance_count');
-        dynamic_app.debug_observers = values_module.get_or_define('debug.observer_count');
+        dynamic_app.debug_templates = dynamic_values.get_or_define('debug.template_count');
+        dynamic_app.debug_placeholders = dynamic_values.get_or_define('debug.placeholder_count');
+        dynamic_app.debug_instances = dynamic_values.get_or_define('debug.instance_count');
+        dynamic_app.debug_observers = dynamic_values.get_or_define('debug.observer_count');
 
         dynamic_app.update_meta_info = function () {
             var
@@ -99,7 +100,7 @@ dynamic_app.run = function () {
             dynamic_app.debug_templates.set_value(Object.keys(templates_module.vars.Definitions).length);
             dynamic_app.debug_placeholders.set_value(Object.keys(templates_module.vars.Placeholders).length);
             dynamic_app.debug_instances.set_value(Object.keys(templates_module.vars.Instances).length);
-            dynamic_app.debug_observers.set_value(Object.keys(values_module.vars.observers).length);
+            dynamic_app.debug_observers.set_value(Object.keys(dynamic_values.vars.observers).length);
 
             Object.keys(templates_module.vars.Instances).forEach(function (ik) {
                 var
@@ -147,11 +148,17 @@ dynamic_app.run = function () {
         component.initialise();
     });
 
-    values_module.enhance(dynamic_value_class);
+    dynamic_values.enhance(dynamic_value_class);
 
     dynamic_app.vars.main_instance = templates_module.create_instance(document.body);
     dynamic_app.vars.main_instance.enhance(dynamic_instance_class);
     dynamic_app.vars.main_instance.get_values_and_templates();
+
+	 dynamic_app.channel_name = dynamic_values.get_by_name('app.use_channel');
+	 logger.info("Channel name", dynamic_app.channel_name);
+	 if (dynamic_app.channel_name !== null){
+	 	dynamic_app.channel = dynamic_websocket.open_channel( dynamic_app.channel_name.value );
+	}
 
     dynamic_app.vars.components.forEach(function notify_component_start(component) {
         component.started();
@@ -349,6 +356,7 @@ dynamic_placeholder.multiple_instance = function (dynamic_value) {
 
         });
     }
+	 logger.debug( '> Placeholder::Multiple '+ this.definition.name );
     this.empty();
 
     var
@@ -364,6 +372,7 @@ dynamic_placeholder.multiple_instance = function (dynamic_value) {
     }, this);
 
     dynamic_value.mark_selected(new_instances);
+	 logger.debug( '< Placeholder::Multiple '+ this.definition.name );
 
 };
 
@@ -509,7 +518,7 @@ dynamic_value_class.can_swap = function (offset) {
 
 function select_dynamic_value() {
     var
-        dynamic_value = values_module.get_by_name(this.dataset.dynamicValue);
+        dynamic_value = dynamic_values.get_by_name(dynamic_dom.set_dataset_value( this, 'dynamicValue'));
 
     dynamic_value.parent.metavalues.selected.set_value(dynamic_value.reference);
 }
@@ -517,11 +526,11 @@ function select_dynamic_value() {
 dynamic_value_class.mark_selected = function (specific_instances) {
     if (this.parent !== null) {
         var
-            selected_reference = this.parent.metainfo.selected;
+            selected_reference = this.metainfo.selected;
 
-        this.parent.get_children().forEach(function (child_value) {
+        this.get_children().forEach(function (child_value) {
             var
-                is_selected = child_value.reference === selected_reference,
+                is_selected = child_value.reference == selected_reference,
                 instances = typeof specific_instances === "object" ? specific_instances : child_value.get_instances()
                 ;
 
@@ -531,7 +540,7 @@ dynamic_value_class.mark_selected = function (specific_instances) {
                     ;
 
                 element_node.removeEventListener('click', select_dynamic_value);
-                element_node.dataset.dynamicValue = child_value.name;
+					 dynamic_dom.set_dataset_value( element_node, 'dynamicValue', child_instance.dynamic_value.name );
 
                 if (is_selected) {
                     dynamic_dom.add_class(element_node, 'is-selected');
@@ -607,11 +616,13 @@ dynamic_instance_class.get_values_and_templates = function () {
         has_value = this.dynamic_value !== null || this === dynamic_app.vars.main_instance;
 
     this.child_nodes.forEach(function (node) {
+		 if (has_value) {
+			  this.get_values(node);
+		 }
         this.get_templates(node);
         if (has_value) {
             this.bind_textnodes(node);
             this.bind_attributes(node);
-            this.get_values(node);
         }
         this.resolve_arguments(node);
         this.trigger_component(node);
@@ -737,25 +748,39 @@ dynamic_instance_class.get_templates = function (node) {
 
         template_placeholder.dynamic_value = attributes.dynamic_value.length > 0 ? this.get_dynamic_value(attributes.dynamic_value) : null;
 
-        if (template_placeholder.dynamic_value !== null) {
-            this.add_observer(
-                template_placeholder.dynamic_value.observe('placeholder_' + template_placeholder.definition.name, function change_placeholder(trigger_value) {
-                    // if (template_placeholder.dynamic_value !== trigger_value ||  template_placeholder.dynamic_value.get_value() !== trigger_value.get_value() ){
-                    // template_placeholder.dynamic_value = trigger_value;
-                    template_placeholder.on_value_changed(trigger_value);
-                    // }
-                }, template_placeholder)
-            );
+        if (template_placeholder.dynamic_value !== null ) {
+			  if ( template_placeholder.dynamic_value.state !== dynamic_values.STATE.NOTIFY ){
+				  logger.debug( 'Placeholder::AddObserver for '+ template_placeholder.definition.name+' on '+template_placeholder.dynamic_value.name + ' because '  + template_placeholder.dynamic_value.state );
+	            template_placeholder.add_observer(
+	                template_placeholder.dynamic_value.observe('placeholder_' + template_placeholder.definition.name, function change_placeholder(trigger_value) {
+	                    // if (template_placeholder.dynamic_value !== trigger_value ||  template_placeholder.dynamic_value.get_value() !== trigger_value.get_value() ){
+	                    // template_placeholder.dynamic_value = trigger_value;
+							  logger.debug( 'Placeholder::ValueChanged '+ template_placeholder.definition.name+' on '+trigger_value.name );
+	                    template_placeholder.on_value_changed(trigger_value);
+	                    // }
+	                }, template_placeholder)
+	            );
+				} else {
+					logger.debug( 'Placeholder::AddObserver skipped for '+ template_placeholder.definition.name+' on '+template_placeholder.dynamic_value.name  );
+				}
 
             var delegated_value = template_placeholder.dynamic_value.get_final();
 
-            if (template_placeholder.range.includes(delegated_value)) {
+// 			This was added for a reason, but could also trigger a second instantiation
+            if (delegated_value.state === dynamic_values.STATE.ASSIGNED || delegated_value.state === dynamic_values.STATE.NOTIFY ) {
+					if (template_placeholder.range.includes(delegated_value)){
                 logger.debug('Instance(s) of ' + template_placeholder.definition.name + ' for ' + template_placeholder.dynamic_value.name + '[' + template_placeholder.dynamic_value.get_final().name + ']');
                 template_placeholder.on_value_changed(template_placeholder.dynamic_value);
-            }
+				 } else {
+					 logger.debug('No nstance(s) of ' + template_placeholder.definition.name + ' for ' + template_placeholder.dynamic_value.name +' , because of ', template_placeholder.range );
+				 }
+            } else {
+					logger.debug( 'Placeholder::AddInstance skipped for '+ template_placeholder.definition.name+' on '+delegated_value.name + ' because '  + delegated_value.state );
+					// + '('+tr')'
+				}
 
             if (delegated_value !== template_placeholder.dynamic_value) {
-                this.add_observer(
+                template_placeholder.add_observer(
                     delegated_value.observe('placeholder_delegated' + template_placeholder.definition.name, function change_placeholder(trigger_value) {
                         // if (template_placeholder.dynamic_value !== trigger_value ||  template_placeholder.dynamic_value.get_value() !== trigger_value.get_value() ){
                         // logger.debug( trigger_value.name+'('+(typeof template_placeholder.dynamic_value === "undefined"?'NIL':template_placeholder.dynamic_value.name)+') ==> instance(s) of ' + template_placeholder.definition.name );
@@ -823,28 +848,19 @@ dynamic_instance_class.get_values = function (node) {
         }
 
         tag_elements.forEach(function (tag_element) {
-            if (typeof tag_element.dataset !== "object") {
-                tag_element.dataset = {};
-            }
-            if (tag_element.name.length > 0) {
-                if (tag_element.dataset.hasOwnProperty('dynamicValue')) {
-                    logger.warning('element already has a value', tag_element.dataset.dynamicValue, tag_element);
-                } else {
-                    this.define_control(tag_element, control_tags[control_tag]);
-                }
-            }
+				if (dynamic_dom.has_dataset_value( tag_element, 'dynamicValue' ) ){
+					logger.warning('element already has a value', dynamic_dom.get_dataset_value( tag_element, 'dynamicValue' ), tag_element);
+				} else {
+					this.define_control(tag_element, control_tags[control_tag]);
+				}
         }, this);
     }, this);
 
     var buttons = dynamic_dom.get_elements(node, 'button.dynamic-value');
     buttons.forEach(function link_button(btn) {
-        if (typeof btn.dataset !== "object") {
-            btn.dataset = {};
-        }
-
-        if (!btn.dataset.hasOwnProperty('dynamicValue')) {
+        if (! dynamic_dom.has_dataset_value( btn, 'dynamicValue' )) {
             var dv = this.dynamic_value;
-            btn.dataset.dynamicValue = dv.name;
+				dynamic_dom.set_dataset_value( btn, 'dynamicValue', dv.name );
 
             Object.keys(button_commands).forEach(function (command_name) {
                 if (btn.className.indexOf(command_name) >= 0) {
@@ -902,7 +918,7 @@ dynamic_instance_class.get_dynamic_value = function get_dynamic_value_for_instan
             }
         }
         if (result === null) {
-            result = values_module.get_or_define(value_name);
+            result = dynamic_values.get_or_define(value_name);
         }
     }
 
@@ -1146,11 +1162,12 @@ AppControl$base.prototype.create = function (element, template_instance) {
     this.element = element;
     this.instance = template_instance;
     this.value_name = this.element.name;
+	 this.xhr = null;
 
     this.dynamic_value = this.instance.get_dynamic_value(this.value_name);
     this.unset_value = null;
     this.element.name = this.dynamic_value.bracket_notation;
-    this.element.dataset.dynamicValue = this.dynamic_value.name;
+	 dynamic_dom.set_dataset_value( this.element, 'dynamicValue', this.dynamic_value.name );
 
     this.set_up();
 };
@@ -1161,8 +1178,13 @@ AppControl$base.prototype.remove = function () {
     this.dynamic_value = null;
 
     if (this.element !== null) {
-        delete this.element.dataset.dynamicValue;
+		 dynamic_dom.set_dataset_value( this.element, 'dynamicValue', null );
     }
+};
+
+AppControl$base.prototype.make_remote = function () {
+
+	this.xhr = new XMLHttpRequest();
 };
 
 function FormControl(form_element, template_instance) {
@@ -1182,11 +1204,13 @@ FormControl.prototype.submit = function () {
 
     this.visual_feedback_id = window.setTimeout(function () {
         self.visual_feedback_id = 0;
-        self.dynamic_value.instances.forEach(function (dv_instance) {
-            dv_instance.child_nodes.forEach(function (node) {
-                dynamic_dom.add_class(node, 'to-be-replaced');
-            }, self);
-        }, self);
+		  if (typeof self.dynamic_value.instances === "object" && typeof self.dynamic_value.instances.forEach === "function" ){
+	        self.dynamic_value.instances.forEach(function (dv_instance) {
+	            dv_instance.child_nodes.forEach(function (node) {
+	                dynamic_dom.add_class(node, 'to-be-replaced');
+	            }, self);
+	        }, self);
+		  }
     }, 521);
 
     this.xhr.send(this.form_data);
@@ -1227,7 +1251,7 @@ function check_form_complete(form_control) {
 FormControl.prototype.set_up = function () {
     var self = this;
 
-    this.xhr = new XMLHttpRequest();
+	 this.make_remote();
 
     this.dynamic_values = this.instance.get_control_observer_values(this.element);
 
@@ -1281,12 +1305,14 @@ FormControl.prototype.set_up = function () {
                 window.clearTimeout(self.visual_feedback_id);
                 self.visual_feedback_id = 0;
             }
+				if (typeof self.dynamic_value.instances === "object" && typeof self.dynamic_value.instances.forEach === "function" ){
 
-            self.dynamic_value.instances.forEach(function (dv_instance) {
-                dv_instance.child_nodes.forEach(function (node) {
-                    dynamic_dom.remove_class(node, 'to-be-replaced');
-                }, self);
-            }, self);
+	            self.dynamic_value.instances.forEach(function (dv_instance) {
+	                dv_instance.child_nodes.forEach(function (node) {
+	                    dynamic_dom.remove_class(node, 'to-be-replaced');
+	                }, self);
+	            }, self);
+				}
         } catch (err) {
             xhrlogger.error("Data parse error", err, self.xhr);
         }
@@ -1328,7 +1354,11 @@ AppControl.prototype.update_by_value = function (dynamic_value) {
 
         if (this.element.value !== dv_text) {
             // logger.debug('update control value from dynamic value', this);
-            this.element.value = dynamic_value.get_value();
+				if (this.element.type==="checkbox"){
+					this.element.checked = dv_text === this.element.value;
+				} else {
+            	this.element.value = dynamic_value.get_value();
+				}
             this.element.dispatchEvent(change_by_value);
         }
     }
@@ -1351,17 +1381,24 @@ AppControl.prototype.update_value = function () {
     var
         control_value = this.element.value;
 
-    if (typeof this.element.options === "object") {
-        if (this.element.options[this.element.selectedIndex].disabled) {
-            control_value = "";
-        }
-    }
+	 if (this.element.type === "checkbox" || this.element.type === "radio"){
+		 if (!this.element.checked){
+			 control_value='';
+		 }
+	 } else {
+
+	    if (typeof this.element.options === "object") {
+	        if (this.element.options[this.element.selectedIndex].disabled) {
+	            control_value = "";
+	        }
+	    }
+	 }
     logger.debug('>>>>> update value "' + this.dynamic_value.name + '" from control "' + control_value + '"', this);
 
     this.dynamic_value.set_value(control_value);
-    metalogger.debug(function () {
-        dynamic_app.update_meta_info();
-    });
+   //  metalogger.debug(function () {
+   //      dynamic_app.update_meta_info();
+   //  });
 
     if (typeof this.element.options === "object") {
         this.dynamic_value.mark_selected();
@@ -1462,13 +1499,22 @@ AppControl.prototype.set_up = function () {
             remove: true
         }),
         self = this;
+// 	 dynamic_dom.set_dataset_value( this.element, 'dynamicValue', this.dynamic_value.name );
 
-    if (this.element.value !== "" && this.dynamic_value.is_empty()) {
-        self.update_value();
-    } else {
-        self.update_by_value(this.dynamic_value);
-    }
+	 	if ( dynamic_dom.has_dataset_value( this.element, 'get' ) ||
+	 		dynamic_dom.has_dataset_value( this.element, 'set' ) ){
+			this.make_remote();
+		}
 
+		if ( dynamic_dom.has_dataset_value( this.element, 'get' ) ){
+
+		} else {
+		 if (this.element.value !== "" && this.dynamic_value.is_empty()) {
+		     self.update_value();
+		 } else {
+		     self.update_by_value(this.dynamic_value);
+		 }
+	 	}
     if (unsetter.length > 0) {
         this.unset_value = this.instance.get_dynamic_value(unsetter);
     }

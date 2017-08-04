@@ -5,16 +5,19 @@
     <meta charset="utf-8">
     <link rel="stylesheet" href="../../../../node_modules/mocha/mocha.css" />
     <link rel="stylesheet" media="all" href="../../../../src/www/css/dynamic-app.css">
+
+	 <script src="https://raw.githubusercontent.com/socketio/socket.io-client/master/dist/socket.io.slim.js"></script>
+
     <script src="../../../../dist/js/dynamic-app.js"></script>
 
   </head>
   <body>
-  
+
     <div class=TOE>
       <label>Please enter your name:
         <input name=addressee value=world>
       </label>
-      
+
       <p class=salutation>Hello {{addressee}}!
     </div>
 
@@ -24,7 +27,7 @@
     <script src="../../../../node_modules/mocha/mocha.js"></script>
     <script src="../../../../node_modules/chai/chai.js"></script>
     <script>
-      mocha.ui('bdd'); 
+      mocha.ui('bdd');
       mocha.reporter('html');
       expect = chai.expect;
     </script>

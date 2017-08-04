@@ -1,10 +1,10 @@
-var 
+var
 	logger_name = 'test_utilities',
  	logger = require('../src/modules/browser_log').get_logger( logger_name ),
 	test = require('tape'),
 	utils = require('../src/modules/dynamic-utils.js')
 	;
- 
+
 test('Utils API ', function (t) {
 
 	var log_config = {};
@@ -62,6 +62,12 @@ test('Utils API ', function (t) {
 
 	t.deepEqual( ar_empty, [], "Difference between array itself = []");
 	t.deepEqual( obj_empty, {}, "Difference between object itself = {}");
+
+	t.equal( utils.CamelCase2HtmlID('dynamicValue'), 'dynamic-value', 'HTML id of dynamicValue is dynamic-value');
+	t.equal( utils.CamelCase2HtmlID('get'), 'get', 'HTML id of get is get');
+	t.equal( utils.CamelCase2HtmlID('DynamicValueObserver'), 'dynamic-value-observer', 'HTML id of dynamicValueObserver is dynamic-value-observer');
+	t.equal( utils.CamelCase2HtmlID('data-ValueObserver'), 'data-value-observer', 'HTML id of data-ValueObserver is data-value-observer (mind the single hyphens)');
+
 
 	t.end();
 

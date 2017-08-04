@@ -10,7 +10,7 @@ var
 
 
 logger.module.set_default_level(logger.module.Levels.WARNING);
-test('Basic Values API ', function (t) {
+test('Basic Values API: simple calculus only, no real math with () and */ before +-', function (t) {
 
     values_module.reset_for_test();
 

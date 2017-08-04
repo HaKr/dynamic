@@ -28,7 +28,7 @@ dynamic_utils.CamelCase2HtmlID = function(camelcase, separator) {
 	}
 	return camelcase.replace(CAPITALMATCHER, function(m, letter) {
 		return separator + letter.toLowerCase();
-	}).substring(1);
+	}).replace(/--/g,'-').replace(/^-/,'');
 };
 
 dynamic_utils.collect = function(regex, text, on_match) {
@@ -121,7 +121,7 @@ dynamic_utils.is_scalar = function(val) {
 
 dynamic_utils.array_duplicate = function( ar, recurse ) {
 	if (typeof recurse !== "boolean"){
-		recurse = false
+		recurse = false;
 	}
 
 	var

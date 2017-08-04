@@ -258,7 +258,10 @@ ClassNameParser.prototype.set_sort_order = function () {
 ClassNameParser.prototype.set_range_from_literal = function () {
     this.remove_class();
     var literal = this.advance();
-    this.remove_class();
+// test class parser cases 10 and 21,22
+	 if (literal.match(/^\d+$/)){
+		  this.remove_class();
+	 }
     this.range = api_keywords.template.range.all.slice(0, 1) + literal + "," + literal + api_keywords.template.range.all.slice(-1);
 };
 

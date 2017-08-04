@@ -1,11 +1,11 @@
-var 
+var
 	logger_name = 'Dynamic Values test',
  	logger = require('../src/modules/browser_log').get_logger( logger_name ),
 	test = require('tape'),
 	utils_module = require('../src/modules/dynamic-utils.js'),
 	values_module = require('../src/modules/dynamic-values.js'),
 	values_logger = logger.module.get_logger( values_module.info.Name ),
-	test_persons 
+	test_persons
 	;
 
 var
@@ -14,12 +14,12 @@ var
 ;
 
 
-logger.module.set_default_level( logger.module.Levels.WARNING );
+logger.module.set_default_level( logger.module.Levels.DEBUG );
 test('Basic Values API ', function (t) {
 
 	values_module.reset_for_test();
 
-	var 
+	var
 		reference_alt1 = 'displaygroups.@.grouplabel.@.setlabel.@.css_class',
 		reference_alt2 = 'displaygroups[@][grouplabel][@][setlabel][@][css_class]',
 		reference_alt3 = 'displaygroups.@.grouplabel.[@][setlabel][@][css_class]',
@@ -27,9 +27,9 @@ test('Basic Values API ', function (t) {
 		modifier = 'modifier',
 		modify_count = 0
 		;
-			
 
-	var 
+
+	var
 		rp1 = values_module.reference_parser( reference_alt1 ),
 		rp2 = values_module.reference_parser( reference_alt2 ),
 		rp3 = values_module.reference_parser( reference_alt3 )
@@ -91,17 +91,17 @@ test('Dynamic values in depth', function ( testcase ) {
 
 	logger.set_level( logger.module.Levels.DEBUG );
 
-	var 
+	var
 		schroedingers_experiment = function( value_name, value_value ){
 			var
 				alive_cat = function(){
 					return values_module.get_or_define( value_name );
 				},
 				quantum_state = function( test_value, examination_state ){
-					var 
+					var
 						check_contents = test_value.get_value()
 					;
-					
+
 					testcase.deepEquals( check_contents, value_value, examination_state+': Set value '+value_name+ " 1:1 = "+pp( check_contents ) );
 
 					templates_forEach( function( dynamic_value, expected ){
@@ -136,7 +136,7 @@ test('Dynamic values in depth', function ( testcase ) {
 					evil_device.call();
 					quantum_state.call( null, cat, 'OPEN' );
 
-					testcase.deepEquals( monitor.notification_sequence, expected_notification_sequence, 'All notifications in correct order '+pp( monitor.notification_sequence ) );
+					testcase.deepEquals( monitor.notification_sequence, expected_notification_sequence, 'All notifications in correct order '+pp( expected_notification_sequence )+' vs '+pp( monitor.notification_sequence ) );
 				},
 				steel_chamber = function( state, cat, evil_device ){
 					values_module.reset_for_test();
@@ -150,11 +150,11 @@ test('Dynamic values in depth', function ( testcase ) {
 		}
 	;
 
-	schroedingers_experiment( 'A', 				template_value.A );
-	schroedingers_experiment( 'A.B', 			template_value.A.B );
+	// schroedingers_experiment( 'A', 				template_value.A );
+	// schroedingers_experiment( 'A.B', 			template_value.A.B );
 	schroedingers_experiment( 'A.B.C', 			template_value.A.B.C );
-	schroedingers_experiment( 'A.B.C.D', 		template_value.A.B.C.D );
-	schroedingers_experiment( 'A.B.C.D.E', 		template_value.A.B.C.D.E );
+	// schroedingers_experiment( 'A.B.C.D', 		template_value.A.B.C.D );
+	// schroedingers_experiment( 'A.B.C.D.E', 		template_value.A.B.C.D.E );
 
 	testcase.end();
 });
@@ -199,11 +199,11 @@ test('Dynamic values in action', function (t) {
 
 	dv_person_current.observe( 'person_current', function( dv ){
 		t.equals( dv.get_value(), person_list.person_5, 'Fifth person selected (1-3).' );
-	})
+	});
 
 	dv_persons_selected.set_value( 'person_5' );
-	t.equals( dv_person_current.get_final().get_value()['company']['address']['city'], person_list.person_5.company.address.city, "Fifth person selected (2-3)." );
-	t.equals( dv_person_current.get_final().get_value()['company']['address']['city'], dv_person_five_company_city.get_value(), "Fifth person selected (3-3)." );
+	t.equals( dv_person_current.get_final().get_value().company.address.city, person_list.person_5.company.address.city, "Fifth person selected (2-3)." );
+	t.equals( dv_person_current.get_final().get_value().company.address.city, dv_person_five_company_city.get_value(), "Fifth person selected (3-3)." );
 
 	t.end();
 });
@@ -255,7 +255,7 @@ test('Dynamic values: manipulate one value over and over again', function ( test
 	values.F.value = null;
 	testcase.deepEquals( monitor.notification_sequence, ['F','D.$count','D','C','B','A'], 'all gone' );
 
-	testcase.deepEquals( template_value, {A:{}}, 'original value has been cleared too')
+	testcase.deepEquals( template_value, {A:{}}, 'original value has been cleared too');
 	testcase.end();
 
 	template_value = utils_module.list_duplicate( rescued_template,true );
@@ -269,9 +269,9 @@ function pp( complex ){
 function templates_forEach( per_template_action, this_arg ){
 	var expectations = utils_module.list_duplicate( template_value, true );
 
-	for ( 
-			var val_index=0, val_name=references[val_index], expected=expectations[references[val_index]]; 
-			val_index<references.length; 
+	for (
+			var val_index=0, val_name=references[val_index], expected=expectations[references[val_index]];
+			val_index<references.length;
 			val_index++, val_name += '.'+references[val_index], expected=expected[references[val_index]]   ){
 
 		per_template_action.call( this_arg, values_module.get_or_define( val_name ), expected, val_index );

@@ -117,6 +117,40 @@ values_module.get_or_define = function(value_name) {
 };
 
 var
+	set_one_value_by_name = function( val_name, val_value ){
+		var v = values_module.get_or_define( val_name );
+		if (v !== null){
+			v.set_value( val_value );
+		}
+	},
+	add_to_value_by_name = function( val_name, val_value ){
+		var v = values_module.get_by_name( val_name );
+		if (v !== null){
+			logger.error( "DynamicValue::add_value Not yet implemented!");
+		}
+	},
+	modify_multiple_values = function ( worker, complex ){
+		if (arguments.length > 2){
+			for (var argi= 1; argi< arguments.length-1; argi += 2){
+				worker.call( null, arguments[argi], arguments[argi+1] );
+			}
+		} else {
+			Object.keys(complex).forEach( function(val_name){
+				worker.call( null, val_name, complex[val_name] );
+			});
+		}
+	}
+;
+
+values_module.set_values_by_name = function(){
+	modify_multiple_values.apply( null, Array.prototype.concat.apply( [set_one_value_by_name], arguments ) );
+};
+
+values_module.add_values_by_name = function(){
+	modify_multiple_values.apply( null, Array.prototype.concat.apply( [set_one_value_by_name], arguments ) );
+};
+
+var
 	value_types = {
 		unassigned: 0,
 		scalar: 1,
@@ -136,6 +170,7 @@ DynamicValue.prototype.create = function(name) {
 	this.metavalues = {};
 	this.metainfo = {};
 	this.suppress_parent_notifications = false;
+	this.state = values_module.STATE.DEFFINED;
 
 	var self = this;
 
@@ -156,6 +191,11 @@ DynamicValue.prototype.create = function(name) {
 		}
 	});
 	Object.defineProperties(this.metainfo, {
+		'value': {
+			get: function() {
+				return self.content;
+			}
+		},
 		'reference': {
 			get: function() {
 				return self.reference;
@@ -203,7 +243,7 @@ DynamicValue.prototype.get_dynamic_value = function get_dynamic_value_for_value(
 			parent_value = this.parent === null ? this.get_final().parent : this.parent;
 			value_name = value_name.substring(1);
 		} else {
-			if (Object.keys(this.children).length < 1) {
+			if (Object.keys(this.children).length < 1 && !dynamic_utils.starts_with(value_name, '.$')) {
 				parent_value = this.parent === null ? this.get_final().parent : this.parent;
 			}
 		}
@@ -329,7 +369,8 @@ DynamicValue.prototype.set_up = function() {
 	parent_ref = parts.slice(0, -1).join('.');
 	if (parent_ref.length > 0) {
 		this.parent = values_module.get_or_define(parent_ref);
-		// this.register_to_parent();
+		// why on earth was this vvv disabled
+		this.register_to_parent();
 	}
 };
 
@@ -548,6 +589,9 @@ DynamicValue.prototype.set_metainfo = function(child_value, newvalue) {
 	}
 
 	this.metainfo[child_reference] = newvalue;
+	if (child_reference === "selected" && typeof this.mark_selected === "function" ){
+		this.mark_selected();
+	}
 };
 
 DynamicValue.prototype.do_set_unassigned = function(){
@@ -597,12 +641,15 @@ DynamicValue.prototype.notify_observers = function(dynamic_value) {
 		dynamic_value = this;
 	}
 
-	var current_observers = dynamic_utils.list_duplicate( this.observers );
+	var current_observers = this.observers; //dynamic_utils.list_duplicate( this.observers );
 
-	logger.info( '+ + + '+ this.name+' notification' );
+	logger.info( '+ + + '+ this.name+' notification '+current_observers.length + ', '+this.observers.length  );
 	for (var li = 0; li < current_observers.length; li++) {
 		var observer = current_observers[li];
+		logger.debug( '+ + + + '+ this.name+' notification '+li+', '+current_observers.length + ', '+this.observers.length  );
 		observer.callback(dynamic_value);
+		logger.debug( '- - - - '+ this.name+' notification '+li+', '+current_observers.length + ', '+this.observers.length  );
+
 	}
 	logger.debug( ' - - -'+this.name+' notification' );
 
@@ -621,20 +668,25 @@ DynamicValue.prototype.set_value = function( newvalue, skip_update_parent ) {
 	// || only_by_attributes
 	if (newvalue != oldvalue ) { // use type coercion if necessary
 		this.oldvalue = oldvalue;
+		var v=JSON.stringify(newvalue).replace( /"([^"]+)"/g,'$1' ).substring(0,25);
+		logger.debug('> DynamicValue::SetValue( '+this.name + ', ' + v +" )" );
 
-		logger.info('> > > > > '+this.name + '::SetValue( '+JSON.stringify(newvalue).replace( /"([^"]+)"/g,'$1' ) +" )" );
-
+		this.state = values_module.STATE.MODIFY;
 		this.do_set_value( newvalue, skip_update_parent );
 
+		this.state = values_module.STATE.NOTIFY;
 		this.notify_observers();
 
 		if ( !skip_update_parent && !this.suppress_parent_notifications ){
 			this.parent.update_from_child( this );
+		} else {
+			logger.debug( 'DynamicValue::UpdateFromChild skipped: '+skip_update_parent +', '+ this.suppress_parent_notifications);
 		}
 
-		logger.debug(' < < < < <'+this.name + '::SetValue( '+JSON.stringify(newvalue).replace( /"([^"]+)"/g,'$1' ) +" )" );
+		logger.debug('< DynamicValue::SetValue( '+this.name + ', ' + v +" )" );
 	}
 
+	this.state = values_module.STATE.ASSIGNED;
 	return this;
 };
 
@@ -707,7 +759,7 @@ DynamicByReferenceValue.prototype.get_final = function() {
 };
 
 DynamicByReferenceValue.prototype.is_deferred = function() {
-	return true;
+	return false;
 };
 
 function by_reference_updater( byref_dynamic_value ) {
@@ -776,5 +828,12 @@ values_module.types.DynamicMetavalue.constructor = values_module.types.DynamicMe
 
 values_module.types.DynamicByReferenceValue.prototype = new DynamicByReferenceValue();
 values_module.types.DynamicByReferenceValue.constructor = values_module.types.DynamicByReferenceValue;
+
+values_module.STATE = {
+	DEFFINED: 'defined',
+	MODIFY:	'set_value',
+	NOTIFY: 'notifying',
+	ASSIGNED: 'stable'
+};
 
 module.exports = values_module;

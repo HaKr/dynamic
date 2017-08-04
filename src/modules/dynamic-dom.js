@@ -27,6 +27,52 @@ var
 	});
 })([Element.prototype, CharacterData.prototype, DocumentType.prototype]);
 
+if (typeof test_element.dataset === "object") {
+	dom_utils.set_dataset_value = function( element, prop_name, prop_value ){
+		if (typeof prop_value === "undefined" || prop_value === null){
+			delete element.dataset[prop_name];
+		} else {
+			element.dataset[prop_name] = prop_value;
+		}
+	};
+
+	dom_utils.get_dataset_value = function( element, prop_name ){
+		return element.dataset[prop_name];
+	};
+
+	dom_utils.has_dataset_value = function( element, prop_name ){
+		return element.dataset.hasOwnProperty( prop_name );
+	};
+
+} else {
+	dom_utils.set_dataset_value = function( element, prop_name, prop_value ){
+		var attr_name = 'data-'+dynamic_utils.CamelCase2HtmlID( prop_name );
+		if (typeof prop_value === "undefined" || prop_value === null){
+			element.removeAttribute( prop_name );
+		} else {
+			element.setAttribute(attr_name,  prop_value );
+		}
+	};
+
+	dom_utils.get_dataset_value = function( element, prop_name ){
+
+		var attr_name = 'data-'+dynamic_utils.CamelCase2HtmlID( prop_name );
+		var result, attr_value = element.getAttribute( attr_name );
+
+		if (attr_value !== null){
+			result = attr_value;
+		}
+
+		return result;
+	};
+
+	dom_utils.has_dataset_value = function( element, prop_name ){
+		var attr_name = 'data-'+dynamic_utils.CamelCase2HtmlID( prop_name );
+		return element.attributes.hasOwnProperty( attr_name );
+	};
+
+}
+
 if (typeof test_element.classList === "object") {
 	dom_utils.get_classes = function(element) {
 		return dynamic_utils.make_array(element.classList);
