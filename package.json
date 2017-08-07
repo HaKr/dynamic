@@ -1,10 +1,10 @@
 {
   "name": "dynamic",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Dynamic templates that appear on value changes",
   "main": "dynamic-server.js",
   "scripts": {
-    "test": "npm run deploy-static && npm run test:unit leave && npm run test:browser",
+    "test": "npm run deploy-static && npm run test:unit",
     "test:unit": "tape test/*.js",
     "test:browser": "mocha-phantomjs -p ./node_modules/phantomjs/bin/phantomjs ./test/mocha/browser/assets/test_screenshot.html",
     "test:integration": "mocha test/mocha/browser/test_hello_world.js",
