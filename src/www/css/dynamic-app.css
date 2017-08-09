@@ -60,7 +60,7 @@ i.fa.fa-envelope-o::before {
 .container label.nested {
 	display: block;
 	width: 100%;
-	height: 36px; 
+	height: 36px;
 	line-height: 36px;
 }
 
@@ -71,7 +71,7 @@ i.fa.fa-envelope-o::before {
 }
 
 .container label .data-item{
-	font-weight: bold;	
+	font-weight: bold;
 }
 
 /* Forms */
@@ -146,17 +146,17 @@ i.fa.fa-envelope-o::before {
 	color: #22B6BA;
 }
 
-.container table tr td label, 
-.container table tr td input, 
-.container table tr td select, 
+.container table tr td label,
+.container table tr td input,
+.container table tr td select,
 .container table tr td textarea {
     font-family: 'Raleway', Arial;
 }
 
-.container table tr td label, 
-.container table tr td input, 
-.container table tr td button, 
-.container table tr td select, 
+.container table tr td label,
+.container table tr td input,
+.container table tr td button,
+.container table tr td select,
 .container table tr td textarea {
     display: inline-block;
     vertical-align: top;
@@ -164,16 +164,16 @@ i.fa.fa-envelope-o::before {
 }
 
 .container table tr td,
-.container table tr td label, 
-.container table tr td input, 
-.container table tr td button, 
+.container table tr td label,
+.container table tr td input,
+.container table tr td button,
 .container table tr td select {
     height: 36px;
     line-height: 36px;
 }
 
-.container table tr td input, 
-.container table tr td select, 
+.container table tr td input,
+.container table tr td select,
 .container table tr td textarea {
     margin: 0;
     padding: 0 10px;
@@ -181,8 +181,8 @@ i.fa.fa-envelope-o::before {
     border-radius: 4px;
 }
 
-.container table tr td input, 
-.container table tr td select, 
+.container table tr td input,
+.container table tr td select,
 .container table tr td textarea {
     -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
@@ -191,8 +191,8 @@ i.fa.fa-envelope-o::before {
     transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
 }
 
-.container table tr td input:focus, 
-.container table tr td select:focus, 
+.container table tr td input:focus,
+.container table tr td select:focus,
 .container table tr td textarea:focus {
     border-color: #66AFE9;
     outline: 0;
@@ -353,7 +353,7 @@ option.is-selected {
 	color: blue !important;
 	font-weight: bold;
 	background-color: inherit !important;
-	margin: initial !important; 
+	margin: initial !important;
 	padding: initial !important;
 }
 

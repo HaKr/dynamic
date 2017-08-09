@@ -57,6 +57,10 @@ values_module.define = function(value_name) {
 		result = null,
 		parts;
 
+	if ( value_name.trim().length<1){
+		logger.error("Value must have a name");
+		return null;
+	}
 	if (value_name.indexOf(selected_reference_token) > 0) {
 		result = new values_module.types.DynamicByReferenceValue(value_name);
 	} else {

@@ -7,7 +7,8 @@ var dynamic_observers = {
 	vars: {},
 	types: {
 		TextObserver: TextObserver,
-		AttributeObserver: AttributeObserver
+		AttributeObserver: AttributeObserver,
+		ValueObserver: ValueObserver
 	},
 	api: {
 		contains_binding: function contains_binding(text) {
@@ -19,14 +20,16 @@ var dynamic_observers = {
 		create_attribute_observer: function create_attribute_observer(node, attribute_name, instance) {
 			return new dynamic_observers.types.AttributeObserver(node, attribute_name, instance);
 		},
-
+		create_value_observer: function create_text_observer( reference, template_instance, observer, ref_object ) {
+			return new dynamic_observers.types.ValueObserver( reference, template_instance, observer, ref_object );
+		}
 	}
 };
 
 var
 	dynamic_dom = require('./dynamic-dom.js'),
 	dynamic_utils = require('./dynamic-utils'),
-	value_module = require('./dynamic-values.js'),
+	dynamic_values = require('./dynamic-values.js'),
 	logger = require('./browser_log').get_logger(dynamic_observers.info.Name);
 
 module.exports = dynamic_observers.api;
@@ -53,6 +56,11 @@ function LiteralPart(text) {
 
 LiteralPart.prototype.get_text = function() {
 	return this.text;
+};
+
+LiteralPart.prototype.remove = function() {
+// nothing to cleanup
+	return;
 };
 
 function DynamicPart(value, binding_observer) {
@@ -93,6 +101,17 @@ function DynamicPart(value, binding_observer) {
 	}
 }
 
+DynamicPart.prototype.remove = function() {
+	if (typeof this.delegate_observer !== "undefined" && this.delegate_observer !== null) {
+		this.delegate_observer.remove();
+		this.delegate_observer = null;
+	}
+	if (typeof this.value_observer !== "undefined" && this.value_observer !== null) {
+		this.value_observer.remove();
+		this.value_observer = null;
+	}
+};
+
 DynamicPart.prototype.get_text = LiteralPart.prototype.get_text;
 
 function BindingObserver() {}
@@ -102,6 +121,17 @@ BindingObserver.prototype.register = function(template_instance) {
 	this.parts = [];
 
 	this.add_parts();
+};
+
+BindingObserver.prototype.remove = function() {
+	this.remove_parts();
+};
+
+BindingObserver.prototype.remove_parts = function() {
+	this.parts.forEach( function remove_part( part ){
+		part.remove();
+	} );
+	this.parts = [];
 };
 
 BindingObserver.prototype.add_literal = function(text) {
@@ -138,6 +168,29 @@ BindingObserver.prototype.add_parts = function() {
 	this.set_text_content();
 };
 
+BindingObserver.prototype.set_text_content = function(){
+	var result = '';
+	this.complete = true;
+
+	this.parts.forEach(function(part) {
+		var part_text = part.get_text();
+		if (part_text.length > 0) {
+			result += part.get_text();
+		} else {
+			this.complete = false;
+		}
+	}, this);
+
+	if (this.complete){
+		result = result.trim();
+	}
+
+	if (this.content !== result){
+		this.content = result;
+		this.notify_content();
+	}
+};
+
 function TextObserver(text_node, template_instance) {
 	this.text_node = text_node;
 	this.original = text_node.textContent;
@@ -148,12 +201,71 @@ function TextObserver(text_node, template_instance) {
 TextObserver.prototype = new BindingObserver();
 TextObserver.constructor = TextObserver;
 
-TextObserver.prototype.set_text_content = function() {
-	var result = '';
-	this.parts.forEach(function(part) {
-		result += part.get_text();
+TextObserver.prototype.notify_content = function() {
+	this.text_node.textContent = this.content.trim();
+};
+
+function ValueObserver(reference, template_instance, observer, ref_object) {
+	this.reference = reference;
+	this.original = reference;
+	this.value_observer = observer;
+	this.ref_object = ref_object;
+	this.instance = template_instance;
+	this.parts = [];
+	this._dynamic_value = null;
+	this.observer = null;
+
+	Object.defineProperty( this, 'dynamic_value', {
+		get: function(){ return this._dynamic_value; }
 	});
-	this.text_node.textContent = result.trim();
+	this.defer_or_hook( reference );
+}
+
+ValueObserver.prototype = new BindingObserver();
+ValueObserver.constructor = AttributeObserver;
+
+ValueObserver.prototype.notify_content = function() {
+	this.unhook();
+	if (this.content.length>0) {
+		this.defer_or_hook( this.content );
+	}
+};
+
+ValueObserver.prototype.remove = function() {
+	this.unhook();
+};
+
+ValueObserver.prototype.unhook = function() {
+	if (this.observer !== null){
+		logger.debug( "ValueObserver::Unobserve " + this._dynamic_value.name+ " for "+this.original );
+		this.observer.remove();
+		this.observer = null;
+		this._dynamic_value = null;
+	}
+};
+
+ValueObserver.prototype.hook = function() {
+	this._dynamic_value = this.instance.get_dynamic_value(this.original);
+	logger.debug( "ValueObserver::Observe " + this._dynamic_value.name+ " for "+this.original );
+
+	this.observer = this._dynamic_value.observe( 'deferred_value_observer', this.value_observer, this.ref_object );
+
+	if (this._dynamic_value.state === dynamic_values.STATE.ASSIGNED || this._dynamic_value.state === dynamic_values.STATE.ASSIGNED ){
+  		logger.debug('ValueObserver::CallObserver for ' + this._dynamic_value.name + ' (state=' + this._dynamic_value.state + ')');
+		this.value_observer.call( null, this._dynamic_value );
+	} else {
+		logger.debug('ValueObserver::SkipObserver for ' + this._dynamic_value.name + ' because of state ' + this._dynamic_value.state);
+	}
+};
+
+ValueObserver.prototype.defer_or_hook = function( ref ) {
+	this.original = ref;
+	if (binding_finder.test( this.original )){
+		logger.debug( "ValueObserver::Defer for "+this.original );
+		this.add_parts();
+	} else {
+		this.hook();
+	}
 };
 
 function AttributeObserver(element, attribute_name, template_instance) {
@@ -168,19 +280,10 @@ function AttributeObserver(element, attribute_name, template_instance) {
 AttributeObserver.prototype = new BindingObserver();
 AttributeObserver.constructor = AttributeObserver;
 
-AttributeObserver.prototype.set_text_content = function() {
-	var
-		result = '',
-		complete = true;
-	this.parts.forEach(function(part) {
-		var part_text = part.get_text();
-		if (part_text.length > 0) {
-			result += part.get_text();
-		} else {
-			complete = false;
-		}
-	});
-	if (complete) {
-		this.element.setAttribute(this.attribute_name, result.trim());
+AttributeObserver.prototype.notify_content = function() {
+	if (this.content.length>0) {
+		this.element.setAttribute(this.attribute_name, this.content);
+	} else {
+		this.element.removeAttribute( this.attribute_name);
 	}
 };

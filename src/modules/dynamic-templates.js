@@ -192,7 +192,7 @@ DynamicTemplatePlaceholder.prototype.set_up = function () {
 };
 
 DynamicTemplatePlaceholder.prototype.add_observer = function (observer) {
-	logger.debug( "Placeholder::AddObserver for "+this.definition.name+' to '+ this.dynamic_value.name );
+	logger.debug( "Placeholder::AddObserver for "+this.definition.name+' to '+ observer.reference );
 	if (this.observers.hasOwnProperty(observer.reference)) {
 		 logger.error('Instance redefines observer ' + observer.reference, this);
 	} else {

@@ -6,6 +6,7 @@ var
 	observer_module = require('./dynamic-observers.js'),
 	formula_module = require('./dynamic-formulas.js'),
 	dynamic_app_module = require('./dynamic-app.js'),
+	dynamic_rest_module = require('./dynamic-rest.js'),
 	logger = require('./browser_log').get_logger(dynamic_app_module.info.Name),
 	event_emmitter_module = require('event-emitter');
 
@@ -13,7 +14,8 @@ function DynamicApp() {
 	this.modules = {
 		values: values_module,
 		templates: templates_module,
-		dom: dynamic_dom
+		dom: dynamic_dom,
+		rest: dynamic_rest_module
 	};
 
 	var self = this;

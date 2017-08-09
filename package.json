@@ -1,5 +1,5 @@
 {
-  "name": "dynamic",
+  "name": "dynamic-app",
   "version": "0.0.1",
   "description": "Dynamic templates that appear on value changes",
   "main": "dynamic-server.js",

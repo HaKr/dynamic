@@ -27,6 +27,7 @@ var
     dynamic_utils = require('./dynamic-utils'),
     dynamic_values = require('./dynamic-values.js'),
 	 dynamic_websocket = require('./dynamic-websocket'),
+	 dynamic_rest = require('./dynamic-rest'),
     templates_module = require('./dynamic-templates.js'),
     observer_module = require('./dynamic-observers.js'),
     formula_module = require('./dynamic-formulas.js'),
@@ -746,53 +747,17 @@ dynamic_instance_class.get_templates = function (node) {
             template_instance.get_values_and_templates();
         };
 
-        template_placeholder.dynamic_value = attributes.dynamic_value.length > 0 ? this.get_dynamic_value(attributes.dynamic_value) : null;
+        if (attributes.dynamic_value.length > 0 ) {
+			  template_placeholder.dynamic_value = null;
+			//   reference, template_instance, observer, ref_object
+			  var template_observer = observer_module.create_value_observer( attributes.dynamic_value, this, function change_placeholder_value( trigger_value ) {
+					logger.debug( 'Placeholder::ValueChanged '+ template_placeholder.definition.name+' on '+trigger_value.name );
+					template_placeholder.on_value_changed( trigger_value );
+				}, template_placeholder );
+			  template_placeholder.add_observer( template_observer );
 
-        if (template_placeholder.dynamic_value !== null ) {
-			  if ( template_placeholder.dynamic_value.state !== dynamic_values.STATE.NOTIFY ){
-				  logger.debug( 'Placeholder::AddObserver for '+ template_placeholder.definition.name+' on '+template_placeholder.dynamic_value.name + ' because '  + template_placeholder.dynamic_value.state );
-	            template_placeholder.add_observer(
-	                template_placeholder.dynamic_value.observe('placeholder_' + template_placeholder.definition.name, function change_placeholder(trigger_value) {
-	                    // if (template_placeholder.dynamic_value !== trigger_value ||  template_placeholder.dynamic_value.get_value() !== trigger_value.get_value() ){
-	                    // template_placeholder.dynamic_value = trigger_value;
-							  logger.debug( 'Placeholder::ValueChanged '+ template_placeholder.definition.name+' on '+trigger_value.name );
-	                    template_placeholder.on_value_changed(trigger_value);
-	                    // }
-	                }, template_placeholder)
-	            );
-				} else {
-					logger.debug( 'Placeholder::AddObserver skipped for '+ template_placeholder.definition.name+' on '+template_placeholder.dynamic_value.name  );
-				}
-
-            var delegated_value = template_placeholder.dynamic_value.get_final();
-
-// 			This was added for a reason, but could also trigger a second instantiation
-            if (delegated_value.state === dynamic_values.STATE.ASSIGNED || delegated_value.state === dynamic_values.STATE.NOTIFY ) {
-					if (template_placeholder.range.includes(delegated_value)){
-                logger.debug('Instance(s) of ' + template_placeholder.definition.name + ' for ' + template_placeholder.dynamic_value.name + '[' + template_placeholder.dynamic_value.get_final().name + ']');
-                template_placeholder.on_value_changed(template_placeholder.dynamic_value);
-				 } else {
-					 logger.debug('No nstance(s) of ' + template_placeholder.definition.name + ' for ' + template_placeholder.dynamic_value.name +' , because of ', template_placeholder.range );
-				 }
-            } else {
-					logger.debug( 'Placeholder::AddInstance skipped for '+ template_placeholder.definition.name+' on '+delegated_value.name + ' because '  + delegated_value.state );
-					// + '('+tr')'
-				}
-
-            if (delegated_value !== template_placeholder.dynamic_value) {
-                template_placeholder.add_observer(
-                    delegated_value.observe('placeholder_delegated' + template_placeholder.definition.name, function change_placeholder(trigger_value) {
-                        // if (template_placeholder.dynamic_value !== trigger_value ||  template_placeholder.dynamic_value.get_value() !== trigger_value.get_value() ){
-                        // logger.debug( trigger_value.name+'('+(typeof template_placeholder.dynamic_value === "undefined"?'NIL':template_placeholder.dynamic_value.name)+') ==> instance(s) of ' + template_placeholder.definition.name );
-                        template_placeholder.dynamic_value = trigger_value;
-                        template_placeholder.on_value_changed(trigger_value);
-                        // }
-                    }, template_placeholder)
-                );
-
-            }
         } else {
-            template_placeholder.set_instance(null);
+            template_placeholder.set_instance( null );
         }
 
         comment_node.remove();
@@ -848,10 +813,13 @@ dynamic_instance_class.get_values = function (node) {
         }
 
         tag_elements.forEach(function (tag_element) {
-				if (dynamic_dom.has_dataset_value( tag_element, 'dynamicValue' ) ){
-					logger.warning('element already has a value', dynamic_dom.get_dataset_value( tag_element, 'dynamicValue' ), tag_element);
-				} else {
-					this.define_control(tag_element, control_tags[control_tag]);
+			  // only use controls with a name attribute, so we can assign a dynamic value
+			  if (tag_element.hasAttribute('name') || dynamic_dom.has_dataset_value( tag_element, 'rest' )){
+					if (dynamic_dom.has_dataset_value( tag_element, 'dynamicValue' ) ){
+						logger.error('element already has a value', dynamic_dom.get_dataset_value( tag_element, 'dynamicValue' ), tag_element);
+					} else {
+						this.define_control(tag_element, control_tags[control_tag]);
+					}
 				}
         }, this);
     }, this);
@@ -890,10 +858,26 @@ dynamic_instance_class.define_control = function (tag_element, control_construct
 dynamic_instance_class.remove = function () {
     this.super_remove();
 
-    dynamic_utils.make_array(this.controls).forEach(function remove_control(the_control) {
-        the_control.remove();
-    }, this);
-    this.controls = [];
+	 if (typeof this.controls === "object"){
+		 dynamic_utils.make_array(this.controls).forEach(function remove_control(the_control) {
+	        the_control.remove();
+	    }, this);
+	    this.controls.splice(0,this.controls.length);
+	 }
+
+	 if (typeof this.text_observers === "object"){
+		 this.text_observers.forEach( function remove_text_observer(observer){
+			 observer.remove();
+		 });
+		 this.text_observers.splice(0,this.text_observers.length);
+	 }
+
+	 if (typeof this.attribute_observers === "object"){
+		 this.attribute_observers.forEach( function remove_attr_observer(observer){
+			 observer.remove();
+		 });
+		 this.attribute_observers.splice(0,this.attribute_observers.length);
+	 }
 };
 
 dynamic_instance_class.get_dynamic_value = function get_dynamic_value_for_instance(value_name) {
@@ -1161,13 +1145,22 @@ function AppControl$base(element, template_instance) {
 AppControl$base.prototype.create = function (element, template_instance) {
     this.element = element;
     this.instance = template_instance;
-    this.value_name = this.element.name;
 	 this.xhr = null;
 
-    this.dynamic_value = this.instance.get_dynamic_value(this.value_name);
+	 if (element.hasAttribute('name')){
+		 this.value_name = this.element.name;
+		 this.dynamic_value = this.instance.get_dynamic_value(this.value_name);
+		 this.element.name = this.dynamic_value.bracket_notation;
+		 dynamic_dom.set_dataset_value( this.element, 'dynamicValue', this.dynamic_value.name );
+	 } else {
+		 this.dynamic_value = null;
+		 this.value_name = '';
+	 }
     this.unset_value = null;
-    this.element.name = this.dynamic_value.bracket_notation;
-	 dynamic_dom.set_dataset_value( this.element, 'dynamicValue', this.dynamic_value.name );
+
+	 this.rest = null;
+	 this.rest_observer = null;
+	 this.define_rest();
 
     this.set_up();
 };
@@ -1180,6 +1173,17 @@ AppControl$base.prototype.remove = function () {
     if (this.element !== null) {
 		 dynamic_dom.set_dataset_value( this.element, 'dynamicValue', null );
     }
+};
+
+AppControl$base.prototype.define_rest = function () {
+	if ( dynamic_dom.has_dataset_value( this.element, 'rest' ) ) {
+		var url = dynamic_dom.get_dataset_value( this.element, 'rest' );
+
+		dynamic_dom.set_dataset_value( this.element, 'rest', null );
+
+		this.rest = this.dynamic_value === null? dynamic_rest.create_rest_resource( '/api'+url  ) : dynamic_rest.create_rest_resource( this.dynamic_value  );
+
+	}
 };
 
 AppControl$base.prototype.make_remote = function () {
@@ -1262,15 +1266,15 @@ FormControl.prototype.set_up = function () {
         attr_observer.attribute_name = 'action';
     }
 
-    if (this.element.dataset.hasOwnProperty('action')) {
+    if (dynamic_dom.has_dataset_value( this.element, 'action' ) ) {
 
-        delete this.element.dataset.action;
+		 dynamic_dom.set_dataset_value( this.element, 'action', null );
     }
 
-    if (this.element.dataset.hasOwnProperty('format')) {
-        this.format = this.element.dataset.format;
+    if ( dynamic_dom.has_dataset_value( this.element, 'format' ) ) {
+        this.format = dynamic_dom.get_dataset_value( this.element, 'format' );
 
-        delete this.element.dataset.format;
+        dynamic_dom.set_dataset_value( this.element, 'format', null );
     }
 
     var
