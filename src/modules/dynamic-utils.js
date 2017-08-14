@@ -228,6 +228,22 @@ dynamic_utils.list_diff = function(a, b) {
 	return result;
 };
 
+dynamic_utils.list_equals = function( a, b ) {
+	var
+		result = false;
+
+	if (Array.isArray(a) && Array.isArray(b)) {
+		var diff = dynamic_utils.array_diff(a, b).concat( dynamic_utils.array_diff( b, a ) );
+		result = diff.length < 1;
+	} else {
+		var difference  = dynamic_utils.object_difference( a, b );
+		result = Object.keys( difference.removed ).length<1 && Object.keys( difference.added ).length<1;
+	}
+
+	return result;
+};
+
+
 var CAPITALMATCHER = /([A-Z])/g;
 var HTMLIDMATCHER = /[\-._:\s](\w)/g;
 

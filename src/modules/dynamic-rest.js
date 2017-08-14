@@ -22,6 +22,7 @@
 	};
 
 	var
+		api_keywords = require('./dynamic-api_keywords.js'),
 		dynamic_utils = require('./dynamic-utils'),
 		dynamic_values = require('./dynamic-values'),
 		logger = require('./browser_log').get_logger(dynamic_rest.info.Name)
@@ -51,8 +52,8 @@
 			url = arguments[0];
 		}
 
-		if (!dynamic_utils.starts_with( url, '/api') ){
-			url = '/api' + url;
+		if (!dynamic_utils.starts_with( url, api_keywords.rest.api) ){
+			url = api_keywords.rest.api + url;
 		}
 
 		if (dynamic_rest.vars.resources.hasOwnProperty( url ) ){
@@ -78,33 +79,71 @@
 			var self = this;
 			this.dynamic_value.set_on_load = false;
 
-			this.rest_observer = this.dynamic_value.observe( 'rest_observer', function( v ){
-				if (!self.dynamic_value.set_on_load){
-					var data={};
-					data[self.dynamic_value.name] = self.dynamic_value.value;
-					self.put( data );
-				}
-			}, this );
+			// this.rest_observer = this.dynamic_value.observe( 'rest_observer', function( v ){
+			// 	if (!self.dynamic_value.set_on_load){
+			// 		var data={};
+			// 		data[self.dynamic_value.name] = self.dynamic_value.value;
+			// 		self.put( data );
+			// 	}
+			// }, this );
 		}
 
 	}
 
 	RestResource.prototype.may_request = function( method_name ){
-		return http_options_method === method_name || this.allowed.indexOf(method_name)>=0;
+		var pending_request = this.get_pending_request();
+		if (pending_request === this.request ){
+			logger.info( 'Aborting '+this.request.method );
+			pending_request.abort();
+			pending_request = null;
+		}
+		return pending_request === null && (http_options_method === method_name || this.allowed.indexOf(method_name)>=0);
+	};
+
+	RestResource.prototype.has_pending_request = function( ){
+		return this.get_pending_request() !== null;
+	};
+
+	RestResource.prototype.get_pending_request = function( ){
+		return this.dynamic_value === null ? null : this.dynamic_value.pending_request;
+	};
+
+	RestResource.prototype.set_pending_request = function( req ){
+		if (this.dynamic_value !== null){
+			this.dynamic_value.pending_request = req;
+		}
+	};
+
+	RestResource.prototype.notify_deferred_observers = function(){
+		if (this.dynamic_value !== null){
+			this.dynamic_value.notify_observers( true );
+			this.dynamic_value.pending_request = null;
+		}
+	};
+
+	RestResource.prototype.get_request_handler = function( method_name ){
+		var
+			method_name_lower = method_name.toLowerCase(),
+			handler_name = 'on_'+method_name_lower + '_loaded',
+			result = this[ handler_name ]
+		;
+
+		return typeof result === 'function' ? result : null;
 	};
 
 	RestResource.prototype.send_request = function( method_name, data ){
-		var method_name_lower = method_name.toLowerCase();
 
 		if ( this.may_request( method_name ) ){
 			this.request = this.create_cors_request( method_name );
+			if ( method_name !== http_options_method ){
+				this.set_pending_request( this.request );
+			}
 			if (this.request !== null){
 				var
 					self = this,
-					handler_name = 'on_'+method_name_lower + '_loaded',
-					handler = this[ handler_name ]
+					handler = this.get_request_handler( method_name )
 				;
-				if (typeof handler === 'function'){
+				if (handler !== null){
 					this.request.addEventListener("load", function ( data ) {
 						handler.apply( self, arguments );
 					});
@@ -113,7 +152,9 @@
 				this.request.send( JSON.stringify( data ) );
 			}
 		} else {
-			logger.error( "Method "+method_name+" is not allowed for "+this.url );
+			if (!this.load_deferred){ // only complain when not in start-up
+				logger.error( "Method "+method_name+" is not allowed for "+this.url+' pending: '+this.has_pending_request(  ) );
+			}
 		}
 	};
 
@@ -139,6 +180,10 @@
 		;
 
 		logger.debug( this.request.method+" "+this.url+' -> '+evt.target.status+" - " +evt.target.statusText+', responseType='+evt.target.responseType+', event=', evt, 'rest=',rest  );
+
+		if (this.get_request_handler( this.request.method ) === null){
+			this.notify_deferred_observers();
+		}
 	};
 
 	RestResource.prototype.on_options_loaded = function( evt ){
@@ -149,15 +194,12 @@
 	};
 
 	RestResource.prototype.on_get_loaded = function( evt ){
-		if (this.dynamic_value !== null){
-			this.handle_data( evt );
-		}
+		this.load_deferred = false;
+		this.handle_data( evt );
 	};
 
 	RestResource.prototype.on_put_loaded = function( evt ){
-		if (this.dynamic_value !== null){
-			this.handle_data( evt, {value_optional: true } );
-		}
+		this.handle_data( evt );
 	};
 
 
@@ -199,11 +241,12 @@
 		try {
 
 			var payload = JSON.parse( event.target.responseText );
-			if (payload.hasOwnProperty( 'messages' )) {
-				dynamic_values.set_values_by_name( 'app.messages', payload.messages );
+			if (payload.hasOwnProperty( api_keywords.rest.messages )) {
+				dynamic_values.set_values_by_name( api_keywords.system_values.app_messages, payload.messages );
 			}
 			if (this.dynamic_value !== null){
 				if (payload.hasOwnProperty( this.dynamic_value.name )) {
+					this.set_pending_request( null );
 					payload = payload[ this.dynamic_value.name ];
 					this.dynamic_value.set_on_load = true;
 					this.dynamic_value.set_value( payload );
@@ -212,11 +255,13 @@
 					if (!options.value_optional){
 						logger.warning( "Cannot set "+this.dynamic_value.name + ' from payload', payload );
 					}
+					this.notify_deferred_observers();
 				}
 			} else {
 				if (payload.hasOwnProperty( 'multiple_values' )) {
 					dynamic_values.set_values_by_name( payload.multiple_values );
 				}
+				this.notify_deferred_observers();
 			}
 		} catch (err) {
 			logger.error("Data parse error", err, self.xhr);

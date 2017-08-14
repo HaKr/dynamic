@@ -52,7 +52,7 @@ var
         incomplete: {},
         range: {}
     },
-    template_tag = 'template',
+    template_tag = api_keywords.template.tag,
     parse_options = {},
     attributelist_pattern = '([^=]+)=(\\S*)\\s*',
     comment_pattern = '^<' + template_tag + '\\s+(((' + attributelist_pattern + '))+)\\s*>$',
@@ -519,7 +519,7 @@ dynamic_value_class.can_swap = function (offset) {
 
 function select_dynamic_value() {
     var
-        dynamic_value = dynamic_values.get_by_name(dynamic_dom.set_dataset_value( this, 'dynamicValue'));
+        dynamic_value = dynamic_values.get_by_name(dynamic_dom.set_dataset_value( this, api_keywords.dom.dynamic_value_camel ));
 
     dynamic_value.parent.metavalues.selected.set_value(dynamic_value.reference);
 }
@@ -541,7 +541,7 @@ dynamic_value_class.mark_selected = function (specific_instances) {
                     ;
 
                 element_node.removeEventListener('click', select_dynamic_value);
-					 dynamic_dom.set_dataset_value( element_node, 'dynamicValue', child_instance.dynamic_value.name );
+					 dynamic_dom.set_dataset_value( element_node, api_keywords.dom.dynamic_value_camel, child_instance.dynamic_value.name );
 
                 if (is_selected) {
                     dynamic_dom.add_class(element_node, 'is-selected');
@@ -617,10 +617,10 @@ dynamic_instance_class.get_values_and_templates = function () {
         has_value = this.dynamic_value !== null || this === dynamic_app.vars.main_instance;
 
     this.child_nodes.forEach(function (node) {
-		 if (has_value) {
-			  this.get_values(node);
-		 }
         this.get_templates(node);
+		  if (has_value) {
+ 			  this.get_values(node);
+ 		 }
         if (has_value) {
             this.bind_textnodes(node);
             this.bind_attributes(node);
@@ -684,16 +684,15 @@ dynamic_instance_class.bind_attributes = function (element) {
 
     elements.forEach(function (child_element) {
         if (typeof child_element.attributes !== "undefined" && child_element.attributes !== null) {
-            var element_attributes = child_element.attributes;
+            var element_attributes = dynamic_utils.make_array( child_element.attributes );
 
-            for (var eai = 0; eai < element_attributes.length; eai++) {
+            element_attributes.forEach( function (attribute){
                 var
-                    attribute = element_attributes[eai],
                     attribute_value = attribute.value;
                 if (observer_module.contains_binding(attribute_value)) {
-                    self.add_attribute_observer(observer_module.create_attribute_observer(child_element, attribute.name, this));
+                    this.add_attribute_observer(observer_module.create_attribute_observer(child_element, attribute.name, this));
                 }
-            }
+            }, this );
         }
     }, this);
 };
@@ -814,9 +813,9 @@ dynamic_instance_class.get_values = function (node) {
 
         tag_elements.forEach(function (tag_element) {
 			  // only use controls with a name attribute, so we can assign a dynamic value
-			  if (tag_element.hasAttribute('name') || dynamic_dom.has_dataset_value( tag_element, 'rest' )){
-					if (dynamic_dom.has_dataset_value( tag_element, 'dynamicValue' ) ){
-						logger.error('element already has a value', dynamic_dom.get_dataset_value( tag_element, 'dynamicValue' ), tag_element);
+			  if (tag_element.hasAttribute('name') || dynamic_dom.has_dataset_value( tag_element, api_keywords.dom.data.rest )){
+					if (dynamic_dom.has_dataset_value( tag_element, api_keywords.dom.dynamic_value_camel ) ){
+						logger.error('element already has a value', dynamic_dom.get_dataset_value( tag_element, api_keywords.dom.dynamic_value_camel ), tag_element);
 					} else {
 						this.define_control(tag_element, control_tags[control_tag]);
 					}
@@ -826,9 +825,9 @@ dynamic_instance_class.get_values = function (node) {
 
     var buttons = dynamic_dom.get_elements(node, 'button.dynamic-value');
     buttons.forEach(function link_button(btn) {
-        if (! dynamic_dom.has_dataset_value( btn, 'dynamicValue' )) {
+        if (! dynamic_dom.has_dataset_value( btn, api_keywords.dom.dynamic_value_camel )) {
             var dv = this.dynamic_value;
-				dynamic_dom.set_dataset_value( btn, 'dynamicValue', dv.name );
+				dynamic_dom.set_dataset_value( btn, api_keywords.dom.dynamic_value_camel, dv.name );
 
             Object.keys(button_commands).forEach(function (command_name) {
                 if (btn.className.indexOf(command_name) >= 0) {
@@ -1151,7 +1150,7 @@ AppControl$base.prototype.create = function (element, template_instance) {
 		 this.value_name = this.element.name;
 		 this.dynamic_value = this.instance.get_dynamic_value(this.value_name);
 		 this.element.name = this.dynamic_value.bracket_notation;
-		 dynamic_dom.set_dataset_value( this.element, 'dynamicValue', this.dynamic_value.name );
+		 dynamic_dom.set_dataset_value( this.element, api_keywords.dom.dynamic_value_camel, this.dynamic_value.name );
 	 } else {
 		 this.dynamic_value = null;
 		 this.value_name = '';
@@ -1160,6 +1159,15 @@ AppControl$base.prototype.create = function (element, template_instance) {
 
 	 this.rest = null;
 	 this.rest_observer = null;
+	 this.pending = null;
+
+	 var unchecked_value = '';
+
+	 if ( dynamic_dom.has_dataset_value( this.element, 'uncheckedValue' ) ){
+		unchecked_value = dynamic_dom.get_dataset_value( this.element, 'uncheckedValue' );
+	 }
+	 this.unchecked_value = unchecked_value;
+
 	 this.define_rest();
 
     this.set_up();
@@ -1171,24 +1179,19 @@ AppControl$base.prototype.remove = function () {
     this.dynamic_value = null;
 
     if (this.element !== null) {
-		 dynamic_dom.set_dataset_value( this.element, 'dynamicValue', null );
+		 dynamic_dom.set_dataset_value( this.element, api_keywords.dom.dynamic_value_camel, null );
     }
 };
 
 AppControl$base.prototype.define_rest = function () {
-	if ( dynamic_dom.has_dataset_value( this.element, 'rest' ) ) {
-		var url = dynamic_dom.get_dataset_value( this.element, 'rest' );
+	if ( dynamic_dom.has_dataset_value( this.element, api_keywords.dom.data.rest ) ) {
+		var url = dynamic_dom.get_dataset_value( this.element, api_keywords.dom.data.rest );
 
-		dynamic_dom.set_dataset_value( this.element, 'rest', null );
+		dynamic_dom.set_dataset_value( this.element, api_keywords.dom.data.rest, null );
 
 		this.rest = this.dynamic_value === null? dynamic_rest.create_rest_resource( '/api'+url  ) : dynamic_rest.create_rest_resource( this.dynamic_value  );
 
 	}
-};
-
-AppControl$base.prototype.make_remote = function () {
-
-	this.xhr = new XMLHttpRequest();
 };
 
 function FormControl(form_element, template_instance) {
@@ -1255,26 +1258,22 @@ function check_form_complete(form_control) {
 FormControl.prototype.set_up = function () {
     var self = this;
 
-	 this.make_remote();
-
     this.dynamic_values = this.instance.get_control_observer_values(this.element);
-
-    this.format = 'json';
 
     var attr_observer = this.instance.get_control_attribute_observer(this.element, 'data-action');
     if (attr_observer !== null) {
-        attr_observer.attribute_name = 'action';
+        attr_observer.attribute_name = api_keywords.dom.data.action;
     }
 
-    if (dynamic_dom.has_dataset_value( this.element, 'action' ) ) {
+    if (dynamic_dom.has_dataset_value( this.element, api_keywords.dom.data.action ) ) {
 
-		 dynamic_dom.set_dataset_value( this.element, 'action', null );
+		 dynamic_dom.set_dataset_value( this.element, api_keywords.dom.data.action, null );
     }
 
-    if ( dynamic_dom.has_dataset_value( this.element, 'format' ) ) {
-        this.format = dynamic_dom.get_dataset_value( this.element, 'format' );
+    if ( dynamic_dom.has_dataset_value( this.element, api_keywords.dom.data.format ) ) {
+        this.format = dynamic_dom.get_dataset_value( this.element, api_keywords.dom.data.format );
 
-        dynamic_dom.set_dataset_value( this.element, 'format', null );
+        dynamic_dom.set_dataset_value( this.element, api_keywords.dom.data.format, null );
     }
 
     var
@@ -1295,7 +1294,7 @@ FormControl.prototype.set_up = function () {
             var payload = JSON.parse(event.target.responseText);
             xhrlogger.info('Data retrieved', payload);
 
-            if (payload.hasOwnProperty('payload')) {
+            if (payload.hasOwnProperty(api_keywords.rest.payload)) {
                 payload = payload.payload;
 
                 if (payload.hasOwnProperty(self.dynamic_value.reference)) {
@@ -1345,11 +1344,11 @@ AppControl.prototype = new AppControl$base();
 AppControl.constructor = AppControl;
 
 var
-// change_by_value = new Event( 'change_by_value' )
+// change_by_value = new Event( api_keywords.events.change_by_value )
     change_by_value = document.createEvent('Event');
 
 // Define that the event name is 'build'.
-change_by_value.initEvent('change_by_value', true, true);
+change_by_value.initEvent(api_keywords.events.change_by_value, true, true);
 
 AppControl.prototype.update_by_value = function (dynamic_value) {
     if (this.element !== null) {
@@ -1359,7 +1358,13 @@ AppControl.prototype.update_by_value = function (dynamic_value) {
         if (this.element.value !== dv_text) {
             // logger.debug('update control value from dynamic value', this);
 				if (this.element.type==="checkbox"){
-					this.element.checked = dv_text === this.element.value;
+					if (this.element.value === dv_text){
+						this.checked = true;
+					} else {
+						if (dv_text === this.unchecked_value ){
+							this.checked = false;
+						}
+					}
 				} else {
             	this.element.value = dynamic_value.get_value();
 				}
@@ -1373,7 +1378,7 @@ AppControl.prototype.remove = function () {
     // those start always with the dollar sign
     // this way, when an instance gets removed, any previous selection gets cleared
     // to prevent confusion upon subsequent instances
-    if (dynamic_utils.starts_with(this.dynamic_value.reference, '$') &&
+    if (dynamic_utils.starts_with( this.dynamic_value.reference, api_keywords.meta.indicator ) &&
         this.element.type !== 'hidden' && !this.element.readOnly && !this.element.disabled && typeof this.element.options === "object") {
         this.dynamic_value.set_value("");
     }
@@ -1387,7 +1392,7 @@ AppControl.prototype.update_value = function () {
 
 	 if (this.element.type === "checkbox" || this.element.type === "radio"){
 		 if (!this.element.checked){
-			 control_value='';
+			 control_value=this.unchecked_value;
 		 }
 	 } else {
 
@@ -1399,7 +1404,16 @@ AppControl.prototype.update_value = function () {
 	 }
     logger.debug('>>>>> update value "' + this.dynamic_value.name + '" from control "' + control_value + '"', this);
 
-    this.dynamic_value.set_value(control_value);
+	 if (this.rest !== null && this.rest.may_put()){
+		 var data={};
+		 data[this.dynamic_value.name] = this.dynamic_value.value;
+		 this.rest.put( data );
+	 } else {
+		this.dynamic_value.set_value(control_value);
+	 }
+
+
+
    //  metalogger.debug(function () {
    //      dynamic_app.update_meta_info();
    //  });
@@ -1476,7 +1490,7 @@ function ValueFormatter(app_control, formatter_name) {
     dynamic_dom.add_class(this.format_element, formatter_name);
 
     this.element.parentNode.insertBefore(this.format_element, this.element);
-    this.element.addEventListener('change_by_value', function () {
+    this.element.addEventListener(api_keywords.events.change_by_value, function () {
         self.format_value();
     });
     this.element.remove();
@@ -1496,44 +1510,46 @@ AppControl.prototype.set_up = function () {
 
     var
         name = this.element.name,
-        unsetter = dynamic_dom.option_from_class(this.element, 'unset', {
+        unsetter = dynamic_dom.option_from_class(this.element, api_keywords.dom.data.unset, {
             default: '',
             get_value: true,
             remove_value: true,
             remove: true
         }),
         self = this;
-// 	 dynamic_dom.set_dataset_value( this.element, 'dynamicValue', this.dynamic_value.name );
+// 	 dynamic_dom.set_dataset_value( this.element, api_keywords.dom.dynamic_value_camel, this.dynamic_value.name );
 
-	 	if ( dynamic_dom.has_dataset_value( this.element, 'get' ) ||
-	 		dynamic_dom.has_dataset_value( this.element, 'set' ) ){
-			this.make_remote();
-		}
+	 if (this.element.value !== "" && this.dynamic_value.is_empty()) {
+	     self.update_value();
+	 } else {
+	     self.update_by_value(this.dynamic_value);
+	 }
 
-		if ( dynamic_dom.has_dataset_value( this.element, 'get' ) ){
-
-		} else {
-		 if (this.element.value !== "" && this.dynamic_value.is_empty()) {
-		     self.update_value();
-		 } else {
-		     self.update_by_value(this.dynamic_value);
-		 }
-	 	}
     if (unsetter.length > 0) {
         this.unset_value = this.instance.get_dynamic_value(unsetter);
     }
 
     this.instance.add_observer(
-        this.dynamic_value.observe('control-' + this.element.tagName + '-' + this.value_name, function update_control(dv) {
+        this.dynamic_value.observe('control-' + this.element.tagName, function update_control(dv) {
             self.update_by_value(dv);
         }, this)
     );
 
-    this.element.addEventListener('change_by_value', function () {
+    this.element.addEventListener(api_keywords.events.change_by_value, function () {
         if (self.unset_value !== null) {
             self.unset_value.set_value(null);
         }
     });
+
+	var supportsPassive = false;
+	try {
+	  var opts = Object.defineProperty({}, 'passive', {
+	    get: function() {
+	      supportsPassive = true;
+	    }
+	  });
+	  window.addEventListener("test", null, opts);
+	} catch (e) {}
 
     this.element.addEventListener('change', function () {
         if (self.unset_value !== null) {
@@ -1541,7 +1557,7 @@ AppControl.prototype.set_up = function () {
         }
 
         self.update_value();
-    });
+    }, supportsPassive? {passive: true} : false);
 
     if (this.element.readOnly) {
         var

@@ -274,7 +274,7 @@ DynamicTemplatePlaceholder.prototype.is_empty = function () {
 DynamicTemplatePlaceholder.prototype.clear = function () {
     var self = this;
 
-    var todo = this.instances.reverse();
+    var todo = dynamic_utils.list_duplicate(this.instances).reverse();
 
     todo.forEach(function (instance) {
         instance.remove();
