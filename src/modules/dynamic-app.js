@@ -155,16 +155,17 @@ dynamic_app.run = function () {
     dynamic_app.vars.main_instance.enhance(dynamic_instance_class);
     dynamic_app.vars.main_instance.get_values_and_templates();
 
-	 dynamic_app.channel_name = dynamic_values.get_by_name('app.use_channel');
-	 logger.info("Channel name", dynamic_app.channel_name);
-	 if (dynamic_app.channel_name !== null){
-	 	dynamic_app.channel = dynamic_websocket.open_channel( dynamic_app.channel_name.value );
-	}
 
     dynamic_app.vars.components.forEach(function notify_component_start(component) {
         component.started();
     });
 };
+
+dynamic_app.connect_socket = function( socket_name ){
+	logger.info("Using web socket ", socket_name );
+	dynamic_app.channel = dynamic_websocket.open_channel( socket_name );
+};
+
 
 dynamic_app.show_instance_info = function () {
     var
@@ -313,6 +314,38 @@ dynamic_app.get_children = function (element, css_selector) {
  */
 var
     dynamic_placeholder = {};
+
+dynamic_placeholder.set_value_reference = function ( dynamic_value_ref ) {
+	var self = this;
+	this.value_observer = null;
+	var template_observer = observer_module.create_value_observer( dynamic_value_ref, this.parent_instance, function change_placeholder_value( trigger_value ) {
+		logger.debug( 'Placeholder::ValueRefChanged '+ self.definition.name+' on '+self.reference );
+		self.attach_value( trigger_value );
+	}, this );
+};
+
+
+dynamic_placeholder.attach_value = function ( dynamic_value ) {
+	if (this.value_observer !== null){
+		this.value_observer.remove();
+	}
+
+	this.dynamic_value = dynamic_value;
+	var self = this;
+
+	this.value_observer = this.dynamic_value.observe( 'placeholder', function value_content_changed( trigger_value ){
+		logger.debug( 'Placeholder::ValueChanged '+ self.definition.name+' on '+self.reference );
+  	 	self.on_value_changed( trigger_value );
+	}, this );
+
+	if (this.dynamic_value.state === dynamic_values.STATE.DEFINED || this.dynamic_value.state === dynamic_values.STATE.ASSIGNED ){
+  		logger.debug('Placeholder::CallObserver for ' + this.dynamic_value.name + ' (state=' + this.dynamic_value.state + ')');
+		self.on_value_changed( this.dynamic_value );
+	} else {
+		logger.debug('Placeholder::SkipObserver for ' + this.dynamic_value.name + ' because of state ' + this.dynamic_value.state);
+	}
+
+};
 
 dynamic_placeholder.single_instance = function (dynamic_value) {
 
@@ -737,6 +770,9 @@ dynamic_instance_class.get_templates = function (node) {
         template_placeholder.range = new ValueRange(attributes.range);
         template_placeholder.with_content = attributes.with_content;
         template_placeholder.sort_order = attributes.sort.length > 0 ? attributes.sort.split(',') : [];
+		  // placeholder enhancements
+		  template_placeholder.set_value_reference = dynamic_placeholder.set_value_reference;
+		  template_placeholder.attach_value = dynamic_placeholder.attach_value;
 
         template_placeholder.on_instance = function on_instance_created(template_instance) {
             if (template_instance.dynamic_value !== null) {
@@ -745,16 +781,10 @@ dynamic_instance_class.get_templates = function (node) {
             template_instance.set_parent(self);
             template_instance.get_values_and_templates();
         };
+		  template_placeholder.dynamic_value = null;
 
-        if (attributes.dynamic_value.length > 0 ) {
-			  template_placeholder.dynamic_value = null;
-			//   reference, template_instance, observer, ref_object
-			  var template_observer = observer_module.create_value_observer( attributes.dynamic_value, this, function change_placeholder_value( trigger_value ) {
-					logger.debug( 'Placeholder::ValueChanged '+ template_placeholder.definition.name+' on '+trigger_value.name );
-					template_placeholder.on_value_changed( trigger_value );
-				}, template_placeholder );
-			  template_placeholder.add_observer( template_observer );
-
+        if ( attributes.dynamic_value.length > 0 ) {
+			  template_placeholder.set_value_reference( attributes.dynamic_value );
         } else {
             template_placeholder.set_instance( null );
         }
@@ -766,10 +796,16 @@ dynamic_instance_class.get_templates = function (node) {
 };
 
 var
+	input_types = {
+		hidden: InputHiddenControl,
+		text: AppControl,
+		checkbox: InputCheckableControl,
+		radio: InputCheckableControl
+	},
     control_tags = {
-        form: FormControl,
-        input: AppControl,
-        select: AppControl
+        form: function(e){ return FormControl; },
+        input: function(e){ return input_types[ e.type ]; },
+        select: function(e){ return AppControl; }
     },
     button_commands = {
         remove: {
@@ -817,7 +853,7 @@ dynamic_instance_class.get_values = function (node) {
 					if (dynamic_dom.has_dataset_value( tag_element, api_keywords.dom.dynamic_value_camel ) ){
 						logger.error('element already has a value', dynamic_dom.get_dataset_value( tag_element, api_keywords.dom.dynamic_value_camel ), tag_element);
 					} else {
-						this.define_control(tag_element, control_tags[control_tag]);
+						this.define_control(tag_element, control_tags[control_tag].call( null, tag_element ));
 					}
 				}
         }, this);
@@ -1141,25 +1177,50 @@ function AppControl$base(element, template_instance) {
 
 }
 
+AppControl$base.prototype.attach_value = function ( dynamic_value ) {
+	if (typeof dynamic_value === 'undefined' ){
+		dynamic_value = null;
+	}
+	if (this.control_observer !== null){
+		this.control_observer.remove();
+	}
+	this.dynamic_value = dynamic_value;
+	if (this.dynamic_value !== null){
+		this.element.name = this.dynamic_value.bracket_notation;
+		dynamic_dom.set_dataset_value( this.element, api_keywords.dom.dynamic_value_camel, this.dynamic_value.name );
+		this.define_rest();
+		var self = this;
+		this.control_observer = this.dynamic_value.observe('control-' + this.element.tagName, function update_control(dv) {
+		  self.update_by_value(dv);
+	  	} );
+
+		this.instance.add_observer( this.control_observer, this 	);
+	}
+};
+
 AppControl$base.prototype.create = function (element, template_instance) {
     this.element = element;
     this.instance = template_instance;
 	 this.xhr = null;
+	 var self = this;
+	 this.rest = null;
+	 this.rest_observer = null;
+	 this.pending = null;
+	 this.control_observer = null;
+	 this.dynamic_value = null;
 
 	 if (element.hasAttribute('name')){
 		 this.value_name = this.element.name;
-		 this.dynamic_value = this.instance.get_dynamic_value(this.value_name);
-		 this.element.name = this.dynamic_value.bracket_notation;
-		 dynamic_dom.set_dataset_value( this.element, api_keywords.dom.dynamic_value_camel, this.dynamic_value.name );
+		 var rest_observer = observer_module.create_value_observer( this.value_name, template_instance, function change_dynamic_value( trigger_value ) {
+			  logger.debug( 'AppControl$base::ValueChanged '+ self.element.tagName +' on '+trigger_value.name );
+			  self.attach_value( trigger_value );
+		  }, this );
+		  template_instance.add_observer( rest_observer );
 	 } else {
 		 this.dynamic_value = null;
 		 this.value_name = '';
 	 }
     this.unset_value = null;
-
-	 this.rest = null;
-	 this.rest_observer = null;
-	 this.pending = null;
 
 	 var unchecked_value = '';
 
@@ -1168,7 +1229,12 @@ AppControl$base.prototype.create = function (element, template_instance) {
 	 }
 	 this.unchecked_value = unchecked_value;
 
-	 this.define_rest();
+	 var intermediate_value = '';
+
+	 if ( dynamic_dom.has_dataset_value( this.element, 'putValue' ) ){
+		intermediate_value = dynamic_dom.get_dataset_value( this.element, 'putValue' );
+	 }
+	 this.intermediate_value = intermediate_value;
 
     this.set_up();
 };
@@ -1192,6 +1258,8 @@ AppControl$base.prototype.define_rest = function () {
 		this.rest = this.dynamic_value === null? dynamic_rest.create_rest_resource( '/api'+url  ) : dynamic_rest.create_rest_resource( this.dynamic_value  );
 
 	}
+};
+AppControl$base.prototype.set_up = function () {
 };
 
 function FormControl(form_element, template_instance) {
@@ -1337,7 +1405,9 @@ FormControl.prototype.set_up = function () {
 };
 
 function AppControl(element, template_instance) {
-    AppControl$base.prototype.create.call(this, element, template_instance);
+	if ( typeof element === 'object' ){
+   	AppControl$base.prototype.create.call(this, element, template_instance);
+ 	}
 }
 
 AppControl.prototype = new AppControl$base();
@@ -1350,25 +1420,18 @@ var
 // Define that the event name is 'build'.
 change_by_value.initEvent(api_keywords.events.change_by_value, true, true);
 
+AppControl.prototype.set_control_value = function (dynamic_value, text_value) {
+	this.element.value = dynamic_value.get_value();
+};
+
 AppControl.prototype.update_by_value = function (dynamic_value) {
-    if (this.element !== null) {
+    if (this.element !== null && typeof dynamic_value !== 'undefined' && dynamic_value !== null) {
         var
             dv_text = dynamic_value.get_text();
 
         if (this.element.value !== dv_text) {
-            // logger.debug('update control value from dynamic value', this);
-				if (this.element.type==="checkbox"){
-					if (this.element.value === dv_text){
-						this.checked = true;
-					} else {
-						if (dv_text === this.unchecked_value ){
-							this.checked = false;
-						}
-					}
-				} else {
-            	this.element.value = dynamic_value.get_value();
-				}
-            this.element.dispatchEvent(change_by_value);
+			  this.set_control_value( dynamic_value, dv_text );
+           this.element.dispatchEvent(change_by_value);
         }
     }
 };
@@ -1378,7 +1441,8 @@ AppControl.prototype.remove = function () {
     // those start always with the dollar sign
     // this way, when an instance gets removed, any previous selection gets cleared
     // to prevent confusion upon subsequent instances
-    if (dynamic_utils.starts_with( this.dynamic_value.reference, api_keywords.meta.indicator ) &&
+
+    if (this.dynamic_value !== null && dynamic_utils.starts_with( this.dynamic_value.reference, api_keywords.meta.indicator ) &&
         this.element.type !== 'hidden' && !this.element.readOnly && !this.element.disabled && typeof this.element.options === "object") {
         this.dynamic_value.set_value("");
     }
@@ -1386,33 +1450,36 @@ AppControl.prototype.remove = function () {
     AppControl$base.prototype.remove.call(this);
 };
 
+AppControl.prototype.get_control_value = function(){
+	return this.element.value;
+};
+
 AppControl.prototype.update_value = function () {
     var
-        control_value = this.element.value;
+        control_value = this.get_control_value();
 
-	 if (this.element.type === "checkbox" || this.element.type === "radio"){
-		 if (!this.element.checked){
-			 control_value=this.unchecked_value;
-		 }
-	 } else {
 
-	    if (typeof this.element.options === "object") {
-	        if (this.element.options[this.element.selectedIndex].disabled) {
-	            control_value = "";
-	        }
-	    }
-	 }
+    if (typeof this.element.options === "object") {
+        if (this.element.options[this.element.selectedIndex].disabled) {
+            control_value = "";
+        }
+    }
     logger.debug('>>>>> update value "' + this.dynamic_value.name + '" from control "' + control_value + '"', this);
-
+// TODO:
+// 	dynamic_value::set_value split into separate will_update() and set_value() parts
+// 	have a data-intermediate attribute to change the value here to that before PUT is done
+// 	e.g. the changing value now used on the services button.
 	 if (this.rest !== null && this.rest.may_put()){
 		 var data={};
-		 data[this.dynamic_value.name] = this.dynamic_value.value;
+		 data[this.dynamic_value.name] = control_value;
+		 if ( this.intermediate_value.length > 0){
+			this.dynamic_value.set_value( this.intermediate_value );
+		 }
+
 		 this.rest.put( data );
 	 } else {
 		this.dynamic_value.set_value(control_value);
 	 }
-
-
 
    //  metalogger.debug(function () {
    //      dynamic_app.update_meta_info();
@@ -1529,12 +1596,6 @@ AppControl.prototype.set_up = function () {
         this.unset_value = this.instance.get_dynamic_value(unsetter);
     }
 
-    this.instance.add_observer(
-        this.dynamic_value.observe('control-' + this.element.tagName, function update_control(dv) {
-            self.update_by_value(dv);
-        }, this)
-    );
-
     this.element.addEventListener(api_keywords.events.change_by_value, function () {
         if (self.unset_value !== null) {
             self.unset_value.set_value(null);
@@ -1577,6 +1638,76 @@ AppControl.prototype.set_up = function () {
     }
 
 };
+
+function InputHiddenControl(element, template_instance) {
+	this.deferred_observer = null;
+   AppControl.prototype.create.call(this, element, template_instance);
+	// this.referenced_value = null;
+}
+
+InputHiddenControl.prototype = new AppControl();
+InputHiddenControl.constructor = InputHiddenControl;
+
+InputHiddenControl.prototype.set_value_by_value = function( deferred_value ){
+	this.dynamic_value.value = deferred_value.name;
+};
+
+InputHiddenControl.prototype.defer_value = function( val_ref ){
+	var result = '';
+	var self = this;
+
+	if ( this.deferred_observer !== null){
+		this.deferred_observer.destroy();
+	}
+	observer_module.create_dynamic_value_dereference( val_ref, this.instance, function( deferred_value ){
+		this.deferred_observer = self.set_value_by_value( deferred_value );
+	}, this );
+
+	return result;
+};
+
+InputHiddenControl.prototype.get_control_value = function(){
+	var
+		val_or_ref = this.element.value,
+		result = val_or_ref
+	;
+
+	if (observer_module.contains_binding( val_or_ref )) {
+		result = this.defer_value( val_or_ref );
+	}
+
+	return result;
+};
+
+function InputCheckableControl(element, template_instance) {
+    AppControl.prototype.create.call( this, element, template_instance );
+}
+
+InputCheckableControl.prototype = new AppControl();
+InputCheckableControl.constructor = InputCheckableControl;
+
+InputCheckableControl.prototype.get_control_value = function(){
+	var result = this.element.value;
+
+	if (!this.element.checked){
+		result=this.unchecked_value;
+	}
+
+	return result;
+};
+
+InputCheckableControl.prototype.set_control_value = function (dynamic_value, text_value) {
+	if (this.element.value === text_value ){
+		this.checked = true;
+	} else {
+		if ( text_value === this.unchecked_value ){
+			this.checked = false;
+		}
+	}
+};
+
+
+
 
 range_testers = {
     '<': function bound_lt(val, bound) {

@@ -22,6 +22,10 @@ function DynamicApp() {
 	dynamic_app_module.before_run = function() {
 		self.before_run();
 	};
+	Object.defineProperty( this, 'observer_count', {
+		enumerable: true,
+		get: function(){ return Object.keys(this.modules.values.vars.observers).length; }
+	});
 }
 
 DynamicApp.prototype.before_run = function() {
@@ -54,6 +58,7 @@ DynamicApp.prototype.$$ = function(value_name) {
 };
 
 DynamicApp.prototype.register_component = dynamic_app_module.register_component;
+DynamicApp.prototype.connect_socket = dynamic_app_module.connect_socket;
 
 DynamicApp.prototype.get_template = templates_module.get_template_by_name;
 

@@ -243,6 +243,8 @@
 			var payload = JSON.parse( event.target.responseText );
 			if (payload.hasOwnProperty( api_keywords.rest.messages )) {
 				dynamic_values.set_values_by_name( api_keywords.system_values.app_messages, payload.messages );
+			} else {
+				dynamic_values.set_values_by_name( api_keywords.system_values.app_messages, {} );
 			}
 			if (this.dynamic_value !== null){
 				if (payload.hasOwnProperty( this.dynamic_value.name )) {

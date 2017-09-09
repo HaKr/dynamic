@@ -5,7 +5,9 @@ var
 		symbols: {
 			name_separator: 		'.',
 			from_here_selector: 	'.',
-			parent_selector:		'..'
+			parent_selector:		'..',
+			reference_start:		'$[',
+			reference_end:			']]'
 		},
 		meta: {
 			indicator:			'$',
@@ -24,7 +26,7 @@ var
 			}
 		},
 		rest: {
-			api:			'/api',
+			api:			'/resources',
 			payload:		'payload',
 			messages:	'messages'
 		},

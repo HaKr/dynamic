@@ -146,7 +146,7 @@ DynamicTemplateDefinition.prototype.absorb = function (element, only_content) {
     });
 
     if (only_content) {
-        dynamic_dom.move_attributes(element, parent.children[0]);
+        dynamic_dom.move_attributes(element, parent.childNodes[0]);
         element.parentNode.removeChild(element);
     }
 
@@ -189,15 +189,6 @@ DynamicTemplatePlaceholder.prototype.set_up = function () {
     }
 
     this.empty();
-};
-
-DynamicTemplatePlaceholder.prototype.add_observer = function (observer) {
-	logger.debug( "Placeholder::AddObserver for "+this.definition.name+' to '+ observer.reference );
-	if (this.observers.hasOwnProperty(observer.reference)) {
-		 logger.error('Instance redefines observer ' + observer.reference, this);
-	} else {
-		 this.observers[observer.reference] = observer;
-	}
 };
 
 DynamicTemplatePlaceholder.prototype.add_value = function (dynamic_value) {

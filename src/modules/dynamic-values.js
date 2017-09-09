@@ -178,7 +178,7 @@ DynamicValue.prototype.create = function(name) {
 	this.metavalues = {};
 	this.metainfo = {};
 	this.suppress_parent_notifications = false;
-	this.state = values_module.STATE.DEFFINED;
+	this.state = values_module.STATE.DEFINED;
 	this.deferred_observers = [];
 	this.pending_request = null;
 
@@ -828,7 +828,6 @@ function by_reference_updater( byref_dynamic_value ) {
 }
 
 DynamicByReferenceValue.prototype.set_up = function() {
-	// TODO: multiple references, like persons.@.companies.@.name
 	var
 		selected_reference_re = new RegExp( selected_reference_token, 'g' ),
 		m = selected_reference_re.exec( this.name )
@@ -871,7 +870,7 @@ values_module.types.DynamicByReferenceValue.prototype = new DynamicByReferenceVa
 values_module.types.DynamicByReferenceValue.constructor = values_module.types.DynamicByReferenceValue;
 
 values_module.STATE = {
-	DEFFINED: 'defined',
+	DEFINED: 'defined',
 	MODIFY:	'set_value',
 	NOTIFY: 'notifying',
 	ASSIGNED: 'stable'
