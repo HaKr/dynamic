@@ -149,6 +149,9 @@
 					});
 				}
 				this.request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+				if (typeof data === 'undefined' || data === null){
+					data = {};
+				}
 				this.request.send( JSON.stringify( data ) );
 			}
 		} else {
@@ -247,18 +250,14 @@
 				dynamic_values.set_values_by_name( api_keywords.system_values.app_messages, {} );
 			}
 			if (this.dynamic_value !== null){
+				var new_value = '';
 				if (payload.hasOwnProperty( this.dynamic_value.name )) {
-					this.set_pending_request( null );
-					payload = payload[ this.dynamic_value.name ];
-					this.dynamic_value.set_on_load = true;
-					this.dynamic_value.set_value( payload );
-					this.dynamic_value.set_on_load = false;
-				} else {
-					if (!options.value_optional){
-						logger.warning( "Cannot set "+this.dynamic_value.name + ' from payload', payload );
-					}
-					this.notify_deferred_observers();
+					new_value = payload[ this.dynamic_value.name ];
 				}
+				this.set_pending_request( null );
+				this.dynamic_value.set_on_load = true;
+				this.dynamic_value.set_value( new_value );
+				this.dynamic_value.set_on_load = false;
 			} else {
 				if (payload.hasOwnProperty( 'multiple_values' )) {
 					dynamic_values.set_values_by_name( payload.multiple_values );

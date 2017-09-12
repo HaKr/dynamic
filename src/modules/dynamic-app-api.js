@@ -58,7 +58,7 @@ DynamicApp.prototype.$$ = function(value_name) {
 };
 
 DynamicApp.prototype.register_component = dynamic_app_module.register_component;
-DynamicApp.prototype.connect_socket = dynamic_app_module.connect_socket;
+DynamicApp.prototype.connect_channel = dynamic_app_module.connect_channel;
 
 DynamicApp.prototype.get_template = templates_module.get_template_by_name;
 

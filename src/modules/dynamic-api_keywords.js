@@ -11,7 +11,8 @@ var
 		},
 		meta: {
 			indicator:			'$',
-			count:				'count'
+			count:				'count',
+			current:				'current'
 		},
 		events: {
 			change_by_value: 	'change_by_value'
@@ -22,7 +23,10 @@ var
 				rest:		'rest',
 				format:	'format',
 				action:  'action',
-				unset:	'unset'
+				unset:	'unset',
+				alias:   'alias',
+				put_value: 'putValue',
+				unchecked_value: 'uncheckedValue'
 			}
 		},
 		rest: {

@@ -48,12 +48,12 @@
 		this.name = name;
 		this.socket = null;
 		this.open = false;
-		this.dynamic_value = dynamic_values.get_or_define( 'socket.'+this.name+'.status' );
+		this.dynamic_value = dynamic_values.get_or_define( 'channel.'+this.name+'.status' );
 		this.dynamic_value.set_value('inactive');
 	}
 
 	WebSocketChannel.prototype.start = function(){
-		logger.info( 'Setting up Web socket' );
+		logger.info( 'Setting up Web socket channel' );
 		var self=this;
 
 		if (this.socket === null){
@@ -67,15 +67,38 @@
 			}
 			catch (e){
 				// dynamic_values.add_values_by_name( self.name+'.exceptions', 'could not open websocket: '+e );
-				logger.error( self.name+'.exceptions', 'could not open websocket: '+e );
+				logger.error( self.name+'.exceptions', 'could not open websocket channel: '+e );
 			}
 		}
 	};
 
+	function WebsocketRoom(){
 
-	responder.on_connect= function(){
+	}
+
+	WebsocketRoom.prototype.init = function( channel, name ){
+		this.name = name;
+		this.channel = channel;
+
+		return this;
+	};
+
+	WebsocketRoom.prototype.leave = function(){
+		// this.channel.$channel.x.leave( this.name );
+	};
+
+	WebSocketChannel.prototype.join = function( room_name ){
+		// this.$channel.x.join( room_name, function(){
+		// 	logger.info("Room %s has news.", room_name );
+		// } );
+		return new WebsocketRoom().init( this, room_name );
+	};
+
+
+	responder.on_connect= function( x ){
 		logger.info("Channel %s awakens", this.$channel.dynamic_value.name );
 		this.$channel.dynamic_value.set_value('active');
+		this.$channel.x = x;
 	};
 
 	responder.on_disconnect= function( reason ){

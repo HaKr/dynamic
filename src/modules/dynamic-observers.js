@@ -9,7 +9,8 @@ var dynamic_observers = {
 		TextObserver: TextObserver,
 		AttributeObserver: AttributeObserver,
 		ValueObserver: ValueObserver,
-		ValueReference: ValueReference
+		ValueReference: ValueReference,
+		DynamicText: DynamicText
 	},
 	api: {
 		contains_binding: function contains_binding(text) {
@@ -24,19 +25,23 @@ var dynamic_observers = {
 		create_value_observer: function create_value_observer( reference, template_instance, observer, ref_object ) {
 			return new dynamic_observers.types.ValueObserver( reference, template_instance, observer, ref_object );
 		},
-		create_dynamic_value_reference: function create_dynamic_value_reference( reference, template_instance, observer, ref_object ) {
-			var result = new dynamic_observers.types.ValueReference().init( template_instance );
-			result.on_change( observer, ref_object );
-			result.set_initial_text( reference );
-
-			return result;
+		create_dynamic_text_reference: function create_dynamic_text_reference( reference, template_instance, observer, ref_object, only_notify_when_complete ) {
+			if (typeof only_notify_when_complete !== 'boolean' ){
+				only_notify_when_complete = false;
+			}
+			return new dynamic_observers.types.DynamicText()
+				.init( template_instance, only_notify_when_complete )
+				.on_change( observer, ref_object )
+				.set_initial_text( reference )
+			;
 		},
-		create_dynamic_value_dereference: function create_dynamic_value_dereference( reference, template_instance, observer, ref_object ) {
-			var result = new dynamic_observers.types.ValueReference().init( template_instance );
-			result.on_value_change( observer, ref_object );
-			result.set_initial_text( reference );
-
-			return result;
+		create_dynamic_value_reference: function create_dynamic_value_reference( reference, template_instance, value_observer, observer, ref_object ) {
+			return new dynamic_observers.types.ValueReference()
+				.init( template_instance )
+				.on_change( observer, ref_object )
+				.on_value_change( value_observer, ref_object )
+				.set_initial_text( reference )
+			;
 		}
 	}
 };
@@ -338,29 +343,37 @@ BindingObserver.prototype.set_text_content = function(){
 
 function TextObserver(text_node, template_instance) {
 	this.text_node = text_node;
-	this.dynamic_text = new DynamicText().init( template_instance );
-	this.dynamic_text.on_change( this.notify_content, this );
-	this.dynamic_text.initial_text = text_node.textContent;
-
-	// this.register(template_instance);
+	this.dynamic_text = dynamic_observers.api.create_dynamic_text_reference( text_node.textContent, template_instance, this.notify_content, this, false );
 }
 
-// TextObserver.prototype = new BindingObserver();
-// TextObserver.constructor = TextObserver;
-//
-TextObserver.prototype.notify_content = function() {
-	this.text_node.textContent = this.dynamic_text.get_text();
+TextObserver.prototype.notify_content = function( content ) {
+	this.text_node.textContent = content;
 };
 
 TextObserver.prototype.remove = function() {
-	this.dynamic_text.destroy();
+	this.dynamic_text.remove();
 };
 
-//
-// TextObserver.prototype.add_deferred = function(dynamic_value_ref) {
-// 	this.parts.push(new DeferredTextPart(dynamic_value_ref, this));
-// };
-//
+function AttributeObserver(element, attribute_name, template_instance) {
+	this.element = element;
+	this.attribute_name = attribute_name;
+	// this.element.removeAttribute(attribute_name);
+
+	this.dynamic_text = dynamic_observers.api.create_dynamic_text_reference( this.element.getAttribute(attribute_name), template_instance, this.notify_content, this, false );
+}
+
+AttributeObserver.prototype.notify_content = function( content ) {
+	if (content.length>0) {
+		this.element.setAttribute(this.attribute_name, content);
+	} else {
+		this.element.removeAttribute( this.attribute_name );
+	}
+};
+
+AttributeObserver.prototype.remove = function() {
+	this.dynamic_text.remove();
+};
+
 
 
 function ValueObserver(reference, template_instance, observer, ref_object) {
@@ -422,36 +435,16 @@ ValueObserver.prototype.defer_or_hook = function( ref ) {
 	}
 };
 
-function AttributeObserver(element, attribute_name, template_instance) {
-	this.element = element;
-	this.attribute_name = attribute_name;
-	this.original = this.element.getAttribute(attribute_name);
-	this.element.removeAttribute(attribute_name);
-
-	this.register(template_instance);
-}
-
-AttributeObserver.prototype = new BindingObserver();
-AttributeObserver.constructor = AttributeObserver;
-
-AttributeObserver.prototype.notify_content = function() {
-	if (this.content.length>0) {
-		this.element.setAttribute(this.attribute_name, this.content);
-	} else {
-		this.element.removeAttribute( this.attribute_name);
-	}
-};
-
 function DynamicText$base(){
 }
 
 // cwd: $[cwd]]
-DynamicText$base.prototype.init = function( parent_instance ){
+DynamicText$base.prototype.init = function( parent_instance, only_notify_when_complete ){
 	this.original = '';
 	this.on_change_callback = null;
 	this.value = '';
 	this.parts = [];
-	this.only_notify_when_complete = false;
+	this.only_notify_when_complete = only_notify_when_complete;
 	this.instance = parent_instance;
 
 	var self = this;
@@ -464,29 +457,38 @@ DynamicText$base.prototype.init = function( parent_instance ){
 	return this;
 };
 
-DynamicText$base.prototype.destroy = function(){
+DynamicText$base.prototype.remove = function(){
+	this.removed = { cb: this.on_change_callback, vcb: this.on_value_change_callback, v: this.value, ref: this.this_arg };
+
 	this.value = null;
-	this.on_change = null;
+	this.on_change_callback = null;
+	this.this_arg = null;
+
 	this.parts.forEach( function( part ){
-		part.destroy();
+		part.remove();
 	});
 };
 
 DynamicText$base.prototype.set_initial_text = function( t ){
 	this.original = t;
 	this.add_parts();
+
+	return this;
 };
 
 DynamicText$base.prototype.on_change = function( callback, this_arg ){
 	this.on_change_callback = callback;
 	this.this_arg = this_arg;
+
+	return this;
 };
 
 DynamicText$base.prototype.on_value_change = function( callback, this_arg ){
+	return this;
 };
 
 DynamicText$base.prototype.notify = function(){
-	if ( !this.only_notify_when_complete || this.complete ){
+	if ( (!this.only_notify_when_complete || this.complete) && typeof this.on_change_callback === 'function' ){
 		this.on_change_callback.call( this.this_arg, this.value );
 	}
 };
@@ -578,6 +580,8 @@ ValueReference.prototype.init = function( parent_instance ){
 ValueReference.prototype.on_value_change = function( callback, this_arg ){
 	this.on_value_change_callback = callback;
 	this.this_arg = this_arg;
+
+	return this;
 };
 
 
@@ -586,17 +590,12 @@ ValueReference.prototype.update_reference = function( v ){
 	this.dynamic_value = this.instance.get_dynamic_value( this.value_name );
 	if (typeof this.on_value_change_callback === 'function' ){
 		this.on_value_change_callback.call( this.this_arg, this.dynamic_value );
-	} else {
-		this.attach();
 	}
+	this.attach();
 };
 
 ValueReference.prototype.add_parts = function(){
-	this.dynamic_text = new DynamicText().init( this.instance );
-
-	this.dynamic_text.only_notify_when_complete = true;
-	this.dynamic_text.on_change( this.update_reference, this );
-	this.dynamic_text.initial_text = this.original;
+	this.dynamic_text = dynamic_observers.api.create_dynamic_text_reference( this.original, this.instance, this.update_reference, this, true );
 };
 
 ValueReference.prototype.update_value = function( ){
@@ -623,10 +622,12 @@ ValueReference.prototype.detach = function(){
 	}
 };
 
-ValueReference.prototype.destroy = function(){
+ValueReference.prototype.remove = function(){
 	this.detach();
+	this.on_value_change_callback = null;
+	this.dynamic_text.remove();
 
-	DynamicText$base.prototype.destroy.call( this );
+	DynamicText$base.prototype.remove.call( this );
 };
 
 function DynamicText(){
