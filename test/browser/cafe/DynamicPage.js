@@ -6,23 +6,23 @@ const
 
 
 class SelectControl {
-	public select_element: Selector;
-	option_elements: Selector;
+	// public select_element: Selector;
+	// option_elements: Selector;
 
-	constructor ( selector:string ){
+	constructor ( selector ){
 		this.select_element = Selector( selector );
 		this.option_elements = this.select_element.find( 'option' );
 	}
 }
 
 export class DynamicPage {
-	working_directory_control: SelectControl;
+	// working_directory_control: SelectControl;
 
    constructor () {
    	this.working_directory_control = new SelectControl( CSS_CWD );
    }
 
-	 set_working_directory( ref:string ) {
+	 set_working_directory( ref ) {
 
 	 }
 
