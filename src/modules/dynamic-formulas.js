@@ -107,7 +107,7 @@ function concat_values_and( op1, op2 ){
 		result = '';
 
 	if (op1.include() && op2.include()){
-		result = op1.get_value() + ' ' + op2.get_value()
+		result = op1.get_value() + ' ' + op2.get_value();
 	}
 
 	return result;
@@ -119,7 +119,7 @@ function concat_values_or( op1, op2 ){
 		result = '';
 
 	if (op1.include() || op2.include()){
-		result = op1.get_value() + (op1.include() && op2.include()?' ':'') + op2.get_value()
+		result = op1.get_value() + (op1.include() && op2.include()?' ':'') + op2.get_value();
 	}
 
 	return result;
@@ -197,14 +197,12 @@ FormulaValue.prototype.push_operand = function(operand) {
 				return !dv.is_empty();
 			},
 			get_value: function() {
-				return dv.get_final().get_value();
+				return dv.get_value();
 			}
 		});
 		var self = this;
 
-		dv.observe(this.formula, function operand_value_changed(v) {
-			self.calculate();
-		}, this);
+		dv.observe(this.formula, this.calculate, this);
 	}
 };
 

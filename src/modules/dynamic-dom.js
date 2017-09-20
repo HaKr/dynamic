@@ -73,6 +73,16 @@ if (typeof test_element.dataset === "object") {
 
 }
 
+dom_utils.get_dataset_value_or_default = function( element, prop_name, prop_default ){
+	var result = prop_default;
+
+	if (dom_utils.has_dataset_value( element, prop_name ) ){
+		result = dom_utils.get_dataset_value( element, prop_name );
+	}
+
+	return result;
+};
+
 if (typeof test_element.classList === "object") {
 	dom_utils.get_classes = function(element) {
 		return dynamic_utils.make_array(element.classList);

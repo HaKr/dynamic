@@ -9,12 +9,16 @@ var dynamic_app = {
         binding_observers: [],
         components: [],
         controls: [],
+		  requested_channel_name: '',
+		  socket_channel: null
     },
     modules: {},
     types: {
         AppComponent: function (css_selector) {
             this.selector = css_selector;
             this.element = null;
+				this.channel = null;
+				this.room = null;
 
             dynamic_app.vars.components.push(this);
         }
@@ -68,11 +72,32 @@ dynamic_dom.events.on('DOM ready', function () {
 
 });
 
+dynamic_app.register_components = function(){
+	dynamic_dom.get_elements(document.body, '.component').forEach( function( element ){
+		var selector = '.'+dynamic_dom.get_classes( element ).join('.');
+		dynamic_app.get_or_define_component( selector );
+	});
+};
+
+dynamic_app.get_or_define_component = function( css_selector ){
+	if (css_selector.indexOf('.component')<0){
+		css_selector = '.component'+css_selector;
+	}
+	var result = dynamic_app.vars.components.find( function( component ){
+		return component.selector === css_selector;
+	});
+	if (typeof result === 'undefined'){
+		result = new dynamic_app.types.AppComponent(css_selector);
+	}
+
+	return result;
+};
+
 dynamic_app.register_component = function (css_selector) {
 
-    var result = new dynamic_app.types.AppComponent(css_selector);
+	var result = dynamic_app.get_or_define_component( css_selector );
 
-    return result;
+	return result;
 };
 
 dynamic_app.run = function () {
@@ -80,70 +105,10 @@ dynamic_app.run = function () {
         dynamic_app.before_run();
     }
 
-    // logger.info(dynamic_app.info);
-
-    metalogger.debug(function () {
-        var
-            old_instances_info = {};
-        dynamic_app.debug_templates = dynamic_values.get_or_define('debug.template_count');
-        dynamic_app.debug_placeholders = dynamic_values.get_or_define('debug.placeholder_count');
-        dynamic_app.debug_instances = dynamic_values.get_or_define('debug.instance_count');
-        dynamic_app.debug_observers = dynamic_values.get_or_define('debug.observer_count');
-
-        dynamic_app.update_meta_info = function () {
-            var
-                instances_info = {},
-                instance_count = 0,
-                tree_count = 1,
-                observer_count = 0,
-                placeholder_count = 0;
-
-            dynamic_app.debug_templates.set_value(Object.keys(templates_module.vars.Definitions).length);
-            dynamic_app.debug_placeholders.set_value(Object.keys(templates_module.vars.Placeholders).length);
-            dynamic_app.debug_instances.set_value(Object.keys(templates_module.vars.Instances).length);
-            dynamic_app.debug_observers.set_value(Object.keys(dynamic_values.vars.observers).length);
-
-            Object.keys(templates_module.vars.Instances).forEach(function (ik) {
-                var
-                    instance = templates_module.vars.Instances[ik],
-                    instance_info = instance.debug_info();
-                instances_info[instance_info.id] = instance_info;
-                delete instance_info.id;
-
-                instance_count++;
-                tree_count += instance_info.child_instances;
-                observer_count += instance_info.observers;
-                placeholder_count += instance_info.placeholders;
-
-            });
-
-            if (Object.keys(old_instances_info).length > 0) {
-
-                metalogger.debug('----- instances -----');
-                var diff = dynamic_utils.object_difference(old_instances_info, instances_info);
-                var removed_count = 0,
-                    added_count = 0;
-                for (var removed_name in diff.removed) {
-                    var removed = diff.removed[removed_name];
-                    metalogger.debug('- ' + removed_name, removed);
-                    removed_count++;
-                }
-                for (var added_name in diff.added) {
-                    var added = diff.added[added_name];
-                    metalogger.debug('+ ' + added_name, added);
-                    added_count++;
-                }
-                metalogger.debug('===== removed: ' + removed_count + ', added: ' + added_count + ', total: ' + instance_count + '; placeholders: ' + placeholder_count + '; observers: ' + observer_count + ' =====');
-            }
-
-            old_instances_info = instances_info;
-
-        };
-
-    });
+	 dynamic_app.socket_connect_channel();
 
     dynamic_app.define_templates();
-
+	 dynamic_app.register_components();
     dynamic_app.vars.components.forEach(function register_components(component) {
         component.locate();
         component.initialise();
@@ -155,17 +120,25 @@ dynamic_app.run = function () {
     dynamic_app.vars.main_instance.enhance(dynamic_instance_class);
     dynamic_app.vars.main_instance.get_values_and_templates();
 
-
     dynamic_app.vars.components.forEach(function notify_component_start(component) {
         component.started();
     });
 };
 
 dynamic_app.connect_channel = function( channel_name ){
-	logger.info("Using web socket ", channel_name );
-	dynamic_app.channel = dynamic_websocket.open_channel( channel_name );
+	dynamic_app.vars.requested_channel_name = channel_name;
+};
 
-	return dynamic_app.channel;
+dynamic_app.socket_connect_channel = function(){
+	if (dynamic_app.vars.requested_channel_name.length < 1){
+		dynamic_app.vars.requested_channel_name = dynamic_dom.get_dataset_value_or_default( document.body, api_keywords.dom.data.socket_channel, '' );
+	}
+	if (dynamic_app.vars.requested_channel_name.length > 0){
+		logger.info("Using web socket ", dynamic_app.vars.requested_channel_name );
+		dynamic_app.vars.socket_channel = dynamic_websocket.open_channel( dynamic_app.vars.requested_channel_name );
+
+		return dynamic_app.vars.socket_channel;
+	}
 };
 
 
@@ -325,32 +298,13 @@ dynamic_placeholder.set_value_reference = function ( dynamic_value_ref ) {
 
 
 dynamic_placeholder.attach_value = function ( dynamic_value ) {
-	// if (this.value_observer !== null){
-	// 	this.value_observer.remove();
-	// }
-	//
-	// this.dynamic_value = dynamic_value;
-	// var self = this;
-	//
-	// this.value_observer = this.dynamic_value.observe( 'placeholder', function value_content_changed( trigger_value ){
-	// 	logger.debug( 'Placeholder::ValueChanged '+ self.definition.name+' on '+self.reference );
- //  	 	self.on_value_changed( trigger_value );
-	// }, this );
-	//
-	// if (this.dynamic_value.state === dynamic_values.STATE.DEFINED || this.dynamic_value.state === dynamic_values.STATE.ASSIGNED ){
- //  		logger.debug('Placeholder::CallObserver for ' + this.dynamic_value.name + ' (state=' + this.dynamic_value.state + ')');
-	// 	self.on_value_changed( this.dynamic_value );
-	// } else {
-	// 	logger.debug('Placeholder::SkipObserver for ' + this.dynamic_value.name + ' because of state ' + this.dynamic_value.state);
-	// }
 	this.dynamic_value = dynamic_value;
 	this.on_value_changed.call( this );
 };
 
 dynamic_placeholder.single_instance = function () {
 
-    // logger.debug('Single instance of ' + this.definition.name + ' for ' + dynamic_value.name, this);
-    // this.dynamic_value = dynamic_value.get_final();
+	 logger.debug('Placeholder::SingleInstance of ' + this.definition.name + ' for ' + this.dynamic_value.name );
 
     this.check_complete(this.dynamic_value);
 };
@@ -362,6 +316,7 @@ dynamic_placeholder.multiple_instance = function () {
         child_keys = Object.keys(dynamic_value.children),
         items = this.sort_order;
 
+		  logger.debug('Placeholder::MultipleInstance of ' + this.definition.name + ' for ' + this.dynamic_value.name );
     if (items.length > 0) {
         child_keys = child_keys.sort(function (key_a, key_b) {
             var
@@ -1258,11 +1213,7 @@ AppControl$base.prototype.attach_value = function ( dynamic_value ) {
 		dynamic_dom.set_dataset_value( this.element, api_keywords.dom.dynamic_value_camel, this.dynamic_value.name );
 		this.define_rest();
 		var self = this;
-		this.control_observer = this.dynamic_value.observe('control-' + this.element.tagName, function update_control(dv) {
-		  self.update_by_value(dv);
-	  	} );
-
-		// this.instance.add_observer( this.control_observer, this 	);
+		this.control_observer = this.dynamic_value.observe('control-' + this.element.tagName, this.update_by_value, this );
 	}
 };
 
@@ -1426,7 +1377,7 @@ FormControl.prototype.set_up = function () {
         var dynamic_value = this.dynamic_values[value_names[vni]];
 
         this.instance.add_observer(
-            dynamic_value.observe('form-is-complete_' + this.element.name, check_form_complete(this), this)
+            dynamic_value.observe('form-is-complete_' + this.element.name, this.check_complete, this)
         );
     }
 
@@ -1500,15 +1451,17 @@ AppControl.prototype.set_control_value = function (dynamic_value, text_value) {
 };
 
 AppControl.prototype.update_by_value = function (dynamic_value) {
+	if (!this.on_change_active){
     if (this.element !== null && typeof dynamic_value !== 'undefined' && dynamic_value !== null) {
         var
             dv_text = dynamic_value.get_text();
 
-        if (this.element.value !== dv_text) {
+        if (this.get_control_value() !== dv_text) {
 			  this.set_control_value( dynamic_value, dv_text );
            this.element.dispatchEvent(change_by_value);
         }
     }
+ }
 };
 
 AppControl.prototype.remove = function () {
@@ -1527,6 +1480,10 @@ AppControl.prototype.remove = function () {
 
 AppControl.prototype.get_control_value = function(){
 	return this.element.value;
+};
+
+AppControl.prototype.update_initial_value = function () {
+	this.update_value();
 };
 
 AppControl.prototype.update_value = function () {
@@ -1648,6 +1605,17 @@ ValueFormatter.prototype.format_value = function () {
     }
 };
 
+var supportsPassive = false;
+try {
+  var opts = Object.defineProperty({}, 'passive', {
+	 get: function() {
+		supportsPassive = true;
+	 }
+  });
+  window.addEventListener("test", null, opts);
+} catch (e) {}
+
+
 AppControl.prototype.set_up = function () {
 
     var
@@ -1660,9 +1628,10 @@ AppControl.prototype.set_up = function () {
         }),
         self = this;
 // 	 dynamic_dom.set_dataset_value( this.element, api_keywords.dom.dynamic_value_camel, this.dynamic_value.name );
+	this.on_change_active = false;
 
 	 if (this.element.value !== "" && this.dynamic_value.is_empty()) {
-	     self.update_value();
+	     self.update_initial_value();
 	 } else {
 	     self.update_by_value(this.dynamic_value);
 	 }
@@ -1677,22 +1646,14 @@ AppControl.prototype.set_up = function () {
         }
     });
 
-	var supportsPassive = false;
-	try {
-	  var opts = Object.defineProperty({}, 'passive', {
-	    get: function() {
-	      supportsPassive = true;
-	    }
-	  });
-	  window.addEventListener("test", null, opts);
-	} catch (e) {}
-
     this.element.addEventListener('change', function () {
         if (self.unset_value !== null) {
             self.unset_value.set_value(null);
         }
 
+		  self.on_change_active = true;
         self.update_value();
+		  self.on_change_active = false;
     }, supportsPassive? {passive: true} : false);
 
     if (this.element.readOnly) {
@@ -1707,7 +1668,6 @@ AppControl.prototype.set_up = function () {
         }
         if (typeof formatter === "object" && formatter !== null) {
             this.formatter = new ValueFormatter(this, class_name);
-
         }
 
     }
@@ -1733,12 +1693,10 @@ InputHiddenControl.prototype.set_value_by_value = function( new_value ){
 	this.dynamic_value.value = new_value;
 };
 
-InputHiddenControl.prototype.get_control_value = function(){
+InputHiddenControl.prototype.update_initial_value = function(){
 
 	this.remove_observer( 'deferred' );
 	this.deferred_observer = observer_module.create_dynamic_text_reference( this.element.value, this.instance, this.set_value_by_value, this, true );
-
-	return '';
 };
 
 function InputCheckableControl(element, template_instance) {
@@ -1760,64 +1718,90 @@ InputCheckableControl.prototype.get_control_value = function(){
 
 InputCheckableControl.prototype.set_control_value = function (dynamic_value, text_value) {
 	if (this.element.value === text_value ){
-		this.checked = true;
+		this.element.checked = true;
 	} else {
 		if ( text_value === this.unchecked_value ){
-			this.checked = false;
+			this.element.checked = false;
 		}
 	}
 };
 
-
-
-
-range_testers = {
-    '<': function bound_lt(val, bound) {
-        return bound < val;
-    },
-    '[': function bound_le(val, bound) {
-        return bound <= val;
-    },
-    '>': function bound_gt(val, bound) {
-        return bound > val;
-    },
-    ']': function bound_ge(val, bound) {
-        return bound >= val;
-    }
-};
+var
+	range_testers = {
+	    '<': function bound_lt(val, bound) {
+	        return bound < val;
+	    },
+	    '[': function bound_le(val, bound) {
+	        return bound <= val;
+	    },
+	    '>': function bound_gt(val, bound) {
+	        return bound > val;
+	    },
+	    ']': function bound_ge(val, bound) {
+	        return bound >= val;
+	    }
+	},
+	range_dispatcher = null
+;
 
 function ValueRange(range) {
     this.range = range;
+	 this.left_hook = range.substr( 0, 1 );
+	 this.right_hook = range.substr( -1, 1 );
+
     this.lower_bound_check = this.range === api_keywords.template.range.all;
     this.upper_bound_check = this.range === api_keywords.template.range.all;
 
     if (range !== api_keywords.template.range.all && range !== api_keywords.template.range.empty) {
-        var parts = range.split(',');
-
-        this.lower_bound = parts[0].substring(1);
+		 range = range.substring(1,range.length - 1 );
+        this.allowed = range.split(',');
+		  this.lower_bound = this.allowed[0];
         if (this.lower_bound.length > 0) {
-            this.lower_bound_check = range_testers[parts[0].substr(0, 1)];
+            this.lower_bound_check = range_testers[ this.left_hook ];
         }
-        this.upper_bound = parts[1].slice(0, -1);
+        this.upper_bound = this.allowed[1];
         if (this.upper_bound.length > 0) {
-            this.upper_bound_check = range_testers[parts[1].substr(-1, 1)];
+            this.upper_bound_check = range_testers[ this.right_hook ];
         }
     }
+	 this.set_up();
 }
 
-ValueRange.prototype.includes = function (dynamic_value) {
+ValueRange.prototype.set_up = function () {
+	if ( range_dispatcher === null){
+		range_dispatcher = {
+			'<': ValueRange.prototype.lies_between,
+			'[': ValueRange.prototype.lies_between,
+			'(': ValueRange.prototype.is_one_of
+		};
+	}
+
+	this.tester = range_dispatcher[ this.left_hook ];
+};
+
+ValueRange.prototype.is_one_of = function ( value ) {
+	return this.allowed.indexOf( value ) >= 0;
+};
+
+ValueRange.prototype.lies_between = function ( value ) {
+	var
+		lower_bound_check = typeof this.lower_bound_check === "function" ? this.lower_bound_check(value, this.lower_bound) : this.lower_bound_check,
+		upper_bound_check = typeof this.upper_bound_check === "function" ? this.upper_bound_check(value, this.upper_bound) : this.upper_bound_check
+	;
+
+	return lower_bound_check && upper_bound_check;
+};
+
+ValueRange.prototype.includes = function ( dynamic_value ) {
     var
-        result;
+        result = false;
 
     if (dynamic_value === null || dynamic_value.is_empty()) {
         result = this.range === api_keywords.template.range.empty;
     } else {
         var
-            val = dynamic_value.get_value(),
-            lower_bound_check = typeof this.lower_bound_check === "function" ? this.lower_bound_check(val, this.lower_bound) : this.lower_bound_check,
-            upper_bound_check = typeof this.upper_bound_check === "function" ? this.upper_bound_check(val, this.upper_bound) : this.upper_bound_check;
-
-        result = lower_bound_check && upper_bound_check;
+            val = dynamic_value.get_value();
+			result = this.tester.call( this, val );
     }
 
     return result;
@@ -1892,7 +1876,13 @@ dynamic_app.types.AppComponent.prototype.initialise = function (callback) {
 };
 
 dynamic_app.types.AppComponent.prototype.started = function (callback) {
-    if (this.element !== null && typeof this.on_start_callback == "function") {
-        this.on_start_callback(this.element);
-    }
+	if (dynamic_app.vars.socket_channel !== null){
+		var room_name = dynamic_dom.get_dataset_value_or_default( this.element, api_keywords.dom.data.socket_room, '' );
+	   if ( room_name.length >0 ) {
+			dynamic_app.vars.socket_channel.subscribe( room_name );
+	   }
+	}
+	if (this.element !== null && typeof this.on_start_callback == "function") {
+	  this.on_start_callback(this.element);
+	}
 };

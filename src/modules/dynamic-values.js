@@ -16,9 +16,6 @@ var values_module = {
 		},
 		DynamicMetavalue: function(name) {
 			this.create(name);
-		},
-		DynamicByReferenceValue: function(name) {
-			this.create(name);
 		}
 	}
 };
@@ -27,19 +24,15 @@ var
 	api_keywords = require('./dynamic-api_keywords.js'),
 	dynamic_utils = require('./dynamic-utils'),
 	deep_equal = require('deep-equal'),
+	util = require('util'),
 
 	logger = require('./browser_log').get_logger(values_module.info.Name),
 	// selected_re=/(.+)\.@selected/g,
 	meta_indicator = api_keywords.meta.indicator,
 	meta_selected_name = meta_indicator + 'selected',
 	meta_count_name = meta_indicator + api_keywords.meta.count,
-	selected_reference_token = '@',
 	parent_meta_selector = api_keywords.symbols.from_here_selector + api_keywords.meta.indicator
 ;
-
-values_module.reference_parser = function(reference) {
-	return new ReferenceParser(reference);
-};
 
 values_module.reset_for_test = function(){
 	values_module.vars = {
@@ -48,6 +41,10 @@ values_module.reset_for_test = function(){
 		observers: {},
 		observer_index: 0
 	};
+};
+
+values_module.reference_parser = function( ref ){
+	return new ReferenceParser( ref );
 };
 
 values_module.enhance = function(methods) {
@@ -65,17 +62,13 @@ values_module.define = function(value_name) {
 		logger.error("Value must have a name");
 		return null;
 	}
-	if (value_name.indexOf(selected_reference_token) > 0) {
-		result = new values_module.types.DynamicByReferenceValue(value_name);
-	} else {
-
-		parts = value_name.split(api_keywords.symbols.name_separator);
-		if (parts.length > 1) {
-			if (dynamic_utils.starts_with(parts.slice(-1)[0], api_keywords.meta.indicator )) {
-				result = new values_module.types.DynamicMetavalue(value_name);
-			}
+	parts = value_name.split(api_keywords.symbols.name_separator);
+	if (parts.length > 1) {
+		if (dynamic_utils.starts_with(parts.slice(-1)[0], api_keywords.meta.indicator )) {
+			result = new values_module.types.DynamicMetavalue(value_name);
 		}
 	}
+
 	if (result === null) {
 		result = new values_module.types.DynamicValue(value_name);
 	}
@@ -250,11 +243,11 @@ DynamicValue.prototype.get_dynamic_value = function get_dynamic_value_for_value(
 		var
 			parent_value = this;
 		if (dynamic_utils.starts_with(value_name, api_keywords.symbols.parent_selector)) {
-			parent_value = this.parent === null ? this.get_final().parent : this.parent;
+			parent_value = this.parent;
 			value_name = value_name.substring(1);
 		} else {
 			if (Object.keys(this.children).length < 1 && !dynamic_utils.starts_with( value_name, parent_meta_selector )) {
-				parent_value = this.parent === null ? this.get_final().parent : this.parent;
+				parent_value = this.parent;
 			}
 		}
 		value_name = parent_value.name + value_name;
@@ -393,21 +386,24 @@ DynamicValue.prototype.get_children = function() {
 	return result;
 };
 
-DynamicValue.prototype.observe = function(name, observer, ref_object) {
+DynamicValue.prototype.observe = function(name, observer, this_arg) {
 	var self = this;
-	if (typeof ref_object !== "undefined") {
+	if (typeof this_arg !== "undefined") {
 		Object.keys(values_module.vars.observers).forEach(function(value_observer_ref) {
 			var value_observer = values_module.vars.observers[value_observer_ref];
 
-			if (value_observer.callback.name === observer.name && value_observer.dynamic_value === self && value_observer.ref_object === ref_object) {
-				logger.error('Redefinition of observer', value_observer);
+			if (value_observer.callback === observer && value_observer.this_arg === this_arg) {
+				logger.error(this.name+': Redefinition of observer', value_observer);
 			}
+			// if (value_observer.callback.name === observer.name && value_observer.dynamic_value === self && value_observer.this_arg === this_arg) {
+			// 	logger.error('Redefinition of observer', value_observer);
+			// }
 		});
 	}
 
 	var
 		result = new DynamicValueObserver(this.name + '_' + name+'_'+observer.name, observer, this);
-	result.ref_object = ref_object;
+	result.this_arg = this_arg;
 
 	this.observers.push(result);
 
@@ -470,14 +466,6 @@ DynamicValue.prototype.set_current = function(current_ref) {
 
 DynamicValue.prototype.clear = function() {
 	return this.set_value( null );
-};
-
-DynamicValue.prototype.get_final = function() {
-	return this;
-};
-
-DynamicValue.prototype.is_deferred = function() {
-	return false;
 };
 
 DynamicValue.prototype.notify_structural_change = function() {
@@ -585,6 +573,7 @@ DynamicValue.prototype.update_from_attributes = function() {
 		// logger.debug( 'clear name '+child_name);
 		// TODO: clear childs that are no longer there
 		// logger.warning('TODO: clear childs that are no longer there, '+ child_name );
+		console.log( 'DynamicValue::update_from_attributes '+child_name, this.children[ child_name ].constructor.name, 'Inspect:', util.inspect(this.children[ child_name ]) );
 		this.children[ child_name ].remove();
 	}, this);
 
@@ -669,7 +658,7 @@ DynamicValue.prototype.notify_observers = function(use_deferred) {
 		var observer = current_observers[li];
 		if (this.pending_request === null){
 			logger.debug( '+ + + + '+ this.name+' notification '+li+', '+current_observers.length + ', '+this.observers.length+', '+observer.reference );
-			observer.callback(dynamic_value);
+			observer.callback.call( observer.this_arg, dynamic_value );
 			logger.debug( '- - - - '+ this.name+' notification '+li+', '+current_observers.length + ', '+this.observers.length  );
 		} else {
 			logger.debug( '. . . . '+ this.name+' deferring    '+li+', '+current_observers.length + ', '+this.observers.length+', '+observer.reference  );
@@ -788,86 +777,11 @@ DynamicMetavalue.prototype.set_up = function() {
 	this.type = value_types.scalar;
 };
 
-function DynamicByReferenceValue() {}
-DynamicByReferenceValue.prototype = new DynamicValue();
-
-DynamicByReferenceValue.prototype.get_full_reference = function() {
-	return this.name;
-};
-
-DynamicByReferenceValue.prototype.get_final = function() {
-	return this.delegate_value === null ? this : this.delegate_value;
-};
-
-DynamicByReferenceValue.prototype.is_deferred = function() {
-	return false;
-};
-
-function by_reference_updater( byref_dynamic_value ) {
-	return function update_reference_through_index( index_value ) {
-		logger.debug( 'By ref index changed', index_value.name, byref_dynamic_value.name, index_value.is_empty() );
-		if (!index_value.is_empty()) {
-			var value_name = byref_dynamic_value.parent_ref + index_value.get_value() + byref_dynamic_value.child_ref;
-
-			if (value_name.indexOf(selected_reference_token) > 0) {
-				var intermediate = new values_module.types.DynamicByReferenceValue(value_name);
-				intermediate.set_up();
-				intermediate.observe( "Double ref", function( delegated_value ){
-					byref_dynamic_value.delegate_value = delegated_value.get_final();
-					byref_dynamic_value.notify_observers( byref_dynamic_value.delegate_value );
-				});
-			} else {
-				byref_dynamic_value.delegate_value = values_module.get_or_define(byref_dynamic_value.parent_ref + index_value.get_value() + byref_dynamic_value.child_ref);
-				byref_dynamic_value.notify_observers( byref_dynamic_value.delegate_value );
-			}
-		} else {
-			byref_dynamic_value.delegate_value = null;
-			byref_dynamic_value.notify_observers( null );
-		}
-	};
-}
-
-DynamicByReferenceValue.prototype.set_up = function() {
-	var
-		selected_reference_re = new RegExp( selected_reference_token, 'g' ),
-		m = selected_reference_re.exec( this.name )
-	;
-
-	this.delegate_value = null;
-
-	if (m) {
-		var
-			left = this.name.substring(0, m.index),
-			// index_value = values_module.get_or_define(left + meta_selected_name),
-			right = this.name.substring(m.index + 1);
-
-	   this.reference_value = values_module.get_or_define( left.slice(0,-1) );
-	   this.index_value = this.reference_value.make_selectable();
-		this.parent_ref = left;
-		this.child_ref = right;
-
-		this.by_reference_observer = this.index_value.observe('index by ref', by_reference_updater( this ), this.name );
-		if (!this.index_value.is_empty()) {
-			by_reference_updater( this ).call( this, this.index_value );
-		}
-	}
-};
-
-DynamicByReferenceValue.prototype.is_empty = function() {
-	var
-		result = this.delegate_value === null;
-
-	return result;
-};
-
 values_module.types.DynamicValue.prototype = new DynamicValue();
 values_module.types.DynamicValue.constructor = values_module.types.DynamicValue;
 
 values_module.types.DynamicMetavalue.prototype = new DynamicMetavalue();
 values_module.types.DynamicMetavalue.constructor = values_module.types.DynamicMetavalue;
-
-values_module.types.DynamicByReferenceValue.prototype = new DynamicByReferenceValue();
-values_module.types.DynamicByReferenceValue.constructor = values_module.types.DynamicByReferenceValue;
 
 values_module.STATE = {
 	DEFINED: 'defined',

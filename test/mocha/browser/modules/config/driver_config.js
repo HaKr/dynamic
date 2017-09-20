@@ -25,7 +25,7 @@ const
 
   browser[name] = function() {
     return Promise.resolve(savedFn.apply(driver, arguments));
-  }
+ };
 });
 
 /**

@@ -6,8 +6,8 @@ var
 			name_separator: 		'.',
 			from_here_selector: 	'.',
 			parent_selector:		'..',
-			reference_start:		'$[',
-			reference_end:			']]'
+			reference_start:		'{{',
+			reference_end:			'}}'
 		},
 		meta: {
 			indicator:			'$',
@@ -26,7 +26,9 @@ var
 				unset:	'unset',
 				alias:   'alias',
 				put_value: 'putValue',
-				unchecked_value: 'uncheckedValue'
+				unchecked_value: 'uncheckedValue',
+				socket_channel: 'socketChannel',
+				socket_room: 'socketSubscribe'
 			}
 		},
 		rest: {
@@ -68,6 +70,7 @@ var
 				in: 		'in',
 				is: 		'is',
 				all: 		'[]',
+				one_of:  '()',
 				empty: 		'<>'
 			}
 		}

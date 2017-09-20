@@ -1,8 +1,5 @@
-/*jslint node: true */
-/*global driver: false */
-/*global by: false */
 
-
+(function(){
 'use strict';
 
 const
@@ -23,8 +20,10 @@ class HelloWorldPage extends BasePage {
 		const self = this;
 
 		return this.get( this.url, this.inputLocator )
-				.then( ()=> {return self.addresseeElement = self.browser.findElement( this.inputLocator ) });
-				
+				.then( ()=> {
+					self.addresseeElement = self.browser.findElement( this.inputLocator );
+					return self.addresseeElement;
+				})
 		;
 	}
 
@@ -42,7 +41,7 @@ class HelloWorldPage extends BasePage {
 		return this.hasSalutation()
 			.then( (has_salutation) => {
 				return has_salutation ? self.salutationElement.getText() : Promise.resolve('');
-			}) 
+			});
 	}
 
 	hasSalutation(){
@@ -65,4 +64,5 @@ class HelloWorldPage extends BasePage {
 }
 
 module.exports = HelloWorldPage;
-	
+
+})( module );

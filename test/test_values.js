@@ -4,6 +4,7 @@ var
 	test = require('tape'),
 	utils_module = require('../src/modules/dynamic-utils.js'),
 	values_module = require('../src/modules/dynamic-values.js'),
+	observers_module = require('../src/modules/dynamic-observers.js'),
 	values_logger = logger.module.get_logger( values_module.info.Name ),
 	test_persons
 	;
@@ -14,16 +15,16 @@ var
 ;
 
 
-logger.module.set_default_level( logger.module.Levels.DEBUG );
+logger.module.set_default_level( logger.module.Levels.WARNING );
 test('Basic Values API ', function (t) {
 
 	values_module.reset_for_test();
 
 	var
-		reference_alt1 = 'displaygroups.@.grouplabel.@.setlabel.@.css_class',
-		reference_alt2 = 'displaygroups[@][grouplabel][@][setlabel][@][css_class]',
-		reference_alt3 = 'displaygroups.@.grouplabel.[@][setlabel][@][css_class]',
-		by_ref = 'a.@.b.@.c.@',
+		reference_alt1 = 'displaygroups.dg_1.grouplabel.gl_2.setlabel.sl_3.css_class',
+		reference_alt2 = 'displaygroups[dg_1][grouplabel][gl_2][setlabel][sl_3][css_class]',
+		reference_alt3 = 'displaygroups.dg_1.grouplabel.[gl_2][setlabel][sl_3][css_class]',
+		by_ref = 'a.1.b.2.c.3',
 		modifier = 'modifier',
 		modify_count = 0
 		;
@@ -94,7 +95,7 @@ test('Dynamic values in depth', function ( testcase ) {
 	var
 		schroedingers_experiment = function( value_name, value_value ){
 			var
-				expected_notification_sequence_for_value = utils_module.list_duplicate(expected_notification_sequence).slice(0, expected_notification_sequence.length - (value_name.split('.').length-1) );
+				expected_notification_sequence_for_value = utils_module.list_duplicate(expected_notification_sequence).slice(0, expected_notification_sequence.length - (value_name.split('.').length-1) ),
 
 				alive_cat = function(){
 					return values_module.get_or_define( value_name );
@@ -167,7 +168,7 @@ test('Dynamic values in action', function (t) {
 	values_module.reset_for_test();
 
 
-	t.plan(7);
+	t.plan(8);
 
 	test_persons = person_list;
 
@@ -178,9 +179,14 @@ test('Dynamic values in action', function (t) {
 
 
 	var
-		dv_persons_selected = values_module.get_or_define( 'persons.$selected' ),
+		dv_current_change_count = 0,
+		dv_persons_selected = values_module.get_or_define( 'current.person' ),
 		dv_persons = values_module.get_or_define( 'persons' ),
-		dv_person_current = values_module.get_or_define( 'persons[@]' ),
+		dv_person_current,
+		dv_person_current_observer = observers_module.create_dynamic_value_reference( 'persons.{{current.person}}', null, function ( nv ){
+			dv_current_change_count++;
+			dv_person_current = nv;
+		}, null, null ),
 		dv_person_one = values_module.get_or_define( 'persons.person_1' ),
 		dv_person_one_first = values_module.get_or_define( 'persons.person_1.first-name' ),
 		dv_person_three_reference = values_module.get_or_define( 'persons.person_3.$reference' ),
@@ -194,18 +200,20 @@ test('Dynamic values in action', function (t) {
 
 	dv_persons_selected.set_value( 'person_1' );
 
-	t.equals( dv_person_current.get_final().get_value(), dv_person_one.get_value(), "First person selected." );
+	t.equals( dv_person_current.get_value(), dv_person_one.get_value(), "First person selected." );
 
 	dv_persons_selected.set_value( 'person_3' );
-	t.equals( dv_person_current.get_final().get_value(), person_list[dv_person_three_reference.get_value()], "Third person unmodified." );
+	t.equals( dv_person_current.get_value(), person_list[dv_person_three_reference.get_value()], "Third person unmodified." );
 
-	dv_person_current.observe( 'person_current', function( dv ){
-		t.equals( dv.get_value(), person_list.person_5, 'Fifth person selected (1-3).' );
+	dv_persons_selected.observe( 'person_current', function( dv ){
+		t.equals( dv.get_value(), 'person_5', 'Fifth person selected (1-3).' );
 	});
 
 	dv_persons_selected.set_value( 'person_5' );
-	t.equals( dv_person_current.get_final().get_value().company.address.city, person_list.person_5.company.address.city, "Fifth person selected (2-3)." );
-	t.equals( dv_person_current.get_final().get_value().company.address.city, dv_person_five_company_city.get_value(), "Fifth person selected (3-3)." );
+	t.equals( dv_person_current.get_value().company.address.city, person_list.person_5.company.address.city, "Fifth person selected (2-3)." );
+	t.equals( dv_person_current.get_value().company.address.city, dv_person_five_company_city.get_value(), "Fifth person selected (3-3)." );
+
+	t.equals( dv_current_change_count, 3, 'current.person modified three times.');
 
 	t.end();
 });

@@ -1,5 +1,5 @@
 
-let 
+let
 	chai = require('chai')
 ;
 
@@ -18,7 +18,6 @@ before( function(){
 // });
 
 
-function ignore(){
 describe('Selenium webdriver and PhantomJS', function() {
 	it( 'should open google and look for "webdriver"', function(done){
 
@@ -28,10 +27,10 @@ describe('Selenium webdriver and PhantomJS', function() {
 				driver.findElement(By.name('btnG')).click();
 
 			})
-			.then( () => 
-				chai.expect('.g:first-of-type h3').dom.to.have.text( 'Selenium Web_driver' )				
+			.then( () =>
+				chai.expect('.g:first-of-type h3').dom.to.have.text( 'Selenium Web_driver' )
 			)
-			.then( () => driver.quit() ) 
+			.then( () => driver.quit() )
 			.then( () => done() )
 
 			.catch( error => done(error) )
@@ -40,14 +39,12 @@ describe('Selenium webdriver and PhantomJS', function() {
 	} );
 
 });
-}
 
-function ignore2(){
 
-describe('my blog', () => {
+xdescribe('my blog', () => {
   it('should navigate to post', function() {
     this.timeout( 5000 );
-      
+
     return driver.get('http://markbirbeck.com/')
     .then(
       driver.getTitle()
@@ -65,10 +62,10 @@ describe('my blog', () => {
     ;
   });
 });
-}
+
 
 // function ignore3(){
-describe('Test mark Birbeck\'s Blog', function(){
+xdescribe('Test mark Birbeck\'s Blog', function(){
     beforeEach(function(done) {
         this.timeout( 5000 );
         driver.get('http://markbirbeck.com')
@@ -89,10 +86,10 @@ describe('Test mark Birbeck\'s Blog', function(){
 
           return driver.findElement( By.linkText('A Mixin Approach to Material Design Lite Using Sass' ) )
             .click()
-            .then( 
+            .then(
                 driver.getTitle().should.eventually.equal('A Mixin Approach to Material Design Lite Using Sass')
             )
-            
+
           ;
         });
     });

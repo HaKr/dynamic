@@ -197,19 +197,13 @@ DynamicTemplatePlaceholder.prototype.add_value = function (dynamic_value) {
 
     this.dynamic_values.push(dynamic_value);
     if (this.definition.wait_for_complete) {
-        dynamic_value.observe('check_for_complete', function check_placeholder_complete(dv) {
-            self.check_complete();
-        }, self);
+        dynamic_value.observe('check_for_complete', this.check_complete, this );
     }
 };
 
 DynamicTemplatePlaceholder.prototype.check_complete = function (dynamic_value) {
     var
         result = false;
-
-    if (!dynamic_utils.is_null(dynamic_value)) {
-        dynamic_value = dynamic_value.get_final();
-    }
 
     result = this.range.includes(dynamic_value);
 

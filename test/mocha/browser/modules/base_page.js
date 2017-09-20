@@ -1,8 +1,4 @@
-/*jslint node: true */
-/*global driver: false */
-/*global by: false */
-
-
+(function base_page_module(){
 'use strict';
 
 const
@@ -28,7 +24,7 @@ class BasePage {
         this.url = url;
 
         return self.browser.get( url )
-            .then( () => {return self.browser.findElement( locator ) });
+            .then( () => {return self.browser.findElement( locator ); });
 
     }
 
@@ -48,9 +44,9 @@ class BasePage {
         const p = self.browser.takeScreenshot();
 
         p.then( function( image_data, err ){
-            const 
+            const
                 d = new Date(),
-                datestring = d.getFullYear() + "-" + ("0"+(d.getMonth()+1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2) + 
+                datestring = d.getFullYear() + "-" + ("0"+(d.getMonth()+1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2) +
                      " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2)+ ":" + ("0" + d.getSeconds()).slice(-2),
                 filename = "./screenshots/" + datestring + '_' + name + '.png'
             ;
@@ -64,21 +60,22 @@ class BasePage {
 
         // self.browser.takeScreenshot()
         //     .then( (png_base64) => {
-        //         const 
+        //         const
         //             d = new Date(),
-        //             datestring = (d.getFullYear() + + "-" + ("0"+(d.getMonth()+1)).slice(-2) + "-" + "0" + d.getDate()).slice(-2) + 
+        //             datestring = (d.getFullYear() + + "-" + ("0"+(d.getMonth()+1)).slice(-2) + "-" + "0" + d.getDate()).slice(-2) +
         //                  " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
 
         //             filename = "./screenshots/" + datestring + '_' + name + '.png'
         //         ;
         //         const  png_data = new Buffer( png_base64, 'base64');
         //         fs.mkdir( './screenshots', ()=>{
-        //             fs.writeFile( filename, png_data, ()=>{} );    
+        //             fs.writeFile( filename, png_data, ()=>{} );
         //         });
         //     })
     }
 
-};
-
+}
 
 module.exports = BasePage;
+
+})();

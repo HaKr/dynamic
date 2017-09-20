@@ -1,4 +1,4 @@
-let 
+let
 	chai = require('chai'),
 	expect = chai.expect,
 	HelloWorldPage = require('./modules/hello_world_page')
@@ -11,7 +11,7 @@ function hello( who ){
 	return 'Hello '+who+'!';
 }
 
-describe('Hello world basic', function(){
+describe('Basic Hello World example; Text in P element follows value of INPUT.', function(){
 	const
 		toe = new HelloWorldPage( 'file://'+__dirname+'/assets/html/hello_world_basic.html' ),
 		theWorld = 'world',
@@ -56,7 +56,7 @@ describe('Hello world basic', function(){
 });
 
 
-describe('Hello world with template', function(){
+describe('Templated "Hello World"; P element follows INPUT, but is only visible when INPUT is not blank', function(){
 	const
 		toe = new HelloWorldPage( 'file://'+__dirname+'/assets/html/hello_world_template.html' ),
 		dieWelt = 'die Welt',

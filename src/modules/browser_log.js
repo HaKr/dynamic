@@ -11,7 +11,7 @@ function Log() {
 		INFO: 1,
 		DEBUG: -1
 	};
-	this.default_level = this.Levels.ERROR;
+	this.default_level = this.Levels.INFO;
 
 	this.Targets = this.hasConsole ? {
 		ERROR: {

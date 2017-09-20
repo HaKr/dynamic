@@ -34,9 +34,9 @@ DynamicApp.prototype.before_run = function() {
 	logger.debug(function() {
 		self.components = dynamic_app_module.vars.components;
 
-		self.definitions = templates_module.vars.definitions;
-		self.placeholders = templates_module.vars.placeholders;
-		self.instances = templates_module.vars.instances;
+		self.definitions = templates_module.vars.Definitions;
+		self.placeholders = templates_module.vars.Placeholders;
+		self.instances = templates_module.vars.Instances;
 
 		self.observers = values_module.vars.observers;
 		self.values = values_module.vars.values;
@@ -53,8 +53,21 @@ DynamicApp.prototype.$ = function(value_name) {
 	return this.get_dynamic_value(value_name);
 };
 
+
 DynamicApp.prototype.$$ = function(value_name) {
 	return this.get_dynamic_value(value_name).value;
+};
+
+DynamicApp.prototype.$T = function(template_name) {
+	var result = null;
+
+	templates_module.vars.Placeholders.forEach( function (placeholder){
+		if (placeholder.definition.name == template_name){
+			result = placeholder;
+		}
+	});
+
+	return result;
 };
 
 DynamicApp.prototype.register_component = dynamic_app_module.register_component;

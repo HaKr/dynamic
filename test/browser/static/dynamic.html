@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang=en>
+	<head>
+		<meta charset=utf-8>
+		<title>Monitor &amp; Control tool</title>
+
+		<script src=../../../dist/js/dynamic-app.js></script>
+	</head>
+
+	<body class=container>
+		<header id="header">
+			<nav id="menu" class="menu">
+				<div id="logo" class="logo">
+					<h1>EEG / KWKG portal development monitor &amp; control</h1>
+				</div>
+			</nav>
+		</header>
+
+		<!-- some common templates -->
+		<div class="helpTextContainer template help-text">
+			<a class=""><i class="fa fa-question-circle-o"></i></a>
+			<div class="replace parameter helpText"></div>
+		</div>
+
+		<label class="nested template labeled-item">
+			<span class="parameter reallabel"></span>
+			<span class="replace parameter data-item"></span>
+		</label>
+
+		<fieldset class="template input-with-help">
+			<label class="nested">
+				<span class="parameter reallabel"></span>
+				<input class="replace parameter control-element">
+			</label>
+			<div class="template help-text"></div>
+		</fieldset>
+		<!-- some common templates -->
+
+		<main class="component team-info" data-socket-subscribe={{current.working_directory}}>
+
+			<section>
+				<h4 class="template alive for channel.mct.status is active">Server connected</h4>
+				<!--  Coloured boxes with feedback of some server actions -->
+				<div class=app-messages>
+					<ul class="contains-{{app.messages.error.$count}} template app-error-list for app.messages.errors">
+						<li class="template app-error-item for each ..errors">{{.$value}}
+					</ul>
+					<ul class="contains-{{app.messages.warning.$count}} template app-warning-list for app.messages.warnings">
+						<li class="template app-warning-item for each ..warnings">{{.$value}}
+					</ul>
+					<ul class="contains-{{app.messages.success.$count}} template app-success-list for app.messages.successes">
+						<li class="template app-success-item for each ..successes">{{.$value}}
+					</ul>
+				</div>
+
+				<section class="team">
+					<h5>Team data</h5>
+					<!-- Form is required by html5 and also the Ciber CSS -->
+					<form action="javascript: return false;">
+
+						<!-- Git working directories. Hard coded, to include some invalid entries -->
+						<input type=hidden name=team.working_directories  data-rest=true />
+
+						<fieldset class="template wd-select extends input-with-help" >
+							<label class="argument reallabel">Working directory</label>
+							<select name=team.current.working_directory class="argument control-element" data-alias=current.working_directory>
+								<option class="placeholder wd-option" value="">Please select a directory from the list</option>
+								<option class="template wd-option for each team.working_directories" value={{.name}}>{{.name}}</option>
+								<option class="wd-option" value=EEG-one>EEG one</option>
+								<option class="wd-option" value=EEG-two>EEG two</option>
+							</select>
+							<p class="argument helpText">The working directory with portal sources.</p>
+						</fieldset>
+
+						<input type=hidden name={{current.working_directory}}.branches  			data-rest=true />
+
+						<fieldset class="template branch-select extends input-with-help">
+							<label class="argument reallabel">Branch</label>
+							<select id=cb-select name={{current.working_directory}}.current.branch class="argument control-element" data-alias=current.branch data-rest=true>
+								<option class="placeholder branch-option" value="" >Please select a branch from the list</option>
+								<option class="template branch-option for each {{current.working_directory}}.branches order by name" title={{.commit.message.complete}} value={{.name}}>{{.name}} ({{.commit.message.abbreviated}})</option>
+							</select>
+							<p class="argument helpText">Select the branch to work on
+						</fieldset>
+
+					</form>
+
+					<!-- Just another way to present some info about the selected branch -->
+					<p class="template current-branch-info for {{current.working_directory}}.branches.{{{{current.working_directory}}.current.branch}}">
+						{{.commit.hash}}<br />{{.commit.message.complete}}
+					</p>
+
+				</section>
+
+			</section>
+
+		</main>
+
+		<footer class="component services-info" data-socket-subscribe=services>
+			<p>This tool is developed by Ciber CMS ADM Java Services. Issues and improvements can be sent to <a href="mailto:nl.cms.adm.js@ciber.nl">nl.cms.adm.js@ciber.nl</a>.</p>
+			<ul>
+				<!--
+					Clickable label to control the docker services
+					Also extensive use of value references to modify the display state and colouring (through CSS)
+				-->
+				<li><label class=clickable><input type=checkbox  name=services.status value=active data-unchecked-value=inactive data-put-value=changing data-rest=true >
+					<span class="has-services-{{services.status}}">Docker down</span>
+					<span class="no--services-{{services.status}}">Docker up</span>
+				</label>
+				<li class="has-services-{{services.status}} {{services.modules.admin}}">Admin
+				<li class="has-services-{{services.status}} {{services.modules.entry}}">Entry
+				<li  class="has-services-{{services.status}}">localhost
+				<li>{{{{current.working_directory}}.branches.{{{{current.working_directory}}.current.branch}}.name}}
+
+				<li><a href="http://www.ciber.nl">COPYRIGHT © 2017 EXPERIS CIBER B.V.</a></li>
+			</ul>
+		</footer>
+
+	</body>
+</html>

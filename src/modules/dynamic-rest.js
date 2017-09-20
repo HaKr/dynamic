@@ -56,8 +56,14 @@
 			url = api_keywords.rest.api + url;
 		}
 
+		url = 'http://dynamic.ms.ciber.nl' + url;
+		logger.info( 'create_rest_resource', url );
+
 		if (dynamic_rest.vars.resources.hasOwnProperty( url ) ){
 			result = dynamic_rest.vars.resources[ url ];
+			if (dynamic_value !== null){
+				dynamic_value.content = '';
+			}
 			result.get();
 		} else {
 			result = new RestResource( url, dynamic_value );
@@ -78,16 +84,7 @@
 		if (this.dynamic_value !== null){
 			var self = this;
 			this.dynamic_value.set_on_load = false;
-
-			// this.rest_observer = this.dynamic_value.observe( 'rest_observer', function( v ){
-			// 	if (!self.dynamic_value.set_on_load){
-			// 		var data={};
-			// 		data[self.dynamic_value.name] = self.dynamic_value.value;
-			// 		self.put( data );
-			// 	}
-			// }, this );
 		}
-
 	}
 
 	RestResource.prototype.may_request = function( method_name ){
