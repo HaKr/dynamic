@@ -2,7 +2,7 @@
   "name": "dynamic-app",
   "version": "0.0.1",
   "description": "Dynamic templates that appear on value changes",
-  "main": "dynamic-server.js",
+  "main": "test/mocha/browser/test_hello_world.js",
   "scripts": {
     "test": "npm run deploy-static && npm run test:unit && npm run test:browser",
     "test:unit": "tape test/*.js",
@@ -27,7 +27,7 @@
     "type": "git",
     "url": "git@github.com/HaKr/dynamic.git"
   },
-	  "jshintConfig": {
+	"jshintConfig": {
 	  "esnext": true
 	},
   "keywords": [

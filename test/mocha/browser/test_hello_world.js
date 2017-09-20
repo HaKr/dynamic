@@ -1,5 +1,5 @@
-let
-	chai = require('chai'),
+const
+	chai = require( 'chai' ),
 	expect = chai.expect,
 	HelloWorldPage = require('./modules/hello_world_page')
 ;
@@ -11,94 +11,122 @@ function hello( who ){
 	return 'Hello '+who+'!';
 }
 
-describe('Basic Hello World example; Text in P element follows value of INPUT.', function(){
-	const
-		toe = new HelloWorldPage( 'file://'+__dirname+'/assets/html/hello_world_basic.html' ),
-		theWorld = 'world',
-		dieWelt = 'die Welt',
-		laMonde = 'la Monde',
-		blank   = ''
-	;
+function be_not_too_impatient( suite ){
+	suite.timeout( 2500 );
+	suite.slow( 750 );
+}
 
-    this.timeout( 2500 );
-    this.slow( 750 );
-
-	before(function(done) {
+function loader( toe ){
+	return done => {
 	    toe.load()
 		    .then( () => done() );
-	});
+	};
+}
 
+let take_pictures_when_failed = ( toe ) => {
+	return  function() {
+		if (this.currentTest.state == 'failed') {
+			console.log( 'Capture', this.currentTest.title );
+			toe.capture( this.currentTest.title );
+		}
+	};
+};
 
-	afterEach(function () {
-        if (this.currentTest.state == 'failed') {
-        	toe.capture( this.currentTest.title );
-        }
-    });
+function prepare( suite, toe ){
+	be_not_too_impatient( suite );
 
-	it('should initialy greet with "'+theWorld+'"', function(){
-		return expect( toe.salutation ).eventually.to.be.equal( hello( theWorld ) );
-	});
+	before( loader( toe ) );
 
-	it('should respond to change to "'+dieWelt+'"', function(){
-		toe.addressee = dieWelt;
-		return expect( toe.salutation ).eventually.to.be.equal( hello( dieWelt ) );
-	});
+	afterEach( take_pictures_when_failed( toe ) );
+}
 
-	it('should respond to change to "'+laMonde+'"', function(){
-		toe.addressee = laMonde;
-		return expect( toe.salutation ).eventually.to.be.equal( hello( laMonde ) );
-	});
+const
+	hello_world_basic = new HelloWorldPage( 'file://'+__dirname+'/assets/html/hello_world_basic.html' ),
+	hello_world_template = new HelloWorldPage( 'file://'+__dirname+'/assets/html/hello_world_template.html' ),
+	addressees = {
+		deutsch:   {input: 'die Welt'},
+		blank:     {input: ''},
+		english:   {input: 'world'},
+		francois:  {input: 'la Monde'}
+	}
+;
 
-	it('should have a blank ', function(){
-		toe.addressee = blank;
-		return expect( toe.salutation ).eventually.to.be.equal( hello( blank ) );
+Object.keys( addressees ).forEach( addressee_name => {
+	let addressee = addressees[ addressee_name ];
+	addressee.basic 		= {salutation: hello( addressee.input )};
+	let is_not_blank = addressee.input.length>0;
+	addressee.template 	= {salutation: is_not_blank ? addressee.basic.salutation : '', has_p: is_not_blank };
+});
+
+describe('Basic Hello World example; Text in P element follows value of INPUT.', function(){
+	[
+		{label: 'basic', 		toe: hello_world_basic },
+		{label: 'template',	toe: hello_world_template }
+	].forEach( function( target ){
+
+		describe( `For ${target.label} file`, function(){
+
+			prepare( this, target.toe );
+
+			it('should initialy greet with "Hello World"', function(){
+				return target.toe.salutation.should.eventually.be.equal( addressees.english[ target.label ].salutation );
+			});
+
+			Object.keys( addressees ).forEach( addressee_name => {
+				let addressee = addressees[ addressee_name ];
+				it( `should respond to change to "${addressee.input}"`, function(){
+					target.toe.addressee = addressee.input;
+					return target.toe.salutation.should.eventually.be.equal( addressee[ target.label ].salutation );
+				});
+			});
+		});
 	});
 });
 
-
-describe('Templated "Hello World"; P element follows INPUT, but is only visible when INPUT is not blank', function(){
+describe('Templated "Hello World"; P element follows INPUT, but is only visible when INPUT is not blank', function() {
 	const
-		toe = new HelloWorldPage( 'file://'+__dirname+'/assets/html/hello_world_template.html' ),
-		dieWelt = 'die Welt',
-		laMonde = 'la Monde',
-		blank   = ''
+		toe = hello_world_template
 	;
 
-    this.timeout( 2500 );
-    this.slow( 750 );
+	prepare( this, toe );
 
-	before(function(done) {
-	    toe.load()
-		    .then( () => done() );
+	Object.keys( addressees ).forEach( addressee_name => {
+		let addressee = addressees[ addressee_name ];
+		let salutation_requirement = addressee.template.has_p ? '' : 'not';
+
+		it(`should ${salutation_requirement} have a salutation to "${addressee.input}"`, function(){
+			toe.addressee = addressee.input;
+			return Promise.all([
+				expect( toe.hasSalutation(), `P.salutation should ${salutation_requirement} be there` ).eventually.to.be.equal( addressee.template.has_p ),
+				expect( toe.salutation, 'P.salutation should read World' ).eventually.to.be.equal( addressee.template.salutation )
+			]);
+		});
 	});
 
+});
 
-	afterEach(function () {
-        if (this.currentTest.state == 'failed') {
-        	toe.capture( this.currentTest.title );
-        }
-    });
+describe('Issue 20170920.01: Inital VALUE of INPUT changes to blank does not update value reference', function() {
+	const toe = hello_world_basic;
 
-	it('should initialy have no salutation', function(){
-		return expect( toe.hasSalutation() ).eventually.to.be.equal( false );
+	prepare( this, toe );
+
+	it('Initialy greets with "Hello World"', function(){
+		return toe.salutation.should.eventually.be.equal( addressees.english.basic.salutation );
 	});
 
-	it('should have salutation after  change to "'+dieWelt+'"', function(){
-		toe.addressee = dieWelt;
-		expect( toe.hasSalutation() ).eventually.to.be.equal( true );
-		return expect( toe.salutation ).eventually.to.be.equal( hello( dieWelt ) );
+	it('Initialy greets with "Hello World"', function(){
+		toe.addressee = addressees.blank.input;
+		return expect(toe.salutation,'Clearing input after inital value seems not to work').eventually.be.equal( addressees.blank.basic.salutation );
 	});
+});
 
-	it('should remove salutation when  blank again', function(){
-		toe.addressee = blank;
-		expect( toe.hasSalutation() ).eventually.to.be.equal( false );
-		return expect( toe.salutation ).eventually.to.be.equal(  blank  );
-	});
+describe('Keep the driver busy', function() {
+	const toe = hello_world_template;
 
-	it('should reappear after change to "'+laMonde+'"', function(){
-		toe.addressee = laMonde;
-		expect( toe.hasSalutation() ).eventually.to.be.equal( true );
-		return expect( toe.salutation ).eventually.to.be.equal( hello( laMonde ) );
+	prepare( this, toe );
+
+	it('Initialy greets with "Hello World!"', function(){
+		return toe.salutation.should.eventually.be.equal( addressees.english.basic.salutation );
 	});
 
 });

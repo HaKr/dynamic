@@ -42,14 +42,16 @@ if (typeof global === 'object'){
  */
 
 after(function(done) {
+	console.log( 'there goes the browser' );
     browser.quit();
+	 result.browser = null;
     if (typeof done == 'function'){
         done();
     }
 });
 
 result.browser = browser;
-result.By = webdriver.By,
+result.By = webdriver.By;
 result.Until = webdriver.until;
 result.Key = webdriver.Key;
 result.PromiseManager = webdriver.promise;

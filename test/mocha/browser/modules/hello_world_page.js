@@ -6,7 +6,6 @@ const
     BasePage      = require( './base_page' )
 ;
 
-
 class HelloWorldPage extends BasePage {
 	constructor( url ){
 		super();
@@ -17,12 +16,10 @@ class HelloWorldPage extends BasePage {
 	}
 
 	load(){
-		const self = this;
-
 		return this.get( this.url, this.inputLocator )
 				.then( ()=> {
-					self.addresseeElement = self.browser.findElement( this.inputLocator );
-					return self.addresseeElement;
+					this.addresseeElement = this.browser.findElement( this.inputLocator );
+					return this.addresseeElement;
 				})
 		;
 	}
@@ -36,23 +33,21 @@ class HelloWorldPage extends BasePage {
 	}
 
 	get salutation(){
-		const self = this;
 
 		return this.hasSalutation()
 			.then( (has_salutation) => {
-				return has_salutation ? self.salutationElement.getText() : Promise.resolve('');
+				return has_salutation ? this.salutationElement.getText() : Promise.resolve('');
 			});
 	}
 
 	hasSalutation(){
-		const self = this;
 		return this.PromiseManager.createPromise( (resolve,reject) => {
-			self.browser.findElements( self.salutationLocator )
+			this.browser.findElements( this.salutationLocator )
 				.then( (element_list) => {
 					let result = false;
 
 					if (element_list.length>0){
-						self.salutationElement = element_list[0];
+						this.salutationElement = element_list[0];
 						result = true;
 					}
 
