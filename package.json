@@ -4,10 +4,9 @@
   "description": "Dynamic templates that appear on value changes",
   "main": "dynamic-server.js",
   "scripts": {
-    "test": "npm run deploy-static && npm run test:unit",
+    "test": "npm run deploy-static && npm run test:unit && npm run test:browser",
     "test:unit": "tape test/*.js",
-    "test:browser": "mocha -p ./node_modules/phantomjs/bin/phantomjs ./test/mocha/browser/test_hello_world.html",
-    "test:integration": "mocha test/mocha/browser/test_hello_world.js",
+    "test:browser": "mocha test/mocha/browser/test_hello_world.js",
 	 "test:cafe": "testcafe --hostname localhost --ports 12345,12346 firefox test/browser/cafe/**/test*.?s",
     "watch:all": "parallelshell 'npm run watch:modules' 'npm run watch:components' 'npm run watch:www'",
     "livereload": "live-reload --port 9091 dist/",
@@ -21,13 +20,16 @@
     "copy-to-mct": "cp  dist/js/dynamic-app.js ${HOME}/work/eeg-mct/eeg-docker/static/js/",
     "deploy-static": "npm run generate-bundle && npm run copy-static",
     "deploy-shared": "npm run generate-bundle && npm run copy-shared",
-    "ensure-folders": "mkdir -p screenshots && mkdir -p dist/js",
-    "deploy-to-mct": "npm run generate-bundle && npm run copy-to-mct"
+	 "deploy-to-mct": "npm run generate-bundle && npm run copy-to-mct",
+    "ensure-folders": "mkdir -p screenshots && mkdir -p dist/js"
   },
   "repository": {
     "type": "git",
     "url": "git@github.com/HaKr/dynamic.git"
   },
+	  "jshintConfig": {
+	  "esnext": true
+	},
   "keywords": [
     "Dynamic",
     "Web"
@@ -39,14 +41,11 @@
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
     "chai-webdriver": "^1.2.0",
-    "event-emitter": "^0.3.4",
     "install": "^0.8.2",
-    "jshint": "^2.9.4",
     "live-reload": "latest",
     "mocha": "^3.2.0",
     "mocha-phantomjs": "^4.1.0",
     "node-inspector": "^0.12.10",
-    "npm": "^4.0.5",
     "parallelshell": "latest",
     "phantomjs": "^2.1.7",
     "selenium-webdriver": "^3.3.0",
@@ -54,11 +53,10 @@
     "tape-run": "^2.1.5",
     "tapes": "^4.1.0",
     "watch": "latest",
-	 "testcafe": "latest",
-	 "nock": "latest"
-
+	 "testcafe": "latest"
   },
   "dependencies": {
+	  "event-emitter": "^0.3.4",
     "deep-equal": "^1.0.1",
     "uuid": "^3.0.1"
   }
