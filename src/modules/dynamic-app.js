@@ -105,6 +105,12 @@ dynamic_app.run = function () {
         dynamic_app.before_run();
     }
 
+	 var p = document.createElement('p');
+	 p.classList.add( 'app-start' );
+	 var t = document.createTextNode('Dynamic app starting up');
+	 p.appendChild( t );
+	 document.body.appendChild( p );
+
 	 dynamic_app.socket_connect_channel();
 
     dynamic_app.define_templates();
@@ -123,6 +129,13 @@ dynamic_app.run = function () {
     dynamic_app.vars.components.forEach(function notify_component_start(component) {
         component.started();
     });
+
+	 var p2 = document.createElement('p');
+	 p2.classList.add( 'app-running' );
+	 var t2 = document.createTextNode('Dynamic app is now running');
+	 p2.appendChild( t2 );
+	 document.body.appendChild( p2 );
+
 };
 
 dynamic_app.connect_channel = function( channel_name ){

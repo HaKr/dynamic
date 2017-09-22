@@ -1,9 +1,8 @@
-
 (function(){
 'use strict';
 
 const
-    BasePage      = require( './base_page' )
+   BasePage      = require( './base_page' )
 ;
 
 class HelloWorldPage extends BasePage {
@@ -13,10 +12,11 @@ class HelloWorldPage extends BasePage {
 		this.url = url;
 		this.inputLocator = this.By.name('addressee');
 		this.salutationLocator = this.By.css('p.salutation');
+		this.dclLocator = this.By.css('p.dom-loaded');
 	}
 
 	load(){
-		return this.get( this.url, this.inputLocator )
+		return this.get( this.url, this.salutationLocator )
 				.then( ()=> {
 					this.addresseeElement = this.browser.findElement( this.inputLocator );
 					return this.addresseeElement;

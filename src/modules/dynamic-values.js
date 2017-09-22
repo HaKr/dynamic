@@ -246,14 +246,20 @@ DynamicValue.prototype.get_dynamic_value = function get_dynamic_value_for_value(
 			parent_value = this.parent;
 			value_name = value_name.substring(1);
 		} else {
-			if (Object.keys(this.children).length < 1 && !dynamic_utils.starts_with( value_name, parent_meta_selector )) {
-				parent_value = this.parent;
+			if ( value_name === api_keywords.symbols.from_here_selector){
+				result = this;
+			} else {
+				if (Object.keys(this.children).length < 1 && !dynamic_utils.starts_with( value_name, parent_meta_selector )) {
+					parent_value = this.parent;
+				}
 			}
 		}
 		value_name = parent_value.name + value_name;
 	}
 
-	result = must_exist ? values_module.get_by_name(value_name) : values_module.get_or_define(value_name);
+	if ( result === null ){
+		result = must_exist ? values_module.get_by_name(value_name) : values_module.get_or_define(value_name);	
+	}
 
 	return result;
 };
@@ -346,14 +352,20 @@ DynamicValue.prototype.enforce_type = function() {
 };
 
 DynamicValue.prototype.add_child = function(child_value) {
+	var notify = false;
 
 	if (this.type === value_types.unassigned) {
 		this.content = {};
 		this.make_list();
 	}
 
+	notify = !this.content.hasOwnProperty( child_value.reference );
 	this.children[child_value.reference] = child_value;
 	this.content[child_value.reference] = child_value.get_value();
+
+	if ( notify ){
+		this.notify_structural_change();
+	}
 
 	return this.content[child_value.reference];
 };
@@ -472,6 +484,7 @@ DynamicValue.prototype.notify_structural_change = function() {
 	if (this.metavalues.count) {
 		this.metavalues.count.notify_observers();
 	}
+	this.notify_observers();
 };
 
 function StructureAnalyser( dynamic_value ){

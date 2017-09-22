@@ -176,10 +176,11 @@ function DynamicText$base(){
 DynamicText$base.prototype.init = function( parent_instance, only_notify_when_complete ){
    this.original = '';
    this.on_change_callback = null;
-   this.value = '';
+   this.value = null;
    this.parts = [];
    this.only_notify_when_complete = only_notify_when_complete;
    this.instance = parent_instance;
+   this.child_count = 0;
 
    var self = this;
 
@@ -228,8 +229,13 @@ DynamicText$base.prototype.notify = function(){
 };
 
 DynamicText$base.prototype.set_value = function( new_value ){
-   if (this.value !== new_value){
+   let child_count = 0;
+   if (typeof new_value === 'object'){
+      child_count = Object.keys( new_value ).length;
+   }
+   if (this.value !== new_value || this.child_count !== child_count){
       this.value = new_value;
+      this.child_count = child_count;
       this.notify();
    }
 };

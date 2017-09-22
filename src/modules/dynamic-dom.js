@@ -229,6 +229,11 @@ dom_utils.get_attributes = function(element) {
 };
 
 function document_ready() {
+	var p = document.createElement('p');
+	p.classList.add( 'dynamic_dom'  );
+	var t = document.createTextNode( 'document ready' );
+	p.appendChild( t );
+	document.body.appendChild( p );
 
 	logger.info("DOM ready", dom_utils);
 	dom_utils.events.emit('DOM ready');
@@ -422,44 +427,7 @@ function waitForDOMContent() {
 		}
 	}
 
-	if (document.addEventListener) { // native event
-		document.addEventListener("DOMContentLoaded", ready, false);
-	} else if (document.attachEvent) { // IE
-		var isFrame;
-		try {
-			isFrame = window.frameElement !== null;
-		} catch (e) {
-			// ignore any error
-		}
-
-		// IE, the document is not inside a frame
-		if (document.documentElement.doScroll && !isFrame) {
-			tryScroll();
-		}
-
-		// IE, the document is inside a frame
-		document.attachEvent("onreadystatechange", function() {
-			if (document.readyState === "complete") {
-				ready();
-			}
-		});
-	}
-
-	// Old browsers
-	if (window.addEventListener)
-		window.addEventListener("load", ready, false);
-	else if (window.attachEvent)
-		window.attachEvent("onload", ready);
-	else {
-		var fn = window.onload; // very old browser, copy old onload
-		window.onload = function() { // replace by new onload and call the old one
-			if (fn) {
-
-				fn();
-			}
-			ready();
-		};
-	}
+	document.addEventListener("DOMContentLoaded", ready, false);
 }
 
 module.exports = dom_utils;
