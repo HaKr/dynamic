@@ -229,11 +229,11 @@ dom_utils.get_attributes = function(element) {
 };
 
 function document_ready() {
-	var p = document.createElement('p');
-	p.classList.add( 'dynamic_dom'  );
-	var t = document.createTextNode( 'document ready' );
-	p.appendChild( t );
-	document.body.appendChild( p );
+	// var p = document.createElement('p');
+	// p.classList.add( 'dynamic_dom'  );
+	// var t = document.createTextNode( 'document ready' );
+	// p.appendChild( t );
+	// document.body.appendChild( p );
 
 	logger.info("DOM ready", dom_utils);
 	dom_utils.events.emit('DOM ready');

@@ -49,7 +49,7 @@ let take_pictures_when_failed = ( toe ) => {
 							if (err){
 								console.error('Error while saving screenshot.',err );
 							} else {
-								console.log( `Written to ${filename}`, image_data );
+								console.log( `\tWritten to ${filename}` );
 							}
 						});
 					})

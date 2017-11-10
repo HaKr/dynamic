@@ -159,8 +159,10 @@ function AttributeObserver(element, attribute_name, template_instance) {
 
 AttributeObserver.prototype.notify_content = function( content ) {
    if (content.length>0) {
+		logger.info("Set "+this.attribute_name +" of "+this.element.tagName + " to '" + content +"'");
       this.element.setAttribute(this.attribute_name, content);
    } else {
+		logger.info("Removing "+this.attribute_name +" of "+this.element.tagName );
       this.element.removeAttribute( this.attribute_name );
    }
 };
@@ -205,7 +207,7 @@ DynamicText$base.prototype.remove = function(){
 };
 
 DynamicText$base.prototype.set_initial_text = function( t ){
-   this.original = t;
+   this.original = dynamic_values.alias_or_name( t );
    this.add_parts();
 
    return this;

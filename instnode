@@ -1,0 +1,11 @@
+nodev=6.9.1
+archnode=linux-x64
+namearh=x64
+
+wget https://nodejs.org/dist/v$nodev/node-v$nodev-linux-$namearh.tar.xz
+
+tar xJf node-v$nodev-linux-x64.tar.xz -C $HOME
+
+export PATH=$PATH:$HOME/node-v$nodev-$archnode/bin:/usr/bin/
+
+$HOME/node-v$nodev-$archnode/bin/npm install

@@ -7,6 +7,7 @@ var values_module = {
 	vars: {
 		values: {},
 		aliases: {},
+		alias_references: {},
 		observers: {},
 		observer_index: 0
 	},
@@ -96,6 +97,20 @@ values_module.get_by_name = function(value_name) {
 	}
 
 	return result;
+};
+
+values_module.alias_or_name = function(value_name) {
+	var result = value_name;
+
+	if (values_module.vars.alias_references.hasOwnProperty(value_name)){
+		result = values_module.vars.alias_references[value_name];
+	}
+
+	return result;
+};
+
+values_module.define_alias = function(value_name, dynamic_value_reference) {
+	values_module.vars.alias_references[value_name] = dynamic_value_reference;
 };
 
 values_module.get_or_define = function(value_name) {
@@ -258,7 +273,7 @@ DynamicValue.prototype.get_dynamic_value = function get_dynamic_value_for_value(
 	}
 
 	if ( result === null ){
-		result = must_exist ? values_module.get_by_name(value_name) : values_module.get_or_define(value_name);	
+		result = must_exist ? values_module.get_by_name(value_name) : values_module.get_or_define(value_name);
 	}
 
 	return result;

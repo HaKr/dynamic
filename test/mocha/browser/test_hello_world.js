@@ -35,24 +35,24 @@ Object.keys( addressees ).forEach( addressee_name => {
 	addressee.template 	= {salutation: is_not_blank ? addressee.basic.salutation : '', has_p: is_not_blank };
 });
 
-describe('Basic Hello World example; Text in P element follows value of INPUT.', function(){
+hello_world_basic.Test.describe('Basic Hello World example; Text in P element follows value of INPUT.', function(){
 	[
-		{label: 'basic', 		toe: hello_world_basic }/*,
-		{label: 'template',	toe: hello_world_template }*/
+		{label: 'basic', 		toe: hello_world_basic },
+		{label: 'template',	toe: hello_world_template }
 	].forEach( function( target ){
 
-		describe( `For ${target.label} file`, function(){
+		hello_world_basic.Test.describe( `For ${target.label} file`, function(){
 			settings.suite = this;
 			settings.toe = target.toe;
 			suite_utils.prepare( settings );
 
-			it('should initialy greet with "Hello World"', function(){
-				return target.toe.salutation.should.eventually.be.equal( addressees.english[ target.label ].salutation );
+			hello_world_basic.Test.it('should initialy greet with "Hello World"', function(){
+				target.toe.salutation.should.eventually.be.equal( addressees.english[ target.label ].salutation );
 			});
 
 			Object.keys( addressees ).forEach( addressee_name => {
 				let addressee = addressees[ addressee_name ];
-				it( `should respond to change to "${addressee.input}"`, function(){
+				hello_world_basic.Test.it( `should respond to change to "${addressee.input}"`, function(){
 					target.toe.addressee = addressee.input;
 					return target.toe.salutation.should.eventually.be.equal( addressee[ target.label ].salutation );
 				});
@@ -61,7 +61,7 @@ describe('Basic Hello World example; Text in P element follows value of INPUT.',
 	});
 });
 
-describe('Templated "Hello World"; P element follows INPUT, but is only visible when INPUT is not blank', function() {
+hello_world_template.Test.describe('Templated "Hello World"; P element follows INPUT, but is only visible when INPUT is not blank', function() {
 	const
 		toe = hello_world_template
 	;
@@ -74,30 +74,29 @@ describe('Templated "Hello World"; P element follows INPUT, but is only visible 
 		let addressee = addressees[ addressee_name ];
 		let salutation_requirement = addressee.template.has_p ? '' : 'not';
 
-		it(`should ${salutation_requirement} have a salutation to "${addressee.input}"`, function(){
+		hello_world_template.Test.it(`should ${salutation_requirement} have a salutation to "${addressee.input}"`, function(){
 			toe.addressee = addressee.input;
-			return Promise.all([
+			// return Promise.all([
 				expect( toe.hasSalutation(), `P.salutation should ${salutation_requirement} be there` ).eventually.to.be.equal( addressee.template.has_p ),
 				expect( toe.salutation, 'P.salutation should read World' ).eventually.to.be.equal( addressee.template.salutation )
-			]);
+			// ]);
 		});
 	});
-
 });
 
-describe('Issue 20170920.01: Inital VALUE of INPUT changes to blank does not update value reference', function() {
+hello_world_basic.Test.describe('Issue 20170920.01: Inital VALUE of INPUT changes to blank does not update value reference', function() {
 	const toe = hello_world_basic;
 
 	settings.suite = this;
 	settings.toe = toe;
 	suite_utils.prepare( settings );
 
-	it('Initialy greets with "Hello World"', function(){
-		return toe.salutation.should.eventually.be.equal( addressees.english.basic.salutation );
+	hello_world_basic.Test.it('Initialy greets with "Hello World"', function(){
+		toe.salutation.should.eventually.be.equal( addressees.english.basic.salutation );
 	});
 
-	it('Should see the change to blank', function(){
+	hello_world_basic.Test.it('Should see the change to blank', function(){
 		toe.addressee = addressees.blank.input;
-		return expect(toe.salutation,'Clearing input after inital value seems not to work').eventually.be.equal( addressees.blank.basic.salutation );
+		expect(toe.salutation,'Clearing input after inital value seems not to work').eventually.be.equal( addressees.blank.basic.salutation );
 	});
 });

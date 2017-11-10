@@ -140,6 +140,7 @@ ClassNameParser.prototype.set_extend_template_name = function () {
 
 ClassNameParser.prototype.set_dynamic_value = function () {
     this.dynamic_value_name_raw = this.class_name;
+	 this.remove_class();
 };
 
 ClassNameParser.prototype.set_dynamic_value_child = function () {

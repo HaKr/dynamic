@@ -6,34 +6,36 @@
   "scripts": {
     "test": "npm run deploy-static && npm run test:unit && npm run test:browser",
     "test:unit": "tape test/*.js",
-	 "test:browser": "mocha test/mocha/browser/test_hello_world.js",
-	 "test:driver": "mocha test/mocha/browser/test_driver.js",
-	 "node:driver": "node test/mocha/browser/test_driver.js",
-	 "phantom:driver": "phantomjs --debug=yes test/phantom/test_phantom.js",
-	 "test:cafe": "testcafe --hostname localhost --ports 12345,12346 firefox test/browser/cafe/**/test*.?s",
+    "test:browser": "mocha test/mocha/browser/test_*.js",
+    "node:driver": "node test/mocha/browser/test_driver.js",
+    "phantom:driver": "phantomjs --debug=yes test/phantom/test_phantom.js",
+    "test:cafe": "testcafe --hostname localhost --ports 12345,12346 firefox test/browser/cafe/**/test*.?s",
+    "test:cucumber": "./node_modules/selenium-cucumber-js/index.js",
     "watch:all": "parallelshell 'npm run watch:modules' 'npm run watch:components' 'npm run watch:www'",
     "livereload": "live-reload --port 9091 dist/",
     "watch:modules": "watch 'npm run generate-bundle' src/modules",
     "watch:components": "watch 'npm run generate-bundle' src/components",
     "watch:www": "watch 'npm run copy-static' src/www",
     "watch:dist": "watch 'npm run copy-shared' dist",
-	 "generate-bundle": "npm run ensure-folders && browserify src/modules/*.js  --outfile dist/js/dynamic-app.js",
-	 "generate-bundle2": "npm run ensure-folders && browserify src/modules/dynamic-dom.js src/modules/dynamic-utils.js src/modules/browser_log.js src/modules/dynamic-api_keywords.js src/modules/dynamic_class_parser.js  --outfile dist/js/dynamic-app.js",
+    "generate-bundle": "npm run ensure-folders && browserify src/modules/*.js  --outfile dist/js/dynamic-app.js",
+    "generate-bundle2": "npm run ensure-folders && browserify src/modules/dynamic-dom.js src/modules/dynamic-utils.js src/modules/browser_log.js src/modules/dynamic-api_keywords.js src/modules/dynamic_class_parser.js  --outfile dist/js/dynamic-app.js",
     "copy-static": "cp -r src/www/* dist/",
     "copy-shared": "cp -r dist/* /media/sf_eeg/dynamic/",
-    "copy-to-mct": "cp  dist/js/dynamic-app.js ${HOME}/work/eeg-mct/eeg-docker/static/js/",
+	 "copy-to-mct": "cp  dist/js/dynamic-app.js ${HOME}/work/eeg-mct/eeg-docker/static/js/",
+	 "copy-to-dge": "cp  dist/js/dynamic-app.js ${HOME}/work/tennet/eeg/eeg-release/eeg-displaygroup-editor/src/main/resources/static/js/",
     "deploy-static": "npm run generate-bundle && npm run copy-static",
     "deploy-shared": "npm run generate-bundle && npm run copy-shared",
 	 "deploy-to-mct": "npm run generate-bundle && npm run copy-to-mct",
+	 "deploy-to-dge": "npm run generate-bundle && npm run copy-to-dge",
     "ensure-folders": "mkdir -p screenshots && mkdir -p dist/js"
   },
   "repository": {
     "type": "git",
     "url": "git@github.com/HaKr/dynamic.git"
   },
-	"jshintConfig": {
-	  "esnext": true
-	},
+  "jshintConfig": {
+    "esnext": true
+  },
   "keywords": [
     "Dynamic",
     "Web"
@@ -42,6 +44,11 @@
   "license": "ISC",
   "devDependencies": {
     "browserify": "^13.1.1",
+    "node-inspector": "^0.12.10",
+    "parallelshell": "latest",
+    "tape": "^4.6.3",
+    "testcafe": "latest",
+    "watch": "latest",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
     "chai-webdriver": "^1.2.0",
@@ -49,18 +56,11 @@
     "live-reload": "latest",
     "mocha": "^3.2.0",
     "mocha-phantomjs": "^4.1.0",
-    "node-inspector": "^0.12.10",
-    "parallelshell": "latest",
-    "phantomjs": "^1.9.8",
     "selenium-webdriver": "^3.3.0",
-    "tape": "^4.6.3",
-    "tape-run": "^2.1.5",
-    "tapes": "^4.1.0",
-    "watch": "latest",
-	 "testcafe": "latest"
+	 "selenium-cucumber-js": "latest"
   },
   "dependencies": {
-	  "event-emitter": "^0.3.4",
+    "event-emitter": "^0.3.4",
     "deep-equal": "^1.0.1",
     "uuid": "^3.0.1"
   }

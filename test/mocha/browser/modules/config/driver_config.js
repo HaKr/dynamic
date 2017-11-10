@@ -1,36 +1,27 @@
-(function(){
-
-'use strict';
-
-
+// Sep 2017
+// The way to specify which browser to use and how to modify it's configuration
+// is not at all clear.
+// The way below seems to work on Linux with Chrome....
 const
-    webdriver = require('selenium-webdriver'),
-   //  phantomjs = require('phantomjs'),
-	//  phantomjs = require('selenium-webdriver/phantomjs'),
-	 Capabilities = require('selenium-webdriver/lib/capabilities').Capabilities,
-	 phantomjs = Capabilities.phantomjs(),
-	 // firefox = Capabilities.firefox(),
-	 chrome = Capabilities.chrome(),
+   webdriver = require('selenium-webdriver'),
+	webdriver_test = require('selenium-webdriver/testing'),
+	until= require('selenium-webdriver/lib/until'),
 
-    result = { browser: null, By: null, Until: null, Key: null, PromiseManager: null }
+	chrome = require('selenium-webdriver/chrome'),
+	//  Capabilities = require('selenium-webdriver/lib/capabilities').Capabilities,
+	//  chrome = Capabilities.chrome(),
+	options =new chrome.Options(),
+   result = { browser: null, By: null, Until: null, Key: null, PromiseManager: null }
 ;
-// chrome.set('window-size','1200x600');
-// chrome.set('headless',true);
-// chrome.set('marionette', true);
+
+options.addArguments('headless');
 
 const
 	browser = new webdriver.Builder()
-						 .withCapabilities(chrome)
+						 .forBrowser('chrome')
+						 .setChromeOptions(options)
 						 .build()
 ;
-// these 3 lines are required with firefox 47+
-// var Capabilities = require('selenium-webdriver/lib/capabilities').Capabilities;
-// var capabilities = Capabilities.phantomjs();
-// capabilities.set('marionette', true);
-
-// var browser = new webdriver.Builder().withCapabilities(capabilities).build();
-
-
 
 /**
  * Since we created the driver, we should remove it:
@@ -65,6 +56,7 @@ result.By = webdriver.By;
 result.Until = webdriver.until;
 result.Key = webdriver.Key;
 result.PromiseManager = webdriver.promise;
+result.Test = webdriver_test;
 
 result.taking_pictures = function( flag ){
 	is_taking_pictures = flag;
@@ -75,5 +67,3 @@ result.taking_pictures = function( flag ){
 };
 
 module.exports = result;
-
-})();

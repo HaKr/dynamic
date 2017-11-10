@@ -105,11 +105,11 @@ dynamic_app.run = function () {
         dynamic_app.before_run();
     }
 
-	 var p = document.createElement('p');
-	 p.classList.add( 'app-start' );
-	 var t = document.createTextNode('Dynamic app starting up');
-	 p.appendChild( t );
-	 document.body.appendChild( p );
+	//  var p = document.createElement('p');
+	//  p.classList.add( 'app-start' );
+	//  var t = document.createTextNode('Dynamic app starting up');
+	//  p.appendChild( t );
+	//  document.body.appendChild( p );
 
 	 dynamic_app.socket_connect_channel();
 
@@ -130,11 +130,11 @@ dynamic_app.run = function () {
         component.started();
     });
 
-	 var p2 = document.createElement('p');
-	 p2.classList.add( 'app-running' );
-	 var t2 = document.createTextNode('Dynamic app is now running');
-	 p2.appendChild( t2 );
-	 document.body.appendChild( p2 );
+	//  var p2 = document.createElement('p');
+	//  p2.classList.add( 'app-running' );
+	//  var t2 = document.createTextNode('Dynamic app is now running');
+	//  p2.appendChild( t2 );
+	//  document.body.appendChild( p2 );
 
 };
 
@@ -308,7 +308,6 @@ dynamic_placeholder.set_value_reference = function ( dynamic_value_ref ) {
 	this.value_observer = null;
 	this.template_observer = observer_module.create_dynamic_value_reference( dynamic_value_ref, this.parent_instance, this.attach_value, this.on_value_changed, this );
 };
-
 
 dynamic_placeholder.attach_value = function ( dynamic_value ) {
 	this.dynamic_value = dynamic_value;
@@ -692,7 +691,9 @@ dynamic_instance_class.bind_attributes = function (element) {
         if (typeof child_element.attributes !== "undefined" && child_element.attributes !== null) {
             var element_attributes = dynamic_utils.make_array( child_element.attributes );
 
-            element_attributes.forEach( function (attribute){
+            element_attributes.filter( function (attr){
+					return attr.name !== 'name' && !dynamic_utils.starts_with( attr.name, 'data-' );
+				}).forEach( function (attribute){
                 var
                     attribute_value = attribute.value;
                 if (observer_module.contains_binding(attribute_value)) {
@@ -1257,7 +1258,10 @@ AppControl$base.prototype.create = function (element, template_instance) {
 		 this.value_name = this.element.name;
 		 this.value_reference_observer = observer_module.create_dynamic_value_reference( this.value_name, template_instance, this.attach_value, null, this );
 		 var alias_name = this.define_from_dataset( api_keywords.dom.data.alias, '' );
-		 this.alias = create_alias_when_needed( alias_name, this.value_name, template_instance );
+		//  this.alias = create_alias_when_needed( alias_name, this.value_name, template_instance );
+		if (alias_name.length > 0){
+			dynamic_values.define_alias( alias_name, this.value_name );
+		}
 
 	 } else {
 		 this.value_name = '';

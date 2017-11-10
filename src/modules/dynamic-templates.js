@@ -36,7 +36,7 @@ var templates_module = {
         DynamicTemplatePlaceholder: function (template_definition, anchor, origin) {
             this.definition = template_definition;
             this.instances = [];
-				this.observers = {};
+				this.template_observer = null;
             this.parent_instance = null;
             this.anchor = anchor;
             this.first = null;
@@ -173,13 +173,12 @@ function DynamicTemplatePlaceholder() {
 }
 
 DynamicTemplatePlaceholder.prototype.remove = function () {
-	logger.debug("Placeholder::remove " + this.definition.name +', '+Object.keys(this.observers).length);
+	logger.debug("Placeholder::remove " + this.definition.name );
     templates_module.vars.Placeholders.splice(templates_module.vars.Placeholders.indexOf(this), 1);
-	 Object.keys(this.observers).forEach(function unobserve_placeholder(observer_ref) {
-		  var observer = this.observers[observer_ref];
-		  observer.remove();
-	 }, this);
-	 this.observers = {};
+	 if (typeof this.template_observer === "object" && this.template_observer !== null){
+ 		this.template_observer.remove();
+		this.template_observer = null;
+ 	}
 };
 
 DynamicTemplatePlaceholder.prototype.set_up = function () {
@@ -341,7 +340,6 @@ DynamicTemplateInstance.prototype.debug_info = function () {
     var node_info = my_node.tagName + '.' + dynamic_utils.make_array(my_node.classList).join('.');
     result.node = node_info;
     result.controls = this.controls ? this.controls.length : 0;
-    result.observers = Object.keys(this.observers).length;
     result.placeholders = Array.isArray(this.placeholders) ? this.placeholders.length : 0;
     result.instance = this;
     this.debug = result.id;

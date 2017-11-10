@@ -2,22 +2,13 @@
 	'use strict';
 
 	const
-		driver_config   = require( './config/driver_config' )
+		BaseComponent   = require( './base_component' )
 	;
 
-
-	class BasePage {
+	class BasePage extends BaseComponent {
 		constructor() {
-			this.delegate( driver_config );
+			super();
 			this.image_data = null;
-		}
-
-		delegate( obj ){
-			Object.keys( obj ).forEach( prop_name => {
-				Object.defineProperty( this, prop_name, {
-					get: function(){ return obj[ prop_name ]; }
-				});
-			});
 		}
 
 		get ( url, locator ) {
@@ -28,13 +19,6 @@
 						.then( () => {
 							return this.browser.findElement( locator );
 						});
-		}
-
-
-		setInputValue( input_element, value ){
-			input_element.clear();
-			input_element.sendKeys( value );
-			input_element.sendKeys( this.Key.TAB );
 		}
 
 		snapshot( ){

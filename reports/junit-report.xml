@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+    <testsuite name="bind-to-inputs;bind-to-controls-and-report-the-value-changes" tests="4" failures="1" skipped="0">
+        <properties>
+            <property name="URI" value="/home/harry/work/dynamic/features/dynamic_controls.feature">
+            </property>
+        </properties>
+        <testcase name="Given The input controls page" classname="bind-to-inputs;bind-to-controls-and-report-the-value-changes" time="1.454220661">
+        </testcase>
+        <testcase name="And initially both report panes display:" classname="bind-to-inputs;bind-to-controls-and-report-the-value-changes" time="0.220467324">
+        </testcase>
+        <testcase name="When I modify the inputs:" classname="bind-to-inputs;bind-to-controls-and-report-the-value-changes" time="0.000770453">
+        </testcase>
+        <testcase name="Then subsequently both report panes only change the appropriate label" classname="bind-to-inputs;bind-to-controls-and-report-the-value-changes" time="2.648601901">
+            <failure message="AssertionError: expected { Object (radio=groen, dropdown=Geel) } to deeply equal {}">AssertionError: expected { Object (radio=groen, dropdown=Geel) } to deeply equal {}
+    at Assertion.assertEqual (/home/harry/work/dynamic/node_modules/chai/lib/chai/core/assertions.js:485:19)
+    at Assertion.ctx.(anonymous function) [as equal] (/home/harry/work/dynamic/node_modules/chai/lib/chai/utils/addMethod.js:41:25)
+    at Promise.all.then._ (/home/harry/work/dynamic/step-definitions/dynamic_controls-steps.js:90:38)
+    at process._tickCallback (internal/process/next_tick.js:109:7)</failure>
+        </testcase>
+    </testsuite>
+</testsuites>

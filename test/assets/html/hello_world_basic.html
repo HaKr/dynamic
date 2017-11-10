@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Dynamic App: Hello World</title>
+		<link rel="stylesheet" media="all" href="../../../../../dist/css/dynamic-app.css">
+		<!-- <script src="../js/test-driver.js"></script>
+		<script src="../../../../../dist/js/dynamic-app.js"></script>
+		<script src="../js/test-driver2.js"></script> -->
+		<!-- file:///home/harry/work/dynamic/test/mocha/browser/assets/html/hello_world_basic.html -->
+		<script src="file:///home/harry/work/dynamic/dist/js/dynamic-app.js"></script>
+	</head>
+
+	<body>
+
+		<label>Please enter your name:
+			<input name=addressee value=world>
+		</label>
+
+		<p class=salutation>Hello {{addressee}}!
+
+		<script type=text/javascript>
+			var p = document.createElement( 'p' );
+			p.classList.add( 'dynamic-type' );
+			var info = typeof( window.$dynamic ) === 'object' ? window.$dynamic.constructor.name : 'NIL';
+			var t = document.createTextNode( '$dynamic='+ info);
+			p.appendChild( t );
+			document.body.appendChild( p );
+		</script>
+
+	</body>
+</html>
